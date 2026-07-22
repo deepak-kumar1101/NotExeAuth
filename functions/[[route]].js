@@ -78,13 +78,7 @@ async function getFirebaseToken(env) {
             returnSecureToken: true
         })
     });
-    const data = await resp.json();
-    if (data.idToken) {
-        cachedToken = data.idToken;
-        tokenExpiry = Date.now() + (parseInt(data.expiresIn) * 1000) - 60000;
-        return cachedToken;
-    }
-    throw new Error('Firebase Auth Failed');
+    
 }
 
 async function dbRequest(env, path, method = 'GET', body = null) {
@@ -367,7 +361,15 @@ app.post('/versioncheck', async (c) => {
         const currentVersion = appData.version || 'UNKNOWN';
         if (currentVersion === appVersion) return sdkJson(c, 'versioncheck', body, true, 'VERSION_OK', { serverVersion: currentVersion });
         return sdkJson(c, 'versioncheck', body, false, 'VERSION_MISMATCH', { serverVersion: currentVersion }, 409);
-    } catch (e) { return c.json(sendResponse(false, 'Error'), 500); }
+    }catch (e) {
+    console.error("Version Check Error:", e);
+
+    return c.json({
+        success: false,
+        message: e.message,
+        stack: e.stack
+    }, 500);
+}
 });
 
 app.post('/getvariable', async (c) => {
