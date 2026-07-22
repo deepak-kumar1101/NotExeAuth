@@ -5,7 +5,10 @@ import CryptoJS from 'crypto-js';
 const app = new Hono();
 
 app.get('/', async (c) => {
-    return c.text('Deep X Auth is Active. Dashboard is loading...', 200);
+    if (c.env && c.env.ASSETS) {
+        return c.env.ASSETS.fetch(c.req.raw);
+    }
+    return c.text('Deep X Auth API is Active.', 200);
 });
 
 const encrypt = (data, secret) => {
@@ -506,6 +509,13 @@ app.post('/delete_license', async (c) => {
         await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`, 'DELETE');
         return c.json(sendResponse(true, 'LICENSE_DELETED'));
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
+});
+
+app.notFound(async (c) => {
+    if (c.env && c.env.ASSETS) {
+        return c.env.ASSETS.fetch(c.req.raw);
+    }
+    return c.text('Not Found', 404);
 });
 
 export const onRequest = handle(app);

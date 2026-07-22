@@ -7,7 +7,10 @@ const app = new Hono();
 app.use('*', cors());
 
 app.get('/', async (c) => {
-    return c.text('Deep X Auth is Active. Dashboard is loading...', 200);
+    if (c.env && c.env.ASSETS) {
+        return c.env.ASSETS.fetch(c.req.raw);
+    }
+    return c.text('Deep X Auth API is Active.', 200);
 });
 
 app.get('/api-status', (c) => c.json({ status: 'Online', service: 'DXA Pages API' }));
