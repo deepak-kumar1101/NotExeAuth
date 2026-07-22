@@ -77,9 +77,11 @@ const App: React.FC = () => {
     );
   }
 
-  const isLoginPage = window.location.hash === '#/login';
-  if (maintenance?.maintenanceMode && !isAdmin && !isLoginPage) {
-    return <MaintenanceView status={maintenance.maintenanceStatus} message={maintenance.maintenanceMessage} />;
+  const isExemptPage = window.location.hash.startsWith('#/login') || window.location.hash.startsWith('#/admin');
+  const isMaintenanceActive = maintenance?.maintenanceMode === true || (maintenance?.maintenanceMode as any) === 'true';
+
+  if (isMaintenanceActive && !isAdmin && !isExemptPage) {
+    return <MaintenanceView status={maintenance?.maintenanceStatus} message={maintenance?.maintenanceMessage} />;
   }
 
   return (

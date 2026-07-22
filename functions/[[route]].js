@@ -208,7 +208,7 @@ function validateSdkRequest(body, endpoint) {
 }
 
 async function sdkJson(c, endpoint, requestBody, success, message, extraData = {}, status = 200) {
-    return c.json(sendResponse(success, message, extraData), status);
+    return c.json(sendResponse(success, message, extraData), 200);
 }
 
 async function getAppMetadata(c, secret, appName) {

@@ -443,13 +443,14 @@ const Admin: React.FC = () => {
                   </div>
                   <button
                     onClick={async () => {
-                      const newState = !maintenance?.maintenanceMode;
+                      const isCurrentlyOn = maintenance?.maintenanceMode === true || (maintenance?.maintenanceMode as any) === 'true';
+                      const newState = !isCurrentlyOn;
                       await set(ref(db, 'system/config/maintenanceMode'), newState);
                       addToast(`Maintenance mode ${newState ? 'ENABLED' : 'DISABLED'}`);
                     }}
-                    className={`w-14 h-8 rounded-full transition-all relative ${maintenance?.maintenanceMode ? 'bg-danger shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-white/10'}`}
+                    className={`w-14 h-8 rounded-full transition-all relative ${(maintenance?.maintenanceMode === true || (maintenance?.maintenanceMode as any) === 'true') ? 'bg-danger shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-white/10'}`}
                   >
-                    <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${maintenance?.maintenanceMode ? 'left-7' : 'left-1'}`} />
+                    <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${(maintenance?.maintenanceMode === true || (maintenance?.maintenanceMode as any) === 'true') ? 'left-7' : 'left-1'}`} />
                   </button>
                 </div>
 
