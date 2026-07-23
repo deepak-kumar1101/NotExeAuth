@@ -55,12 +55,15 @@ function isRateLimited(ip) {
     return limitData.count > maxRequests;
 }
 
+const getDbSecret = (env) => (env && env.DB_SECRET) ? env.DB_SECRET : 'MyDeepXAuthSecretKey_2026!#';
+
 async function verifyAppOwnership(c, ownerEmailKey, secret) {
     if(!ownerEmailKey || !secret) return false;
     const record = await dbRequest(c.env, `customers/${ownerEmailKey}`);
     if(!record) return false;
-    let data = typeof record === 'string' ? decrypt(record, c.env.DB_SECRET) : record;
-    if(data.metadata) data = decrypt(data.metadata, c.env.DB_SECRET);
+    const dbSecret = getDbSecret(c.env);
+    let data = typeof record === 'string' ? decrypt(record, dbSecret) : record;
+    if(data && data.metadata) data = decrypt(data.metadata, dbSecret);
     return data && data.secret === secret;
 }
 
@@ -206,16 +209,17 @@ async function sdkJson(c, endpoint, requestBody, success, message, extraData = {
 }
 
 async function getAppMetadata(c, secret, appName) {
+    const dbSecret = getDbSecret(c.env);
     const metaRaw = await dbRequest(c.env, `applications/${secret}/${appName}/metadata`);
     if (metaRaw) {
-        let meta = decrypt(metaRaw, c.env.DB_SECRET);
+        let meta = decrypt(metaRaw, dbSecret);
         return typeof meta === 'object' ? meta : { version: 'UNKNOWN', applicationPaused: false };
     }
     const appDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}`);
     if (!appDataRaw) return null;
     let appData = appDataRaw;
-    if (typeof appData === 'string') return decrypt(appData, c.env.DB_SECRET);
-    if (appData && appData.metadata) return decrypt(appData.metadata, c.env.DB_SECRET);
+    if (typeof appData === 'string') return decrypt(appData, dbSecret);
+    if (appData && appData.metadata) return decrypt(appData.metadata, dbSecret);
     return appData;
 }
 
@@ -230,6 +234,7 @@ app.post('/login', async (c) => {
         appName = appName?.trim(); appVersion = appVersion?.trim(); hwid = hwid?.trim();
         if (!username || !password || !secret || !appName || !appVersion) return sdkJson(c, 'login', body, false, 'Missing required fields', {}, 400);
 
+        const dbSecret = getDbSecret(c.env);
         const appData = await getAppMetadata(c, secret, appName);
         if (!appData) return sdkJson(c, 'login', body, false, 'Application not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'login', body, false, 'APPLICATION_PAUSED', {}, 403);
@@ -238,7 +243,7 @@ app.post('/login', async (c) => {
         const userDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (!userDataRaw) return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
         let userData = userDataRaw;
-        if (typeof userData === 'string') userData = decrypt(userData, c.env.DB_SECRET);
+        if (typeof userData === 'string') userData = decrypt(userData, dbSecret);
         if (userData.password !== password) return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
         if (userData.isBanned) return sdkJson(c, 'login', body, false, 'USER_BANNED', {}, 403);
 
@@ -246,7 +251,7 @@ app.post('/login', async (c) => {
             if (!userData.sid) {
                 if (hwid) {
                     userData.sid = hwid;
-                    await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(userData, c.env.DB_SECRET));
+                    await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(userData, dbSecret));
                 }
             } else if (userData.sid !== hwid) return sdkJson(c, 'login', body, false, 'HWID_MISMATCH', {}, 403);
         }
@@ -272,6 +277,7 @@ app.post('/register', async (c) => {
         let { username, password, licenseKey, secret, appName, appVersion, hwid } = body;
         if (!username || !password || !licenseKey || !secret || !appName || !appVersion) return sdkJson(c, 'register', body, false, 'Missing required fields', {}, 400);
 
+        const dbSecret = getDbSecret(c.env);
         const appData = await getAppMetadata(c, secret, appName);
         if (!appData) return sdkJson(c, 'register', body, false, 'App not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'register', body, false, 'APPLICATION_PAUSED', {}, 403);
@@ -283,7 +289,7 @@ app.post('/register', async (c) => {
         const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`);
         if (!licenseDataRaw) return sdkJson(c, 'register', body, false, 'Invalid or used License', {}, 404);
         let licenseData = licenseDataRaw;
-        if (typeof licenseData === 'string') licenseData = decrypt(licenseData, c.env.DB_SECRET);
+        if (typeof licenseData === 'string') licenseData = decrypt(licenseData, dbSecret);
         if (licenseData.used) return sdkJson(c, 'register', body, false, 'Invalid or used License', {}, 409);
 
         const newUser = {
@@ -291,10 +297,10 @@ app.post('/register', async (c) => {
             expiry: licenseData.expiry || 'lifetime', subscription: licenseData.rank || 'default',
             created: new Date().toISOString()
         };
-        await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(newUser, c.env.DB_SECRET));
+        await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(newUser, dbSecret));
         licenseData.used = true;
         licenseData.associatedUser = username;
-        await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`, 'PUT', encrypt(licenseData, c.env.DB_SECRET));
+        await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`, 'PUT', encrypt(licenseData, dbSecret));
         return sdkJson(c, 'register', body, true, 'REGISTER_SUCCESS');
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });
@@ -379,12 +385,13 @@ app.post('/getvariable', async (c) => {
     try {
         const body = await c.req.json();
         let { secret, appName, appVersion, varName } = body;
+        const dbSecret = getDbSecret(c.env);
         const appData = await getAppMetadata(c, secret, appName);
         if (!appData) return sdkJson(c, 'getvariable', body, false, 'App not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'getvariable', body, false, 'APPLICATION_PAUSED', {}, 403);
         if ((appData.version || 'UNKNOWN') !== appVersion) return sdkJson(c, 'getvariable', body, false, 'VERSION_MISMATCH', { serverVersion: appData.version || 'UNKNOWN' }, 409);
         const varValueRaw = await dbRequest(c.env, `applications/${secret}/${appName}/variables/${varName}`);
-        if (varValueRaw) return sdkJson(c, 'getvariable', body, true, 'VARIABLE_FOUND', { value: decrypt(varValueRaw, c.env.DB_SECRET) });
+        if (varValueRaw) return sdkJson(c, 'getvariable', body, true, 'VARIABLE_FOUND', { value: decrypt(varValueRaw, dbSecret) });
         return sdkJson(c, 'getvariable', body, false, 'VARIABLE_NOT_FOUND', {}, 404);
     } catch (e) { return c.json(sendResponse(false, 'Server Error'), 500); }
 });
@@ -393,9 +400,10 @@ app.post('/getvariables', async (c) => {
     try {
         const body = await c.req.json();
         let { secret, appName } = body;
+        const dbSecret = getDbSecret(c.env);
         const rawVars = await dbRequest(c.env, `applications/${secret}/${appName}/variables`);
         let vars = {};
-        if (rawVars) for (const key in rawVars) vars[key] = decrypt(rawVars[key], c.env.DB_SECRET);
+        if (rawVars) for (const key in rawVars) vars[key] = decrypt(rawVars[key], dbSecret);
         return sdkJson(c, 'getvariables', body, true, rawVars ? 'VARIABLES_FOUND' : 'NO_VARIABLES', { variables: vars });
     } catch (e) { return c.json(sendResponse(false, 'Error'), 500); }
 });
@@ -408,10 +416,11 @@ app.post('/create_app', async (c) => {
             const isOwner = await verifyAppOwnership(c, ownerEmailKey, secret);
             if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'));
         }
+        const dbSecret = getDbSecret(c.env);
         const metaRaw = await dbRequest(c.env, `applications/${secret}/${appName}/metadata`);
         if (metaRaw) return c.json(sendResponse(false, 'App already exists'));
         const meta = { created: new Date().toISOString(), version: "1.0", applicationPaused: false };
-        await dbRequest(c.env, `applications/${secret}/${appName}/metadata`, 'PUT', encrypt(meta, c.env.DB_SECRET));
+        await dbRequest(c.env, `applications/${secret}/${appName}/metadata`, 'PUT', encrypt(meta, dbSecret));
         return c.json(sendResponse(true, 'APP_CREATED'));
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });
@@ -438,10 +447,11 @@ app.post('/delete_user', async (c) => {
             if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'));
         }
 
+        const dbSecret = getDbSecret(c.env);
         const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (userSnapshot) {
             let user = userSnapshot;
-            if (typeof user === 'string') user = decrypt(user, c.env.DB_SECRET);
+            if (typeof user === 'string') user = decrypt(user, dbSecret);
             if (user && user.license && user.license !== 'direct') {
                 await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${user.license}`, 'DELETE');
             }
@@ -456,14 +466,15 @@ app.post('/reset_hwid', async (c) => {
         const { secret, appName, username } = await c.req.json();
         if (!secret || !appName || !username) return c.json(sendResponse(false, 'Missing required fields'));
 
+        const dbSecret = getDbSecret(c.env);
         const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (!userSnapshot) return c.json(sendResponse(false, 'User not found'));
 
         let user = userSnapshot;
-        if (typeof user === 'string') user = decrypt(user, c.env.DB_SECRET);
+        if (typeof user === 'string') user = decrypt(user, dbSecret);
         user.sid = "";
 
-        await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(user, c.env.DB_SECRET));
+        await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(user, dbSecret));
         return c.json(sendResponse(true, 'HWID_RESET'));
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });
@@ -477,6 +488,7 @@ app.post('/create_license', async (c) => {
             if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'));
         }
 
+        const dbSecret = getDbSecret(c.env);
         const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`);
         if (licenseDataRaw) return c.json(sendResponse(false, 'License already exists'));
 
@@ -489,7 +501,7 @@ app.post('/create_license', async (c) => {
             created: new Date().toISOString()
         };
 
-        await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`, 'PUT', encrypt(licenseData, c.env.DB_SECRET));
+        await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`, 'PUT', encrypt(licenseData, dbSecret));
         return c.json(sendResponse(true, 'LICENSE_CREATED'));
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });
@@ -503,10 +515,11 @@ app.post('/delete_license', async (c) => {
             if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'));
         }
 
+        const dbSecret = getDbSecret(c.env);
         const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`);
         if (licenseDataRaw) {
             let license = licenseDataRaw;
-            if (typeof license === 'string') license = decrypt(license, c.env.DB_SECRET);
+            if (typeof license === 'string') license = decrypt(license, dbSecret);
             if (license && license.associatedUser) {
                 await dbRequest(c.env, `applications/${secret}/${appName}/users/${license.associatedUser}`, 'DELETE');
             }

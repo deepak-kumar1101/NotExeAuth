@@ -1716,27 +1716,12 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                 for (let j = 0; j < parseInt(licenseLen); j++) key += chars.charAt(Math.floor(Math.random() * chars.length));
               }
               
-              try {
-                const resp = await fetch('/create_license', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    ownerEmailKey: auth.currentUser?.email?.replace(/\./g, ','),
-                    secret: userSecret,
-                    appName: currentApp,
-                    licenseKey: key,
-                    rank: 'default',
-                    expiry: exp,
-                    note: displayName || ''
-                  })
-                });
-                const result = await resp.json();
-                if(!result.success) throw new Error(result.message);
-              } catch(err) {
-                await set(ref(db, `applications/${userSecret}/${currentApp}/licenses/${key}`), encrypt({
-                  expiry: exp, displayName: displayName || '', used: false, created: new Date().toISOString()
-                }));
-              }
+              await set(ref(db, `applications/${userSecret}/${currentApp}/licenses/${key}`), encrypt({
+                expiry: exp,
+                displayName: displayName || '',
+                used: false,
+                created: new Date().toISOString()
+              }));
               newKeys.push(key);
             }
 
