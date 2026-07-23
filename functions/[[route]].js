@@ -324,7 +324,7 @@ app.post('/register', async (c) => {
         }
 
         const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
-        if (userSnapshot && userSnapshot !== null && typeof userSnapshot === 'object' && !userSnapshot.error) {
+        if (userSnapshot && userSnapshot !== null && !userSnapshot.error && userSnapshot !== "null") {
             return sdkJson(c, 'register', body, false, 'Username taken', {}, 409);
         }
 
