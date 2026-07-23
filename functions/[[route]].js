@@ -72,25 +72,55 @@ let tokenExpiry = 0;
 
 async function getFirebaseToken(env) {
     if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
-    const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            email: env.FIREBASE_AUTH_EMAIL,
-            password: env.FIREBASE_AUTH_PASSWORD,
-            returnSecureToken: true
-        })
-    });
-    
+    try {
+        const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: env.FIREBASE_AUTH_EMAIL,
+                password: env.FIREBASE_AUTH_PASSWORD,
+                returnSecureToken: true
+            })
+        });
+        const text = await resp.text();
+        if (resp.ok && text) {
+            const data = JSON.parse(text);
+            if (data && data.idToken) {
+                cachedToken = data.idToken;
+                tokenExpiry = Date.now() + (parseInt(data.expiresIn || '3600') - 60) * 1000;
+                return cachedToken;
+            }
+        }
+    } catch (e) {
+        console.error("Firebase auth token error:", e);
+    }
+    return cachedToken;
 }
 
 async function dbRequest(env, path, method = 'GET', body = null) {
-    const token = await getFirebaseToken(env);
-    const url = `${env.FIREBASE_DB_URL}/${path}.json?auth=${token}`;
+    let token = await getFirebaseToken(env);
+    let url = token ? `${env.FIREBASE_DB_URL}/${path}.json?auth=${token}` : `${env.FIREBASE_DB_URL}/${path}.json`;
     const options = { method, headers: { 'Content-Type': 'application/json' } };
     if (body) options.body = JSON.stringify(body);
-    const resp = await fetch(url, options);
-    return await resp.json();
+    
+    let resp = await fetch(url, options);
+
+    if (!resp.ok && token) {
+        cachedToken = null;
+        tokenExpiry = 0;
+        token = await getFirebaseToken(env);
+        const retryUrl = token ? `${env.FIREBASE_DB_URL}/${path}.json?auth=${token}` : `${env.FIREBASE_DB_URL}/${path}.json`;
+        resp = await fetch(retryUrl, options);
+    }
+
+    const text = await resp.text();
+    if (!text || text.trim() === '' || text.trim() === 'null') return null;
+
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        return null;
+    }
 }
 
 const sendResponse = (success, message, extraData = {}) => ({ success, message, ...extraData });
