@@ -320,7 +320,7 @@ app.post('/isapplicationpaused', async (c) => {
 app.post('/create_user', async (c) => {
     try {
         const body = await c.req.json();
-        let { ownerEmailKey, username, password, secret, appName, appVersion, hwid, expiry, subscription } = body;
+        let { ownerEmailKey, username, password, secret, appName, appVersion, hwid, expiry, subscription, hwidLock, oneTime } = body;
         if (!username || !password || !secret || !appName || !appVersion) return c.json(sendResponse(false, 'Missing required fields'));
         
         if (ownerEmailKey) {
@@ -336,17 +336,20 @@ app.post('/create_user', async (c) => {
         const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (userSnapshot) return c.json(sendResponse(false, 'Username taken'));
 
+        const dbSecret = c.env.DB_SECRET || 'MyDeepXAuthSecretKey_2026!#';
+
         const newUser = {
             password,
-            hwidLock: true,
+            hwidLock: hwidLock !== undefined ? hwidLock : true,
             sid: hwid || "",
             isBanned: false,
             license: 'direct',
             expiry: expiry || 'lifetime',
             subscription: subscription || 'default',
+            oneTime: oneTime || false,
             created: new Date().toISOString()
         };
-        await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(newUser, c.env.DB_SECRET));
+        await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(newUser, dbSecret));
         return c.json(sendResponse(true, 'USER_CREATED'));
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });

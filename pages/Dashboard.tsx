@@ -1535,27 +1535,18 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
           if (!u || !p || !userSecret || !currentApp) return;
           const exp = calculateExpiry(createVal, createUnit);
           try {
-            const resp = await fetch('/create_user', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ownerEmailKey: auth.currentUser?.email?.replace(/\./g, ','),
-                username: u,
-                password: p,
-                secret: userSecret,
-                appName: currentApp,
-                appVersion: apps[currentApp]?.version || '1.0',
-                hwid: "",
-                expiry: exp,
-                subscription: "default"
-              })
-            });
-            const result = await resp.json();
-            if(!result.success) throw new Error(result.message);
-          } catch(err) {
             await set(ref(db, `applications/${userSecret}/${currentApp}/users/${u}`), encrypt({
-              password: p, expiry: exp, isBanned: false, hwidLock: createHwidLock, sid: "", oneTime: createOneTime, created: new Date().toISOString()
+              password: p,
+              expiry: exp,
+              isBanned: false,
+              hwidLock: createHwidLock,
+              sid: "",
+              oneTime: createOneTime,
+              created: new Date().toISOString()
             }));
+          } catch(err: any) {
+            addToast(err.message || 'Failed to create user', 'error');
+            return;
           }
           setShowCreateUser(false);
           await sendWebhook('notifyAddUser', {
