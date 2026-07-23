@@ -880,7 +880,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                       <div className="p-10 text-center text-muted">No users found.</div>
                     ) : filteredUsers.map(([name, user]) => (
                       <div key={name} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors group">
-                        <div className="col-span-4 font-bold truncate">{name}</div>
+                        <div className="col-span-4 font-bold truncate">{user.username || name}</div>
                         <div className="col-span-2">
                           {user.isBanned ? <span className="text-[10px] bg-danger/10 text-danger px-2 py-0.5 rounded font-bold uppercase">Banned</span> : <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded font-bold uppercase">Active</span>}
                         </div>

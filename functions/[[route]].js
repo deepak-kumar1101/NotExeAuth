@@ -114,6 +114,10 @@ async function dbRequest(env, path, method = 'GET', body = null) {
     }
 
     const text = await resp.text();
+    if (!resp.ok && method !== 'GET') {
+        throw new Error(`Database write failed (${resp.status}): ${text}`);
+    }
+
     if (!text || text.trim() === '' || text.trim() === 'null') return null;
 
     try {
@@ -378,6 +382,7 @@ app.post('/register', async (c) => {
         }
 
         const newUser = {
+            username: username,
             password,
             hwidLock: true,
             sid: (hwid && hwid !== "" && hwid !== "HWID_FAIL") ? hwid : "",

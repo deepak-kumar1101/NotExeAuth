@@ -55,6 +55,7 @@ export interface AppMetadata {
 }
 
 export interface User {
+  username?: string;
   password?: string;
   expiry: string | 'lifetime';
   isBanned: boolean;

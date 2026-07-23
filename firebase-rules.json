@@ -1,40 +1,40 @@
 {
   "rules": {
     ".read": true,
-    ".write": "auth != null",
+    ".write": true,
 
     "resellers": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
 
     "applications": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
 
     "webhookSettings": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".read": true,
+      ".write": true
     },
 
     "customers": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".read": true,
+      ".write": true
     },
 
     "system": {
       "stats": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": true
       },
       "plans": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": true
       },
       "config": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": true
       }
     }
   }

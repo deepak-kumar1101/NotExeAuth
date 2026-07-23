@@ -12,8 +12,8 @@ from dxa import DXA
 # DEEP X AUTH DEFAULT APPLICATION CONFIGURATION
 # (You can also edit these live in the app via the ⚙ button!)
 # =========================================================
-DEFAULT_APP_NAME = "opti"
-DEFAULT_SECRET_KEY = "DXA-K6EN1PCEMF"
+DEFAULT_APP_NAME = "test"
+DEFAULT_SECRET_KEY = "DXA-8AGOE52C6UL"
 DEFAULT_APP_VERSION = "1.0"
 DEFAULT_API_URL = "https://deepxauth.pages.dev"
 # =========================================================
