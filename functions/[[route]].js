@@ -432,18 +432,14 @@ app.post('/versioncheck', async (c) => {
         const appData = await getAppMetadata(c, secret, appName);
         if (!appData) return sdkJson(c, 'versioncheck', body, false, 'App not found', {}, 404);
 
-        const currentVersion = appData.version || 'UNKNOWN';
-        if (currentVersion === appVersion) return sdkJson(c, 'versioncheck', body, true, 'VERSION_OK', { serverVersion: currentVersion });
+        const currentVersion = appData.version || '1.0';
+        if (!appVersion || currentVersion === appVersion || currentVersion === '1.0' || !appData.version) {
+            return sdkJson(c, 'versioncheck', body, true, 'VERSION_OK', { serverVersion: currentVersion });
+        }
         return sdkJson(c, 'versioncheck', body, false, 'VERSION_MISMATCH', { serverVersion: currentVersion }, 409);
-    }catch (e) {
-    console.error("Version Check Error:", e);
-
-    return c.json({
-        success: false,
-        message: e.message,
-        stack: e.stack
-    }, 500);
-}
+    } catch (e) {
+        return sdkJson(c, 'versioncheck', {}, false, 'Server error: ' + e.message, {}, 500);
+    }
 });
 
 app.post('/getvariable', async (c) => {
