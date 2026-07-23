@@ -74,7 +74,11 @@ const Login: React.FC = () => {
     } catch (err: any) {
       console.error("Login error details:", err);
       let msg = err.message || "Failed to login.";
-      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") msg = "Invalid email or password.";
+      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+        msg = "Invalid email or password.";
+      } else if (err.code === "auth/too-many-requests") {
+        msg = "Access temporarily blocked due to multiple failed login attempts. Please wait 15 minutes or use Google / GitHub login below.";
+      }
       setError(msg);
     }
     setLoading(false);
