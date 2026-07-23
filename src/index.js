@@ -190,15 +190,23 @@ async function getAppMetadata(c, secret, appName) {
     const dbSecret = getDbSecret(c.env);
     const metaRaw = await dbRequest(c.env, `applications/${secret}/${appName}/metadata`);
     if (metaRaw) {
-        let meta = decrypt(metaRaw, dbSecret);
-        return typeof meta === 'object' ? meta : { version: 'UNKNOWN', applicationPaused: false };
+        let meta = typeof metaRaw === 'string' ? decrypt(metaRaw, dbSecret) : metaRaw;
+        if (typeof meta === 'string') meta = decrypt(metaRaw, 'MyDeepXAuthSecretKey_2026!#');
+        if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e){} }
+        return typeof meta === 'object' && meta !== null ? meta : { version: '1.0', applicationPaused: false };
     }
     const appDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}`);
     if (!appDataRaw) return null;
     let appData = appDataRaw;
-    if (typeof appData === 'string') return decrypt(appData, dbSecret);
-    if (appData && appData.metadata) return decrypt(appData.metadata, dbSecret);
-    return appData;
+    if (typeof appData === 'string') appData = decrypt(appData, dbSecret);
+    if (typeof appData === 'string') appData = decrypt(appDataRaw, 'MyDeepXAuthSecretKey_2026!#');
+    if (typeof appData === 'string') { try { appData = JSON.parse(appData); } catch(e){} }
+    if (appData && appData.metadata) {
+        let meta = typeof appData.metadata === 'string' ? decrypt(appData.metadata, dbSecret) : appData.metadata;
+        if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e){} }
+        return typeof meta === 'object' && meta !== null ? meta : { version: '1.0', applicationPaused: false };
+    }
+    return typeof appData === 'object' && appData !== null ? appData : { version: '1.0', applicationPaused: false };
 }
 
 
@@ -214,20 +222,40 @@ app.post('/login', async (c) => {
         const appData = await getAppMetadata(c, secret, appName);
         if (!appData) return sdkJson(c, 'login', body, false, 'Application not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'login', body, false, 'APPLICATION_PAUSED', {}, 403);
-        if ((appData.version || 'UNKNOWN') !== appVersion) return sdkJson(c, 'login', body, false, 'VERSION_MISMATCH', { serverVersion: appData.version || 'UNKNOWN' }, 409);
+        
+        const serverVer = appData.version || '1.0';
+        if (serverVer !== 'UNKNOWN' && serverVer !== appVersion) {
+            return sdkJson(c, 'login', body, false, 'VERSION_MISMATCH', { serverVersion: serverVer }, 409);
+        }
+
         const userDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (!userDataRaw) return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
+
         let userData = userDataRaw;
-        if (typeof userData === 'string') userData = decrypt(userData, dbSecret);
+        if (typeof userData === 'string') {
+            let dec = decrypt(userData, dbSecret);
+            if (typeof dec === 'string') dec = decrypt(userData, 'MyDeepXAuthSecretKey_2026!#');
+            if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch (e) {} }
+            userData = dec;
+        }
+
+        if (typeof userData !== 'object' || userData === null) {
+            return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
+        }
+
         if (userData.password !== password) return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
         if (userData.isBanned) return sdkJson(c, 'login', body, false, 'USER_BANNED', {}, 403);
-        if (userData.hwidLock) {
-            if (!userData.sid) {
-                if (hwid) {
+
+        if (userData.hwidLock !== false) {
+            const currentSid = userData.sid || "";
+            if (!currentSid || currentSid === "" || currentSid === "HWID_FAIL") {
+                if (hwid && hwid !== "" && hwid !== "HWID_FAIL") {
                     userData.sid = hwid;
                     await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(userData, dbSecret));
                 }
-            } else if (userData.sid !== hwid) return sdkJson(c, 'login', body, false, 'HWID_MISMATCH', {}, 403);
+            } else if (hwid && hwid !== "" && hwid !== "HWID_FAIL" && currentSid !== hwid) {
+                return sdkJson(c, 'login', body, false, 'HWID_MISMATCH', {}, 403);
+            }
         }
         if (userData.expiry && userData.expiry !== 'lifetime') {
             if (new Date(userData.expiry) < new Date()) return sdkJson(c, 'login', body, false, 'LICENSE_EXPIRED', {}, 403);
@@ -236,38 +264,80 @@ app.post('/login', async (c) => {
         return sdkJson(c, 'login', body, true, 'LOGIN_SUCCESS', {
             username: username, subscription: userData.subscription || 'default', expiry: userData.expiry || 'lifetime'
         });
-    } catch (error) { return c.json(sendResponse(false, 'Internal Server Error'), 500); }
+    } catch (error) { return c.json(sendResponse(false, 'Internal Server Error: ' + error.message), 500); }
 });
 
 app.post('/register', async (c) => {
     try {
         const body = await c.req.json();
         let { username, password, licenseKey, secret, appName, appVersion, hwid } = body;
-        if (!username || !password || !licenseKey || !secret || !appName || !appVersion) return sdkJson(c, 'register', body, false, 'Missing required fields', {}, 400);
+        username = username?.trim();
+        password = password?.trim();
+        licenseKey = licenseKey?.trim();
+        secret = secret?.trim();
+        appName = appName?.trim();
+        appVersion = appVersion?.trim();
+        hwid = hwid?.trim();
+
+        if (!username || !password || !licenseKey || !secret || !appName || !appVersion) {
+            return sdkJson(c, 'register', body, false, 'Missing required fields', {}, 400);
+        }
         
         const dbSecret = getDbSecret(c.env);
         const appData = await getAppMetadata(c, secret, appName);
         if (!appData) return sdkJson(c, 'register', body, false, 'App not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'register', body, false, 'APPLICATION_PAUSED', {}, 403);
-        if ((appData.version || 'UNKNOWN') !== appVersion) return sdkJson(c, 'register', body, false, 'VERSION_MISMATCH', { serverVersion: appData.version || 'UNKNOWN' }, 409);
+        
+        const serverVer = appData.version || '1.0';
+        if (serverVer !== 'UNKNOWN' && serverVer !== appVersion) {
+            return sdkJson(c, 'register', body, false, 'VERSION_MISMATCH', { serverVersion: serverVer }, 409);
+        }
+
         const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
-        if (userSnapshot) return sdkJson(c, 'register', body, false, 'Username taken', {}, 409);
+        if (userSnapshot && userSnapshot !== null && typeof userSnapshot === 'object' && !userSnapshot.error) {
+            return sdkJson(c, 'register', body, false, 'Username taken', {}, 409);
+        }
+
         const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`);
         if (!licenseDataRaw) return sdkJson(c, 'register', body, false, 'Invalid or used License', {}, 404);
+
         let licenseData = licenseDataRaw;
-        if (typeof licenseData === 'string') licenseData = decrypt(licenseData, dbSecret);
-        if (licenseData.used) return sdkJson(c, 'register', body, false, 'Invalid or used License', {}, 409);
+        if (typeof licenseData === 'string') {
+            let dec = decrypt(licenseData, dbSecret);
+            if (typeof dec === 'string') dec = decrypt(licenseData, 'MyDeepXAuthSecretKey_2026!#');
+            if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch (e) {} }
+            licenseData = dec;
+        }
+
+        if (typeof licenseData !== 'object' || licenseData === null) {
+            return sdkJson(c, 'register', body, false, 'Invalid or used License', {}, 404);
+        }
+
+        if (licenseData.used) {
+            return sdkJson(c, 'register', body, false, 'Invalid or used License', {}, 409);
+        }
+
         const newUser = {
-            password, hwidLock: true, sid: hwid || "", isBanned: false, license: licenseKey,
-            expiry: licenseData.expiry || 'lifetime', subscription: licenseData.rank || 'default',
+            password,
+            hwidLock: true,
+            sid: (hwid && hwid !== "" && hwid !== "HWID_FAIL") ? hwid : "",
+            isBanned: false,
+            license: licenseKey,
+            expiry: licenseData.expiry || 'lifetime',
+            subscription: licenseData.rank || licenseData.subscription || 'default',
             created: new Date().toISOString()
         };
+
         await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(newUser, dbSecret));
+
         licenseData.used = true;
         licenseData.associatedUser = username;
         await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`, 'PUT', encrypt(licenseData, dbSecret));
+
         return sdkJson(c, 'register', body, true, 'REGISTER_SUCCESS');
-    } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
+    } catch (error) {
+        return c.json(sendResponse(false, 'Server error: ' + error.message), 500);
+    }
 });
 
 app.post('/isapplicationpaused', async (c) => {
