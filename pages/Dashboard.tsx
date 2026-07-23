@@ -288,19 +288,25 @@ const Dashboard: React.FC = () => {
     onValue(ref(db, `applications/${userSecret}/${currentApp}/users`), (snap) => {
       const raw = snap.val() || {};
       const dec: Record<string, User> = {};
-      Object.keys(raw).forEach(k => dec[k] = decrypt(raw[k]));
+      Object.keys(raw).forEach(k => {
+        const item = decrypt(raw[k], userSecret);
+        if (item && typeof item === 'object') dec[k] = item;
+      });
       setUsers(dec);
     });
     onValue(ref(db, `applications/${userSecret}/${currentApp}/licenses`), (snap) => {
       const raw = snap.val() || {};
       const dec: Record<string, License> = {};
-      Object.keys(raw).forEach(k => dec[k] = decrypt(raw[k]));
+      Object.keys(raw).forEach(k => {
+        const item = decrypt(raw[k], userSecret);
+        if (item && typeof item === 'object') dec[k] = item;
+      });
       setLicenses(dec);
     });
     onValue(ref(db, `applications/${userSecret}/${currentApp}/variables`), (snap) => {
       const raw = snap.val() || {};
       const dec: Record<string, string> = {};
-      Object.keys(raw).forEach(k => dec[k] = decrypt(raw[k]));
+      Object.keys(raw).forEach(k => dec[k] = decrypt(raw[k], userSecret));
       setVariables(dec);
     });
     onValue(ref(db, `applications/${userSecret}/${currentApp}/variables`), (snap) => {
