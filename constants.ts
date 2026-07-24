@@ -13,4 +13,3 @@ export const FIREBASE_CONFIG = {
 
 export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "";
 export const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "";
-export const TURNSTILE_SECRET_KEY = import.meta.env.VITE_TURNSTILE_SECRET_KEY || "";

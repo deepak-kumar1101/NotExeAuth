@@ -1,11 +1,8 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true,
-
     "resellers": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
 
     "applications": {
@@ -14,27 +11,27 @@
     },
 
     "webhookSettings": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
 
     "customers": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
 
     "system": {
       "stats": {
         ".read": true,
-        ".write": true
+        ".write": "auth != null"
       },
       "plans": {
         ".read": true,
-        ".write": true
+        ".write": "auth != null"
       },
       "config": {
         ".read": true,
-        ".write": true
+        ".write": "auth != null"
       }
     }
   }
