@@ -326,15 +326,16 @@ const Dashboard: React.FC = () => {
     const emailKey = auth.currentUser.email.replace(/\./g, ',');
 
     const loadResellers = () => {
-      const resellersRef = ref(db, 'resellers');
-      onValue(resellersRef, (snap) => {
+      const q = query(ref(db, 'resellers'), orderByChild('createdBy'), equalTo(emailKey));
+      onValue(q, (snap) => {
         const raw = snap.val() || {};
         const dec: Record<string, Reseller> = {};
 
-        Object.entries(raw).forEach(([hash, ciphertext]) => {
+        Object.entries(raw).forEach(([hash, item]: [string, any]) => {
           try {
+            const ciphertext = typeof item === 'object' && item !== null && item.payload ? item.payload : item;
             const r = decrypt(ciphertext as string) as Reseller;
-            if (r && r.createdBy === emailKey) {
+            if (r) {
               dec[hash] = r;
             }
           } catch (e) {
@@ -721,11 +722,11 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
 
         <div className="p-4 border-t border-white/[0.08] space-y-2">
           {auth.currentUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
-            <Link to="/admin" className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-2xl hover:bg-amber-500/20 transition-all shadow-sm">
+            <Link to="/admin" className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-2xl hover:bg-amber-500/20 transition-all shadow-sm effect-magnetic">
               <Crown size={16} /> Admin Console
             </Link>
           )}
-          <button onClick={logout} className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 rounded-2xl transition-all">
+          <button onClick={logout} className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 rounded-2xl transition-all effect-repulsive">
             <span className="truncate max-w-[140px] text-slate-300 font-mono text-[11px]">{auth.currentUser?.email}</span>
             <LogOut size={16} className="text-rose-400 shrink-0" />
           </button>
@@ -1928,7 +1929,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
               panelName: d.get('panelName') as string || undefined
             };
 
-            await set(ref(db, `resellers/${hash}`), encrypt(newReseller));
+            await set(ref(db, `resellers/${hash}`), { createdBy: newReseller.createdBy, payload: encrypt(newReseller) });
             setShowCreateReseller(false);
             addToast('Reseller Created');
           }} className="space-y-4">
@@ -2003,7 +2004,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
             const pwd = d.get('password') as string;
             if (pwd) updated.passwordHash = pwd;
 
-            await set(ref(db, `resellers/${r.hash}`), encrypt(updated));
+            await set(ref(db, `resellers/${r.hash}`), { createdBy: r.createdBy || auth.currentUser?.email?.replace(/\./g, ',') || '', payload: encrypt(updated) });
             setShowEditReseller(null);
             addToast('Reseller updated');
           }} className="space-y-4">

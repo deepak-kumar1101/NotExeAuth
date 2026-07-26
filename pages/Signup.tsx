@@ -124,15 +124,15 @@ const Signup: React.FC = () => {
       </div>
 
       <div className="w-full max-w-md px-4 py-12 relative z-20 animate-fade-in my-auto">
-        <Link to="/" className="inline-flex items-center text-xs font-semibold text-slate-400 hover:text-white mb-6 transition-colors group">
+        <Link to="/" className="inline-flex items-center text-xs font-semibold text-slate-400 hover:text-white mb-6 transition-colors group effect-magnetic">
           <ArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" size={15} /> Back to Home
         </Link>
 
-        <div className="glass-card-premium p-8 md:p-10 rounded-3xl border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] relative overflow-hidden backdrop-blur-3xl">
+        <div className="glass-card-premium p-8 md:p-10 rounded-3xl border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] relative overflow-hidden backdrop-blur-3xl glass-reflection">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/80 to-transparent" />
 
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-white via-indigo-100 to-indigo-300 text-black mb-4 shadow-lg shadow-white/20">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-white via-indigo-100 to-indigo-300 text-black mb-4 shadow-lg shadow-white/20 effect-repulsive cursor-pointer">
               <span className="font-black text-sm tracking-tighter">DXA</span>
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-white mb-1.5">Create Account</h1>
@@ -196,7 +196,7 @@ const Signup: React.FC = () => {
                   {agree && <Check size={12} className="text-black stroke-[3px]" />}
                 </div>
                 <span className="text-xs text-slate-400 leading-relaxed font-medium">
-                  I agree to the <Link to="/tos" className="text-white hover:underline font-bold">Terms of Service</Link> and Privacy Policy.
+                  I agree to the <Link to="/tos" className="text-white hover:underline font-bold effect-magnetic inline-block">Terms of Service</Link> and Privacy Policy.
                 </span>
               </label>
             </div>
@@ -208,7 +208,7 @@ const Signup: React.FC = () => {
             <button 
               disabled={loading || !agree || !turnstileToken} 
               type="submit" 
-              className="btn-magnetic-primary h-12 w-full text-xs tracking-wider uppercase font-extrabold flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="btn-magnetic-primary effect-magnetic h-12 w-full text-xs tracking-wider uppercase font-extrabold flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : 'Create Account'}
             </button>
@@ -223,7 +223,7 @@ const Signup: React.FC = () => {
             <button 
               type="button"
               onClick={() => socialLogin(new GoogleAuthProvider())} 
-              className="btn-magnetic-glass h-11 w-full text-xs font-bold flex items-center justify-center gap-3 rounded-xl border border-white/10"
+              className="btn-magnetic-glass effect-repulsive h-11 w-full text-xs font-bold flex items-center justify-center gap-3 rounded-xl border border-white/10"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -236,7 +236,7 @@ const Signup: React.FC = () => {
             <button 
               type="button"
               onClick={() => socialLogin(new GithubAuthProvider())} 
-              className="btn-magnetic-glass h-11 w-full text-xs font-bold flex items-center justify-center gap-3 rounded-xl border border-white/10"
+              className="btn-magnetic-glass effect-repulsive h-11 w-full text-xs font-bold flex items-center justify-center gap-3 rounded-xl border border-white/10"
             >
               <Github size={17} className="text-white" />
               <span>Continue with GitHub</span>
@@ -244,7 +244,7 @@ const Signup: React.FC = () => {
           </div>
 
           <p className="text-center mt-7 text-xs text-slate-400 font-medium">
-            Already have an account? <Link to="/login" className="text-white font-bold hover:underline">Log in</Link>
+            Already have an account? <Link to="/login" className="text-white font-bold hover:underline effect-magnetic inline-block">Log in</Link>
           </p>
         </div>
 

@@ -224,22 +224,22 @@ if (response.Success) {
 
       
       <div className="fixed top-5 left-0 right-0 z-50 flex justify-center px-4">
-        <nav className={`w-full max-w-5xl transition-all duration-300 rounded-full border ${isScrolled ? 'bg-[#0d0f17]/80 backdrop-blur-xl border-white/[0.12] py-2.5 px-6 shadow-2xl shadow-black/80' : 'bg-white/[0.02] backdrop-blur-md border-white/[0.08] py-3.5 px-7'}`}>
+        <nav className={`w-full max-w-5xl transition-all duration-300 rounded-full border ${isScrolled ? 'bg-[#0d0f17]/85 backdrop-blur-2xl border-white/[0.15] py-2.5 px-6 shadow-2xl shadow-black/90 glass-reflection' : 'bg-white/[0.03] backdrop-blur-xl border-white/[0.1] py-3.5 px-7'}`}>
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-white to-slate-200 text-black flex items-center justify-center font-black text-xs transition-transform group-hover:scale-105 shadow-md shadow-white/10">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-white via-slate-200 to-indigo-200 text-black flex items-center justify-center font-black text-xs transition-transform group-hover:scale-110 shadow-lg shadow-white/20">
                 DXA
               </div>
               <span className="font-bold text-xs uppercase tracking-[0.2em] text-white group-hover:text-indigo-300 transition-colors">Deep X Auth</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-7">
-              <Link to="/shop" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors">Shop</Link>
-              <Link to="/tos" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors">Terms</Link>
-              <Link to="/docs" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors">Documentation</Link>
+              <Link to="/shop" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors effect-magnetic">Shop</Link>
+              <Link to="/tos" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors effect-magnetic">Terms</Link>
+              <Link to="/docs" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors effect-magnetic">Documentation</Link>
               <div className="h-4 w-px bg-white/10 mx-1" />
-              <Link to="/login" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors">Log In</Link>
-              <Link to="/signup" className="btn-saas-primary px-5 py-2 text-xs font-bold uppercase tracking-wider shadow-lg">
+              <Link to="/login" className="text-[11px] font-semibold tracking-wider text-slate-300 hover:text-white transition-colors effect-magnetic">Log In</Link>
+              <Link to="/signup" className="btn-magnetic-primary effect-magnetic px-5 py-2 text-xs font-bold uppercase tracking-wider shadow-lg">
                 Sign Up
               </Link>
             </div>
@@ -251,13 +251,13 @@ if (response.Success) {
 
           
           {isMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 right-0 mt-3 glass-card border border-white/10 p-6 flex flex-col gap-4 rounded-3xl shadow-2xl animate-fade-in">
-              <Link to="/shop" className="text-xs font-semibold text-slate-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>Shop</Link>
-              <Link to="/tos" className="text-xs font-semibold text-slate-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>Terms of Service</Link>
-              <Link to="/docs" className="text-xs font-semibold text-slate-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>Documentation</Link>
+            <div className="md:hidden absolute top-full left-0 right-0 mt-3 glass-card border border-white/10 p-6 flex flex-col gap-4 rounded-3xl shadow-2xl animate-fade-in glass-reflection">
+              <Link to="/shop" className="text-xs font-semibold text-slate-300 hover:text-white effect-magnetic" onClick={() => setIsMenuOpen(false)}>Shop</Link>
+              <Link to="/tos" className="text-xs font-semibold text-slate-300 hover:text-white effect-magnetic" onClick={() => setIsMenuOpen(false)}>Terms of Service</Link>
+              <Link to="/docs" className="text-xs font-semibold text-slate-300 hover:text-white effect-magnetic" onClick={() => setIsMenuOpen(false)}>Documentation</Link>
               <hr className="border-white/10 my-1" />
-              <Link to="/login" className="text-xs font-semibold text-white" onClick={() => setIsMenuOpen(false)}>Log In</Link>
-              <Link to="/signup" className="btn-saas-primary text-center py-3 text-xs font-bold uppercase tracking-wider" onClick={() => setIsMenuOpen(false)}>Get Started</Link>
+              <Link to="/login" className="text-xs font-semibold text-white effect-magnetic" onClick={() => setIsMenuOpen(false)}>Log In</Link>
+              <Link to="/signup" className="btn-magnetic-primary effect-magnetic text-center py-3 text-xs font-bold uppercase tracking-wider" onClick={() => setIsMenuOpen(false)}>Get Started</Link>
             </div>
           )}
         </nav>
@@ -267,43 +267,43 @@ if (response.Success) {
         
         <section className="min-h-screen flex flex-col justify-center pt-28 pb-16 px-6 relative">
           
-          <div className="absolute top-36 left-[8%] hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md text-[11px] font-semibold text-slate-300 shadow-xl animate-bounce" style={{ animationDuration: '4s' }}>
+          <div className="absolute top-36 left-[8%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/[0.04] border border-white/12 backdrop-blur-xl text-[11px] font-semibold text-slate-200 shadow-2xl animate-float-slow glass-reflection effect-repulsive cursor-pointer">
             <ShieldCheck size={14} className="text-emerald-400" /> HWID Locked
           </div>
-          <div className="absolute top-48 right-[10%] hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md text-[11px] font-semibold text-slate-300 shadow-xl animate-bounce" style={{ animationDuration: '5s' }}>
+          <div className="absolute top-48 right-[10%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/[0.04] border border-white/12 backdrop-blur-xl text-[11px] font-semibold text-slate-200 shadow-2xl animate-float-delayed glass-reflection effect-repulsive cursor-pointer">
             <Zap size={14} className="text-amber-400" /> &lt;5ms API Latency
           </div>
-          <div className="absolute bottom-40 left-[10%] hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md text-[11px] font-semibold text-slate-300 shadow-xl animate-bounce" style={{ animationDuration: '6s' }}>
+          <div className="absolute bottom-40 left-[10%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/[0.04] border border-white/12 backdrop-blur-xl text-[11px] font-semibold text-slate-200 shadow-2xl animate-float-slow glass-reflection effect-repulsive cursor-pointer">
             <Database size={14} className="text-indigo-400" /> Cloud Variables
           </div>
-          <div className="absolute bottom-32 right-[8%] hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md text-[11px] font-semibold text-slate-300 shadow-xl animate-bounce" style={{ animationDuration: '4.5s' }}>
+          <div className="absolute bottom-32 right-[8%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/[0.04] border border-white/12 backdrop-blur-xl text-[11px] font-semibold text-slate-200 shadow-2xl animate-float-delayed glass-reflection effect-repulsive cursor-pointer">
             <Lock size={14} className="text-purple-400" /> AES-256 Encrypted
           </div>
 
           <div className="max-w-6xl mx-auto text-center animate-slide-up">
             
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/[0.04] border border-white/10 text-xs font-semibold text-slate-300 mb-8 backdrop-blur-md shadow-sm">
+            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/[0.05] border border-white/15 text-xs font-semibold text-slate-200 mb-8 backdrop-blur-2xl shadow-xl glass-reflection effect-repulsive cursor-pointer">
               <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Authentication Architecture v2.0 Released</span>
-              <ChevronRight size={14} className="text-slate-400" />
+              <ChevronRight size={14} className="text-indigo-300" />
             </div>
 
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight mb-8 leading-[1.05] text-white">
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight mb-8 leading-[1.05] text-white drop-shadow-2xl">
               Enterprise Software <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
                 Licensing & Security.
               </span>
             </h1>
 
-            <p className="text-slate-400 text-base sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+            <p className="text-slate-300 text-base sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
               High-performance, hardware-bound authentication and cloud licensing built for modern developers. Protect your software and scale with zero friction.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-              <Link to="/signup" className="btn-saas-primary h-13 px-8 text-xs font-bold tracking-wider uppercase flex items-center gap-2 shadow-glow-sm">
+              <Link to="/signup" className="btn-magnetic-primary effect-magnetic h-13 px-8 text-xs font-bold tracking-wider uppercase flex items-center gap-2 shadow-glow-md">
                 Start Building Free <ArrowRight size={15} />
               </Link>
-              <Link to="/docs" className="btn-saas-secondary h-13 px-8 text-xs font-semibold tracking-wider uppercase flex items-center gap-2">
+              <Link to="/docs" className="btn-magnetic-glass effect-repulsive h-13 px-8 text-xs font-semibold tracking-wider uppercase flex items-center gap-2">
                 Explore Documentation <ExternalLink size={14} />
               </Link>
             </div>
@@ -311,25 +311,25 @@ if (response.Success) {
 
           
           <div className="max-w-5xl mx-auto w-full animate-fade-in">
-            <div className="glass-card rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+            <div className="glass-card-premium rounded-3xl border border-white/12 overflow-hidden shadow-2xl glass-reflection">
               
               <div className="p-4 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-rose-500/80" />
                   <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                   <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                  <span className="ml-2 text-xs font-semibold text-slate-400">dxa-dashboard-v2.preview</span>
+                  <span className="ml-2 text-xs font-mono text-slate-400">dxa-dashboard-v2.preview</span>
                 </div>
                 <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/10">
                   <button 
                     onClick={() => setPreviewTab('ui')}
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${previewTab === 'ui' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${previewTab === 'ui' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'}`}
                   >
                     UI Preview
                   </button>
                   <button 
                     onClick={() => setPreviewTab('code')}
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${previewTab === 'code' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${previewTab === 'code' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'}`}
                   >
                     SDK Code
                   </button>
@@ -498,7 +498,7 @@ if (response.Success) {
               { label: 'Auth Latency', val: '< 5ms', icon: <Zap size={16} />, color: 'text-amber-400' },
               { label: 'Encryption', val: 'AES-256', icon: <ShieldCheck size={16} />, color: 'text-purple-400' },
             ].map((stat, i) => (
-              <div key={i} className="glass-card glass-card-hover p-6 rounded-2xl">
+              <div key={i} className="glass-card-premium p-6 rounded-2xl glass-reflection">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
                   {stat.icon} <span>{stat.label}</span>
                 </div>
@@ -532,7 +532,7 @@ if (response.Success) {
               { icon: <Terminal className="w-5 h-5 text-amber-400" />, title: 'Native Client SDKs', desc: 'Drop-in single-header and zero-dependency libraries for C#, Python, C++, and Rust.' },
               { icon: <Key className="w-5 h-5 text-cyan-400" />, title: 'Bulk Key Engine', desc: 'Generate single or thousands of license keys with customizable prefixes, lengths, and expiry dates.' },
             ].map((f, i) => (
-              <div key={i} className="glass-card glass-card-hover p-7 rounded-2xl flex flex-col justify-between">
+              <div key={i} className="glass-card-premium p-7 rounded-2xl flex flex-col justify-between glass-reflection">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-5">
                     {f.icon}
@@ -547,7 +547,7 @@ if (response.Success) {
 
         
         <section className="py-20 px-6 max-w-5xl mx-auto">
-          <div className="glass-card p-8 md:p-12 rounded-3xl border border-white/10 relative overflow-hidden">
+          <div className="glass-card-premium p-8 md:p-12 rounded-3xl border border-white/12 relative overflow-hidden glass-reflection">
             <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
             <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
               <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
@@ -598,7 +598,7 @@ if (response.Success) {
               Get started in less than 5 minutes with our zero-dependency SDKs and intuitive dashboard.
             </p>
             <div className="pt-2">
-              <Link to="/signup" className="btn-saas-primary inline-flex h-14 px-10 text-xs font-bold tracking-wider uppercase items-center gap-3 shadow-glow-md">
+              <Link to="/signup" className="btn-magnetic-primary inline-flex h-14 px-10 text-xs font-bold tracking-wider uppercase items-center gap-3 shadow-glow-md">
                 Create Free Account <ChevronRight size={16} />
               </Link>
             </div>

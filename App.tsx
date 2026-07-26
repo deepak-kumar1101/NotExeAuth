@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './services/firebase';
 
@@ -14,6 +13,11 @@ import ResellerPortal from './pages/ResellerPortal';
 import Shop from './pages/Shop';
 import TOS from './pages/TOS';
 import Docs from './pages/Docs';
+import NotFound from './pages/NotFound';
+
+import LoadingScreen from './components/LoadingScreen';
+import CursorGlow from './components/CursorGlow';
+
 import { onValue, ref } from 'firebase/database';
 import { db } from './services/firebase';
 import { ADMIN_EMAIL } from './constants';
@@ -24,8 +28,8 @@ const MaintenanceView: React.FC<{ status?: string, message?: string }> = ({ stat
   <div className="flex h-screen items-center justify-center bg-background px-4">
     <div className="text-center max-w-md">
       <div className="mb-6 flex justify-center">
-        <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-          <Hammer className="w-12 h-12 text-white" />
+        <div className="p-6 bg-white/5 rounded-3xl border border-white/10 glass-reflection">
+          <Hammer className="w-12 h-12 text-white animate-bounce" />
         </div>
       </div>
       <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Maintenance Mode</h1>
@@ -33,8 +37,8 @@ const MaintenanceView: React.FC<{ status?: string, message?: string }> = ({ stat
         {message || "We're currently performing some improvements to the site. Please check back later!"}
       </p>
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 border-dashed">
-        <div className="w-2 h-2 rounded-full bg-white/40 animate-pulse"></div>
-        <span className="text-[10px] uppercase font-black tracking-widest text-white/40">Status: {status || "Polishing Gears"}</span>
+        <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></div>
+        <span className="text-[10px] uppercase font-black tracking-widest text-white/60 font-mono">Status: {status || "Polishing Gears"}</span>
       </div>
     </div>
   </div>
@@ -70,11 +74,7 @@ const App: React.FC = () => {
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white"></div>
-      </div>
-    );
+    return <LoadingScreen message="Establishing Encrypted Session" />;
   }
 
   const isExemptPage = window.location.hash.startsWith('#/login') || window.location.hash.startsWith('#/admin');
@@ -86,6 +86,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
+      <CursorGlow />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
@@ -96,13 +97,12 @@ const App: React.FC = () => {
         <Route path="/tos" element={<TOS />} />
         <Route path="/docs" element={<Docs />} />
 
-        
         <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/shop" element={user ? <Shop /> : <Navigate to="/login" />} />
         <Route path="/admin" element={user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? <Admin /> : <Navigate to="/dashboard" />} />
         <Route path="/reseller/:hash" element={<ResellerPortal />} />
 
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </HashRouter>
   );

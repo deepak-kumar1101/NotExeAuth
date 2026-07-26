@@ -199,27 +199,27 @@ const ResellerPortal: React.FC = () => {
                 setFirebaseAuthAttempted(true);
                 try {
                     const snap = await get(ref(db, `resellers/${hash}`));
-                    if (snap.exists()) {
-                        const data = decrypt(snap.val());
-                        if (data.hash === hash) {
-                            setReseller(data);
+                    const val = snap.val();
+                    const ciphertext = typeof val === 'object' && val !== null && val.payload ? val.payload : val;
+                    const data = decrypt(ciphertext);
+                    if (data && data.hash === hash) {
+                        setReseller(data);
 
-                            if (savedCredentials) {
-                                try {
-                                    const { username, password, hash: savedHash } = JSON.parse(savedCredentials);
-                                    if (savedHash === hash && data.username === username && data.passwordHash === password) {
-                                        setIsAuthenticated(true);
-                                        const parsedApps = data.allowedApps.map((str: string) => {
-                                            const [secret, name] = str.split('::');
-                                            return { secret, name, version: '1.0' };
-                                        });
-                                        setApps(parsedApps);
-                                        if (parsedApps.length > 0) setCurrentApp(parsedApps[0]);
-                                        addToast('Auto-login successful');
-                                    }
-                                } catch (e) {
-                                    console.error('Auto-login failed:', e);
+                        if (savedCredentials) {
+                            try {
+                                const { username, password, hash: savedHash } = JSON.parse(savedCredentials);
+                                if (savedHash === hash && data.username === username && data.passwordHash === password) {
+                                    setIsAuthenticated(true);
+                                    const parsedApps = (data.allowedApps || []).map((str: string) => {
+                                        const [secret, name] = str.split('::');
+                                        return { secret, name, version: '1.0' };
+                                    });
+                                    setApps(parsedApps);
+                                    if (parsedApps.length > 0) setCurrentApp(parsedApps[0]);
+                                    addToast('Auto-login successful');
                                 }
+                            } catch (e) {
+                                console.error('Auto-login failed:', e);
                             }
                         }
                     }
@@ -308,9 +308,10 @@ const ResellerPortal: React.FC = () => {
         if (!reseller || !currentApp || !firebaseAuthAttempted) return;
 
         const { prefix, displayName, duration, unit, amount } = licenseForm;
-        const prefixUpper = prefix.toUpperCase();
-        const durationNum = parseInt(duration) || 1;
-        const amountNum = Math.max(1, parseInt(amount) || 1);
+        const cleanPrefix = (prefix || 'DXA').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const prefixUpper = cleanPrefix || 'DXA';
+        const durationNum = Math.max(1, parseInt(duration) || 1);
+        const amountNum = Math.min(100, Math.max(1, parseInt(amount) || 1));
 
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         const newKeys: string[] = [];
@@ -325,14 +326,19 @@ const ResellerPortal: React.FC = () => {
         try {
             for (let a = 0; a < amountNum; a++) {
                 let key = prefixUpper;
+                const randomBuffer = new Uint32Array(20);
+                window.crypto.getRandomValues(randomBuffer);
+                let bufIdx = 0;
                 for (let i = 0; i < 4; i++) {
                     key += "-";
-                    for (let j = 0; j < 5; j++) key += chars.charAt(Math.floor(Math.random() * chars.length));
+                    for (let j = 0; j < 5; j++) {
+                        key += chars.charAt(randomBuffer[bufIdx++] % chars.length);
+                    }
                 }
 
                 await set(ref(db, `applications/${currentApp.secret}/${currentApp.name}/licenses/${key}`), encrypt({
                     expiry: exp,
-                    displayName: displayName || '',
+                    displayName: (displayName || '').trim(),
                     used: false,
                     created: new Date().toISOString(),
                     createdBy: hash
@@ -341,7 +347,7 @@ const ResellerPortal: React.FC = () => {
             }
 
             const updateReseller = { ...reseller, licensesCreated: (reseller.licensesCreated || 0) + amountNum };
-            await set(ref(db, `resellers/${reseller.hash}`), encrypt(updateReseller));
+            await set(ref(db, `resellers/${reseller.hash}`), { createdBy: reseller.createdBy, payload: encrypt(updateReseller) });
             setReseller(updateReseller);
 
             setGeneratedKeys(newKeys);
@@ -369,8 +375,14 @@ const ResellerPortal: React.FC = () => {
             return addToast('User limit reached', 'error');
         }
 
-        const { username, password, duration, unit, oneTime } = userForm;
-        const durationNum = parseInt(duration) || 1;
+        const username = userForm.username.trim();
+        const password = userForm.password.trim();
+        const { duration, unit, oneTime } = userForm;
+        const durationNum = Math.max(1, parseInt(duration) || 1);
+
+        if (!username || !password) {
+            return addToast('Username and password are required', 'error');
+        }
 
         let exp = 'lifetime';
         if (unit !== 'lifetime') {
@@ -398,7 +410,7 @@ const ResellerPortal: React.FC = () => {
         await set(ref(db, `applications/${currentApp.secret}/${currentApp.name}/users/${username}`), encrypt(u));
 
         const updateReseller = { ...reseller, usersCreated: (reseller.usersCreated || 0) + 1 };
-        await set(ref(db, `resellers/${reseller.hash}`), encrypt(updateReseller));
+        await set(ref(db, `resellers/${reseller.hash}`), { createdBy: reseller.createdBy, payload: encrypt(updateReseller) });
         setReseller(updateReseller);
 
         addToast('User Created');

@@ -17,13 +17,13 @@ import { ADMIN_EMAIL } from '../constants';
 import { subscribeToSDKs, saveSDK, deleteSDK, toggleSDKVisibility } from '../services/sdkService';
 
 const Modal: React.FC<{ title: string, onClose: () => void, children: React.ReactNode }> = ({ title, onClose, children }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-    <div className="bg-surface border border-white/10 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-      <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
-        <h3 className="text-xl font-black uppercase tracking-widest text-muted/50 text-[10px]">{title}</h3>
-        <button onClick={onClose} className="text-muted hover:text-white transition-colors p-2 hover:bg-white/5 rounded-xl"><X size={20} /></button>
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="glass-card-premium border border-white/12 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh] glass-reflection">
+      <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">{title}</h3>
+        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-xl"><X size={18} /></button>
       </div>
-      <div className="p-8 overflow-y-auto custom-scrollbar">{children}</div>
+      <div className="p-6 overflow-y-auto custom-scrollbar">{children}</div>
     </div>
   </div>
 );
@@ -531,7 +531,7 @@ const Admin: React.FC = () => {
                   onDropCapture={(e) => {
                     e.currentTarget.classList.remove('border-white/40', 'bg-white/[0.03]');
                   }}
-                  className="relative group bg-surface border border-white/5 p-8 rounded-[2rem] shadow-xl hover:border-white/20 transition-all flex flex-col h-full cursor-move"
+                  className="relative group glass-card-premium border border-white/10 p-8 rounded-[2rem] shadow-xl hover:border-white/20 transition-all flex flex-col h-full cursor-move glass-reflection"
                 >
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-3">
@@ -633,7 +633,7 @@ const Admin: React.FC = () => {
           </div>
         ) : (
           <div className="max-w-xl space-y-8 animate-fade-in">
-            <div className="bg-surface border border-white/5 p-10 rounded-[2.5rem] shadow-2xl">
+            <div className="glass-card-premium border border-white/10 p-10 rounded-[2.5rem] shadow-2xl glass-reflection">
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-4 bg-white/5 rounded-2xl">
                   <Hammer className="text-white" size={24} />
@@ -670,7 +670,7 @@ const Admin: React.FC = () => {
                       placeholder="e.g. Polishing Gears"
                       value={maintenance?.maintenanceStatus || ''}
                       onChange={(e) => setMaintenance(prev => ({ ...prev, maintenanceStatus: e.target.value }))}
-                      className="w-full bg-surfaceHighlight border border-white/5 p-4 rounded-2xl focus:outline-none focus:border-white/20 text-sm"
+                      className="w-full bg-[#080a10] border border-white/10 p-4 rounded-2xl focus:outline-none focus:border-white/20 text-sm"
                     />
                   </div>
                   <div className="space-y-1 mt-4">
@@ -679,7 +679,7 @@ const Admin: React.FC = () => {
                       placeholder="We're currently performing some improvements..."
                       value={maintenance?.maintenanceMessage || ''}
                       onChange={(e) => setMaintenance(prev => ({ ...prev, maintenanceMessage: e.target.value }))}
-                      className="w-full bg-surfaceHighlight border border-white/5 p-6 rounded-3xl focus:outline-none focus:border-white/20 text-sm leading-relaxed"
+                      className="w-full bg-[#080a10] border border-white/10 p-6 rounded-3xl focus:outline-none focus:border-white/20 text-sm leading-relaxed"
                       rows={3}
                     />
                   </div>
@@ -692,7 +692,7 @@ const Admin: React.FC = () => {
                       });
                       addToast('Maintenance info updated');
                     }}
-                    className="w-full py-4 bg-white hover:bg-gray-200 text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl transition-all"
+                    className="w-full py-4 btn-magnetic-primary text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl transition-all"
                   >
                     Update All Info
                   </button>
@@ -700,7 +700,7 @@ const Admin: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-surface border border-white/5 p-10 rounded-[2.5rem] shadow-2xl">
+            <div className="glass-card-premium border border-white/10 p-10 rounded-[2.5rem] shadow-2xl glass-reflection">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-white/10 pb-6">
                 <div className="flex items-center gap-4">
                   <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-indigo-400">

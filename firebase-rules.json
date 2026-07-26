@@ -1,37 +1,70 @@
 {
   "rules": {
-    "resellers": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-
-    "applications": {
-      ".read": true,
-      ".write": true
-    },
-
-    "webhookSettings": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-
-    "customers": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-
     "system": {
-      "stats": {
+      "config": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
       },
       "plans": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
       },
-      "config": {
+      "stats": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || auth.token.role === 'worker' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "sdks": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      }
+    },
+
+    "customers": {
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
+      "$emailKey": {
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))",
+        "secret": {
+          ".validate": "auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || !data.exists() || data.val() === newData.val()"
+        }
+      }
+    },
+
+    "applications": {
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
+      "$userSecret": {
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.secret === $userSecret || (auth.token.email != null && root.child('customers').child(auth.token.email.replace('.', ',')).child('secret').val() === $userSecret) || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || auth.token.role === 'worker')",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.secret === $userSecret || (auth.token.email != null && root.child('customers').child(auth.token.email.replace('.', ',')).child('secret').val() === $userSecret) || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || auth.token.role === 'worker')"
+      }
+    },
+
+    "webhookSettings": {
+      "$userSecret": {
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.secret === $userSecret || (auth.token.email != null && root.child('customers').child(auth.token.email.replace('.', ',')).child('secret').val() === $userSecret))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.secret === $userSecret || (auth.token.email != null && root.child('customers').child(auth.token.email.replace('.', ',')).child('secret').val() === $userSecret))"
+      }
+    },
+
+    "resellers": {
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && query.orderByChild === 'createdBy' && query.equalTo === auth.token.email.replace('.', ',')))",
+      ".indexOn": ["createdBy"],
+      "$hash": {
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && data.child('createdBy').val() === auth.token.email.replace('.', ',')))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && (data.exists() ? data.child('createdBy').val() === auth.token.email.replace('.', ',') : newData.child('createdBy').val() === auth.token.email.replace('.', ','))))",
+        ".validate": "newData.hasChildren(['createdBy', 'payload'])",
+        "createdBy": {
+          ".validate": "newData.isString() && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && newData.val() === auth.token.email.replace('.', ','))) && (!data.exists() || data.val() === newData.val())"
+        },
+        "payload": {
+          ".validate": "newData.isString()"
+        }
+      }
+    },
+
+    "resellerWebhooks": {
+      "$hash": {
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && auth.token.email.replace('.', ',') === root.child('resellers').child($hash).child('createdBy').val()))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && auth.token.email.replace('.', ',') === root.child('resellers').child($hash).child('createdBy').val()))"
       }
     }
   }

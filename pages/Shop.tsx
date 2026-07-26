@@ -117,17 +117,17 @@ const Shop: React.FC = () => {
       <div className="fixed top-[-10%] left-[20%] w-[500px] h-[500px] bg-indigo-600/10 blur-[140px] rounded-full pointer-events-none" />
 
       <nav className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
-        <div className="w-full max-w-5xl glass-card rounded-full border border-white/[0.08] px-6 py-3 flex justify-between items-center shadow-xl backdrop-blur-xl">
-          <Link to="/" className="flex items-center gap-3">
+        <div className="w-full max-w-5xl glass-card-premium rounded-full border border-white/[0.12] px-6 py-3 flex justify-between items-center shadow-2xl backdrop-blur-2xl glass-reflection">
+          <Link to="/" className="flex items-center gap-3 effect-magnetic">
             <div className="w-7 h-7 rounded-lg bg-white text-black font-black flex items-center justify-center text-xs">DXA</div>
             <span className="font-bold text-xs uppercase tracking-widest text-white">Shop</span>
           </Link>
           <div className="flex items-center gap-5">
-            <div className="flex items-center gap-1.5 bg-white/[0.04] px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-bold text-amber-400">
+            <div className="flex items-center gap-1.5 bg-white/[0.05] px-3.5 py-1.5 rounded-full border border-white/12 text-xs font-bold text-amber-400 effect-repulsive cursor-pointer">
               <Coins className="w-3.5 h-3.5" />
               <span>{customer?.credits || 0} Credits</span>
             </div>
-            <Link to="/dashboard" className="text-xs font-semibold tracking-wider text-slate-400 hover:text-white transition-colors">Dashboard</Link>
+            <Link to="/dashboard" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-white transition-colors effect-magnetic">Dashboard</Link>
           </div>
         </div>
       </nav>
@@ -145,9 +145,9 @@ const Shop: React.FC = () => {
           {(Object.entries(plans) as [string, SystemPlan][])
             .sort((a, b) => (a[1].order || 0) - (b[1].order || 0))
             .map(([name, plan]) => (
-              <div key={name} className="glass-card glass-card-hover p-8 rounded-3xl border border-white/10 flex flex-col group relative overflow-hidden shadow-2xl">
+              <div key={name} className="glass-card-premium p-8 rounded-3xl border border-white/12 flex flex-col group relative overflow-hidden shadow-2xl glass-reflection">
                 {customer?.plan === name && (
-                  <div className="absolute top-4 right-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">Active Plan</div>
+                  <div className="absolute top-4 right-4 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.2)]">Active Plan</div>
                 )}
                 <div className="mb-6">
                   <h3 className="text-lg font-bold text-white mb-2">{name}</h3>
@@ -173,7 +173,7 @@ const Shop: React.FC = () => {
                 <button
                   onClick={() => buyPlan(name, plan)}
                   disabled={customer?.plan === name || buying === name}
-                  className={`w-full py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs transition-all ${customer?.plan === name ? 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/5' : 'btn-saas-primary'}`}
+                  className={`w-full py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs transition-all ${customer?.plan === name ? 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/5' : 'btn-magnetic-primary'}`}
                 >
                   {buying === name ? <Loader2 className="animate-spin mx-auto" size={16} /> : customer?.plan === name ? 'Current Plan' : 'Purchase with Credits'}
                 </button>
@@ -184,11 +184,11 @@ const Shop: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-16 glass-card p-8 rounded-3xl border border-white/10 text-center max-w-2xl mx-auto shadow-2xl relative overflow-hidden">
+        <div className="mt-16 glass-card-premium p-8 rounded-3xl border border-white/12 text-center max-w-2xl mx-auto shadow-2xl relative overflow-hidden glass-reflection">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 pointer-events-none" />
           <h2 className="text-xl font-extrabold text-white mb-2 relative z-10">Earn Free Bonus Credits!</h2>
           <p className="text-slate-400 text-xs mb-6 font-medium leading-relaxed relative z-10">Join our official Discord community to earn free credits through daily events and rewards.</p>
-          <a href="https://discord.gg/HrVXH3wNpj" target="_blank" rel="noreferrer" className="btn-saas-primary inline-flex items-center gap-2 px-7 py-3 text-xs uppercase font-bold tracking-wider relative z-10 shadow-lg">
+          <a href="https://discord.gg/HrVXH3wNpj" target="_blank" rel="noreferrer" className="btn-magnetic-primary inline-flex items-center gap-2 px-7 py-3 text-xs uppercase font-bold tracking-wider relative z-10 shadow-lg">
             <MessageSquare size={15} /> Join Discord & Claim Credits
           </a>
         </div>
