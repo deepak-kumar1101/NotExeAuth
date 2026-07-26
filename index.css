@@ -1,6 +1,183 @@
-/* DXA Auth - index.css */
-/* This file intentionally left minimal. All styles are in index.html via Tailwind CDN. */
+/* DXA Auth - Enterprise SaaS Design System (index.css) */
+
 .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 9999px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
+
+/* Typography & Gradient Text */
+.text-gradient-white {
+  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-indigo {
+  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Floating Frosted Glass Cards (Raycast / Vercel / Linear Style) */
+.glass-card-premium {
+  background: linear-gradient(180deg, rgba(20, 24, 38, 0.65) 0%, rgba(11, 13, 22, 0.85) 100%);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-premium:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.8), 0 0 35px 0 rgba(99, 102, 241, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Floating Sidebar & Header Shell */
+.floating-sidebar-shell {
+  margin: 1.25rem;
+  height: calc(100vh - 2.5rem);
+  background: linear-gradient(180deg, rgba(14, 17, 27, 0.88) 0%, rgba(9, 11, 18, 0.94) 100%);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+.floating-header-shell {
+  margin-top: 1.25rem;
+  margin-right: 1.25rem;
+  background: linear-gradient(180deg, rgba(14, 17, 27, 0.75) 0%, rgba(9, 11, 18, 0.85) 100%);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Premium Navigation Active Indicators */
+.nav-item-active {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.18) 0%, rgba(168, 85, 247, 0.08) 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border-left: 3px solid #6366f1;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+}
+
+.nav-item-inactive {
+  color: #94a3b8;
+  font-weight: 600;
+  border-radius: 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-item-inactive:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+/* Magnetic Action Buttons */
+.btn-magnetic-primary {
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
+  color: #0f172a;
+  font-weight: 800;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-magnetic-primary:hover {
+  transform: scale(1.03) translateY(-1px);
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.btn-magnetic-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-magnetic-glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  font-weight: 600;
+  border-radius: 14px;
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-magnetic-glass:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  transform: scale(1.02) translateY(-1px);
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Glass Data Tables */
+.table-panel-container {
+  background: linear-gradient(180deg, rgba(16, 19, 30, 0.75) 0%, rgba(10, 12, 20, 0.9) 100%);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.table-row-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.table-row-hover:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: scale(1.002);
+}
+
+/* Neon Pill Badges */
+.badge-neon-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.badge-neon-indigo {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+.badge-neon-rose {
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.2);
+}
+
+/* Infinite Marquee Animation System */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-scroll {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 28s linear infinite;
+}
+
+.marquee-group:hover .animate-marquee-scroll {
+  animation-play-state: paused;
+}
+
+.marquee-mask-fade {
+  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+}

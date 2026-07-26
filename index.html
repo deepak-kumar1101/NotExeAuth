@@ -18,22 +18,34 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            background: '#050505',
-            surface: '#0a0a0a',
-            surfaceHighlight: '#141414',
-            border: '#222222',
+            background: '#07080c',
+            surface: '#0d0f17',
+            surfaceHighlight: '#141824',
+            border: 'rgba(255, 255, 255, 0.08)',
+            borderHighlight: 'rgba(255, 255, 255, 0.18)',
             primary: '#ffffff',
-            muted: '#888888',
-            success: '#22c55e',
-            danger: '#ef4444'
+            muted: '#94a3b8',
+            mutedDark: '#64748b',
+            success: '#10b981',
+            danger: '#f43f5e',
+            accent: '#6366f1',
+            accentHover: '#4f46e5'
+          },
+          boxShadow: {
+            'glass': '0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 30px 0 rgba(99, 102, 241, 0.03)',
+            'glow-sm': '0 0 20px -5px rgba(99, 102, 241, 0.25)',
+            'glow-md': '0 0 40px -10px rgba(99, 102, 241, 0.35)',
+            'card-hover': '0 25px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)'
           },
           animation: {
-            'fade-in': 'fadeIn 0.3s ease-out forwards',
-            'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+            'fade-in': 'fadeIn 0.25s ease-out forwards',
+            'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-glow': 'pulseGlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
           },
           keyframes: {
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            pulseGlow: { '0%, 100%': { opacity: '0.03', transform: 'scale(1)' }, '50%': { opacity: '0.08', transform: 'scale(1.05)' } }
           }
         }
       }
@@ -41,14 +53,15 @@
   </script>
   <style>
     body {
-      background-color: #050505;
-      color: #fff;
+      background-color: #07080c;
+      color: #f8fafc;
       overflow-x: hidden;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     }
 
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
 
     ::-webkit-scrollbar-track {
@@ -56,18 +69,37 @@
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #333;
-      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #555;
+      background: rgba(255, 255, 255, 0.3);
     }
 
     .glass {
-      background: rgba(10, 10, 10, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid #222;
+      background: rgba(13, 15, 23, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-card {
+      background: linear-gradient(180deg, rgba(18, 22, 34, 0.6) 0%, rgba(11, 14, 22, 0.8) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .glass-card-hover {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glass-card-hover:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px 0 rgba(99, 102, 241, 0.08);
     }
 
     .grid-bg {
@@ -75,17 +107,17 @@
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.07;
-      background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px);
-      background-size: 50px 50px;
+      opacity: 0.04;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
 
     .blur-glow {
       position: fixed;
       z-index: -1;
       border-radius: 100%;
-      filter: blur(120px);
-      opacity: 0.02;
+      filter: blur(140px);
+      pointer-events: none;
     }
   </style>
   <script type="importmap">

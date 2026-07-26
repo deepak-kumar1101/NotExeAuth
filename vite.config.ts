@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
         proxy: {
           '^/(login|register|versioncheck|getvariable|getvariables|create_user|delete_user|reset_hwid|create_license|delete_license|create_app|delete_app)': {
-            target: '...................................................................',
+            target: 'https://deepxauth.pages.dev',
             changeOrigin: true,
           }
         }

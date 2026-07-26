@@ -21,9 +21,9 @@ type Tab = 'application' | 'users' | 'license' | 'variables' | 'interrogation' |
 const CustomCheckbox: React.FC<{ checked: boolean, onChange: (val: boolean) => void, label?: string }> = ({ checked, onChange, label }) => (
   <label className="flex items-center gap-3 cursor-pointer group select-none">
     <div
-      className={`relative w-6 h-6 rounded-lg border-2 transition-all duration-300 flex items-center justify-center ${checked
-        ? 'bg-white border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]'
-        : 'border-border bg-surfaceHighlight group-hover:border-white/30'
+      className={`relative w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center ${checked
+        ? 'bg-white border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]'
+        : 'border-white/15 bg-[#080a10] group-hover:border-white/30'
         }`}
     >
       <input
@@ -32,11 +32,11 @@ const CustomCheckbox: React.FC<{ checked: boolean, onChange: (val: boolean) => v
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <div className={`transition-all duration-300 transform ${checked ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
-        <Check size={14} className="text-black stroke-[4px]" />
+      <div className={`transition-all duration-200 transform ${checked ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
+        <Check size={13} className="text-black stroke-[3.5px]" />
       </div>
     </div>
-    {label && <span className={`text-sm font-semibold transition-all duration-300 ${checked ? 'text-white' : 'text-muted group-hover:text-white/80'}`}>{label}</span>}
+    {label && <span className={`text-xs font-medium transition-colors duration-200 ${checked ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{label}</span>}
   </label>
 );
 
@@ -57,18 +57,18 @@ const CustomSelect: React.FC<{ value: string, options: { label: string, value: s
     <div className="relative w-full" ref={containerRef}>
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight border border-border rounded-xl text-sm hover:border-white/20 transition-all text-left cursor-pointer"
+        className="w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-[#0b0e17] border border-white/[0.08] rounded-xl text-xs font-semibold hover:border-white/20 transition-all text-left cursor-pointer shadow-sm text-slate-200 hover:text-white"
       >
         <span className="truncate">{selectedOption ? selectedOption.label : (placeholder || 'Select...')}</span>
-        <ChevronDown size={16} className={`transition-transform text-muted ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={15} className={`transition-transform text-slate-400 ${isOpen ? 'rotate-180 text-white' : ''}`} />
       </div>
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-surfaceHighlight border border-border rounded-xl shadow-2xl z-[150] overflow-hidden animate-fade-in max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#0e111c] border border-white/10 rounded-xl shadow-2xl z-[150] overflow-hidden animate-fade-in max-h-52 overflow-y-auto backdrop-blur-xl p-1">
           {options.map(opt => (
             <div
               key={opt.value}
               onClick={() => { onChange(opt.value); setIsOpen(false); }}
-              className={`w-full text-left px-4 py-2.5 text-sm cursor-pointer hover:bg-white/5 transition-colors ${value === opt.value ? 'text-white bg-white/10' : 'text-muted'}`}
+              className={`w-full text-left px-3.5 py-2 text-xs font-medium rounded-lg cursor-pointer transition-colors ${value === opt.value ? 'text-white bg-white/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
             >
               {opt.label}
             </div>
@@ -80,21 +80,25 @@ const CustomSelect: React.FC<{ value: string, options: { label: string, value: s
 };
 
 const DetailRow: React.FC<{ label: string, val: string, copyable?: boolean }> = ({ label, val, copyable }) => (
-  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 py-3 border-b border-border/50">
-    <span className="text-muted text-sm">{label}</span>
-    <div className="flex items-center gap-3 overflow-hidden">
-      <code className="font-mono text-sm bg-black/50 px-3 py-1.5 rounded-lg text-white/80 select-all border border-white/10 truncate max-w-[200px]">{val}</code>
-      {copyable && <button onClick={() => { navigator.clipboard.writeText(val); alert('Copied!'); }} className="text-muted hover:text-white transition-colors flex-shrink-0"><Copy size={16} /></button>}
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 py-3 border-b border-white/[0.06]">
+    <span className="text-slate-400 text-xs font-medium">{label}</span>
+    <div className="flex items-center gap-2 overflow-hidden">
+      <code className="font-mono text-xs bg-[#080a10] px-3 py-1.5 rounded-lg text-slate-200 select-all border border-white/10 truncate max-w-[220px]">{val}</code>
+      {copyable && (
+        <button onClick={() => { navigator.clipboard.writeText(val); alert('Copied!'); }} className="p-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0">
+          <Copy size={14} />
+        </button>
+      )}
     </div>
   </div>
 );
 
 const Modal: React.FC<{ title: string, onClose: () => void, children: React.ReactNode }> = ({ title, onClose, children }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-    <div className="bg-surface border border-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-      <div className="p-6 border-b border-border flex justify-between items-center bg-surfaceHighlight/30">
-        <h3 className="text-lg font-bold">{title}</h3>
-        <button onClick={onClose} className="text-muted hover:text-white transition-colors"><X size={20} /></button>
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="glass-card border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+        <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
+        <button onClick={onClose} className="p-1 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"><X size={18} /></button>
       </div>
       <div className="p-6 overflow-y-auto custom-scrollbar">{children}</div>
     </div>
@@ -584,50 +588,68 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
 
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-white font-sans selection:bg-white/20">
+    <div className="flex h-screen overflow-hidden bg-[#06070a] text-white font-sans selection:bg-indigo-500/30 relative">
+      
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[10%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[160px] animate-pulse-glow" />
+        <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[160px] animate-pulse-glow" />
+        <div className="grid-bg opacity-30" />
+      </div>
+
       
       <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none">
         {toasts.map(t => (
-          <div key={t.id} className={`flex items-center gap-3 p-4 rounded-xl border shadow-2xl backdrop-blur-md min-w-[300px] animate-fade-in pointer-events-auto ${t.type === 'success' ? 'border-success/20 text-success bg-surface' : 'border-danger/20 text-danger bg-surface'}`}>
+          <div key={t.id} className={`flex items-center gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl min-w-[320px] animate-fade-in pointer-events-auto ${t.type === 'success' ? 'border-emerald-500/30 text-emerald-400 bg-[#0d101d]/90 shadow-emerald-500/10' : 'border-rose-500/30 text-rose-400 bg-[#0d101d]/90 shadow-rose-500/10'}`}>
             {t.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-            <span className="text-sm font-semibold text-white/90">{t.msg}</span>
+            <span className="text-xs font-bold text-white/90">{t.msg}</span>
           </div>
         ))}
       </div>
 
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.05]" style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
-
       
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border transform transition-transform duration-300 md:relative md:transform-none flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 border-b border-border flex items-center justify-center gap-2 font-bold text-xl">
-          <span className="bg-white text-black px-2 py-0.5 rounded text-sm font-extrabold uppercase tracking-tight">DXA</span>
-          <span className="text-muted tracking-tight">Dashboard</span>
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 floating-sidebar-shell transform transition-transform duration-300 md:relative md:transform-none flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-5 border-b border-white/[0.08] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-white via-indigo-100 to-indigo-300 text-black flex items-center justify-center font-black text-xs shadow-lg shadow-white/20">
+              DXA
+            </div>
+            <div>
+              <div className="text-white font-extrabold text-sm tracking-tight">Deep X Auth</div>
+              <div className="text-[10px] text-indigo-400 font-semibold uppercase tracking-wider">Enterprise Pro</div>
+            </div>
+          </div>
+          <span className="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400">v2.0</span>
         </div>
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+
+        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
           <button
             onClick={() => { setActiveTab('application'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${activeTab === 'application' ? 'bg-white/10 text-white' : 'text-muted hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'application' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
-            <Box size={18} /> Application
+            <Box size={17} className={activeTab === 'application' ? 'text-indigo-400' : 'text-slate-400'} /> 
+            <span>Application</span>
           </button>
           <button
             onClick={() => { setActiveTab('users'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${activeTab === 'users' ? 'bg-white/10 text-white' : 'text-muted hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'users' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
-            <Users size={18} /> Users
+            <Users size={17} className={activeTab === 'users' ? 'text-indigo-400' : 'text-slate-400'} /> 
+            <span>Users</span>
           </button>
           <button
             onClick={() => { setActiveTab('license'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${activeTab === 'license' ? 'bg-white/10 text-white' : 'text-muted hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'license' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
-            <Key size={18} /> Licenses
+            <Key size={17} className={activeTab === 'license' ? 'text-indigo-400' : 'text-slate-400'} /> 
+            <span>Licenses</span>
           </button>
 
           <button
             onClick={() => { setActiveTab('earn'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${activeTab === 'earn' ? 'bg-white/10 text-white' : 'text-muted hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'earn' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
-            <Coins size={18} /> Earn Credits
+            <Coins size={17} className={activeTab === 'earn' ? 'text-amber-400' : 'text-slate-400'} /> 
+            <span>Earn Credits</span>
           </button>
 
           <button
@@ -640,14 +662,13 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
               setActiveTab('variables');
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className={`w-full flex items-center justify-between p-3 rounded-xl transition-all group ${activeTab === 'variables' ? 'bg-white text-black font-semibold' : 'text-muted hover:text-white hover:bg-white/5'
-              }`}
+            className={`w-full flex items-center justify-between px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'variables' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
             <div className="flex items-center gap-3">
-              <Database size={18} />
-              <span className="text-sm font-medium">Cloud Variables</span>
+              <Database size={17} className={activeTab === 'variables' ? 'text-indigo-400' : 'text-slate-400'} />
+              <span>Cloud Variables</span>
             </div>
-            {isFeatureLocked('variables').locked && <Lock size={14} className="text-muted/50" />}
+            {isFeatureLocked('variables').locked && <Lock size={13} className="text-slate-500" />}
           </button>
 
           <button
@@ -661,14 +682,13 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
               setActiveTab('interrogation');
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className={`w-full flex items-center justify-between p-3 rounded-xl transition-all group ${activeTab === 'interrogation' ? 'bg-white text-black font-semibold' : 'text-muted hover:text-white hover:bg-white/5'
-              }`}
+            className={`w-full flex items-center justify-between px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'interrogation' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
             <div className="flex items-center gap-3">
-              <Webhook size={18} />
-              <span className="text-sm font-medium">Interrogation</span>
+              <Webhook size={17} className={activeTab === 'interrogation' ? 'text-indigo-400' : 'text-slate-400'} />
+              <span>Interrogation</span>
             </div>
-            {isFeatureLocked('webhooks').locked && <Lock size={14} className="text-muted/50" />}
+            {isFeatureLocked('webhooks').locked && <Lock size={13} className="text-slate-500" />}
           </button>
 
           <button
@@ -681,42 +701,45 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
               setActiveTab('resellers');
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className={`w-full flex items-center justify-between p-3 rounded-xl transition-all group ${activeTab === 'resellers' ? 'bg-white text-black font-semibold' : 'text-muted hover:text-white hover:bg-white/5'
-              }`}
+            className={`w-full flex items-center justify-between px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'resellers' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
             <div className="flex items-center gap-3">
-              <ShieldCheck size={18} />
-              <span className="text-sm font-medium">Resellers</span>
+              <ShieldCheck size={17} className={activeTab === 'resellers' ? 'text-indigo-400' : 'text-slate-400'} />
+              <span>Resellers</span>
             </div>
-            {isFeatureLocked('resellers').locked && <Lock size={14} className="text-muted/50" />}
+            {isFeatureLocked('resellers').locked && <Lock size={13} className="text-slate-500" />}
           </button>
+
           <button
             onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${activeTab === 'settings' ? 'bg-white/10 text-white' : 'text-muted hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'settings' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
-            <Settings size={18} /> Settings
+            <Settings size={17} className={activeTab === 'settings' ? 'text-indigo-400' : 'text-slate-400'} /> 
+            <span>Settings</span>
           </button>
         </nav>
-        <div className="p-4 border-t border-border">
+
+        <div className="p-4 border-t border-white/[0.08] space-y-2">
           {auth.currentUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
-            <Link to="/admin" className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-xl hover:bg-yellow-500/20 transition-all mb-2">
-              <Crown size={18} /> Admin Console
+            <Link to="/admin" className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-2xl hover:bg-amber-500/20 transition-all shadow-sm">
+              <Crown size={16} /> Admin Console
             </Link>
           )}
-          <button onClick={logout} className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-danger hover:bg-danger/10 rounded-xl transition-all">
-            <LogOut size={18} /> Sign Out
+          <button onClick={logout} className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 rounded-2xl transition-all">
+            <span className="truncate max-w-[140px] text-slate-300 font-mono text-[11px]">{auth.currentUser?.email}</span>
+            <LogOut size={16} className="text-rose-400 shrink-0" />
           </button>
         </div>
       </aside>
 
-      <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden fixed top-4 left-4 z-50 p-2 bg-surface border border-border rounded-lg text-white">
-        <Menu size={20} />
+      <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden fixed top-5 left-5 z-50 p-2.5 bg-[#0d0f17] border border-white/10 rounded-2xl text-white shadow-2xl">
+        <Menu size={18} />
       </button>
 
       
-      <main className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <header className="h-16 border-b border-border bg-background/50 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-20">
-          <div className="ml-10 md:ml-0 flex items-center gap-4 flex-1">
+      <main className="flex-1 flex flex-col overflow-hidden relative z-10 mr-0 md:mr-5">
+        <header className="floating-header-shell h-16 flex items-center justify-between px-6 sticky top-0 z-20">
+          <div className="ml-10 md:ml-0 flex items-center gap-3 flex-1">
             <div className="w-64">
               <CustomSelect
                 value={currentApp || ''}
@@ -725,28 +748,29 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                 placeholder="Select Application"
               />
             </div>
-            <button onClick={() => setShowCreateApp(true)} className="p-2 text-muted hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-              <Plus size={20} />
+            <button onClick={() => setShowCreateApp(true)} className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/10 shadow-sm">
+              <Plus size={18} />
             </button>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-3 px-4 py-1.5 bg-surfaceHighlight/50 border border-border rounded-full">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-muted border-r border-border pr-3">
-                <Crown size={14} className="text-yellow-500" />
-                <span className="uppercase tracking-wider">{customer?.plan || 'Free Plan'}</span>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3 px-4 py-1.5 bg-white/[0.04] border border-white/10 rounded-full shadow-inner">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200 border-r border-white/10 pr-3">
+                <Crown size={14} className="text-amber-400" />
+                <span className="uppercase tracking-wider text-[10px] font-extrabold">{customer?.plan || 'Free Plan'}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-success pl-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 pl-1">
                 <Coins size={14} />
                 <span>{customer?.credits || 0}</span>
               </div>
             </div>
-            <Link to="/shop" className="p-2 text-muted hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-              <ShoppingCart size={20} />
+            <Link to="/shop" className="btn-magnetic-glass p-2.5">
+              <ShoppingCart size={18} />
             </Link>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 animate-fade-in custom-scrollbar">
           <div className="max-w-6xl mx-auto space-y-6">
 
             
@@ -754,41 +778,49 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {[
-                    { label: 'Total Units', val: Object.keys(users).length + Object.keys(licenses).length, color: 'text-white' },
-                    { label: 'Active Users', val: (Object.values(users) as User[]).filter(u => !u.isBanned).length, color: 'text-success' },
-                    { label: 'Lifetime Users', val: (Object.values(users) as User[]).filter(u => u.expiry === 'lifetime').length, color: 'text-purple-400' },
-                    { label: 'HWID Locked', val: (Object.values(users) as User[]).filter(u => u.hwidLock).length, color: 'text-blue-400' },
-                    { label: 'Used Licenses', val: (Object.values(licenses) as License[]).filter(l => l.used).length, color: 'text-muted' }
+                    { label: 'Total Units', val: Object.keys(users).length + Object.keys(licenses).length, icon: <Box size={16} />, color: 'text-white', badge: 'Realtime' },
+                    { label: 'Active Users', val: (Object.values(users) as User[]).filter(u => !u.isBanned).length, icon: <Users size={16} />, color: 'text-emerald-400', badge: 'Active' },
+                    { label: 'Lifetime Users', val: (Object.values(users) as User[]).filter(u => u.expiry === 'lifetime').length, icon: <Crown size={16} />, color: 'text-purple-400', badge: 'Lifetime' },
+                    { label: 'HWID Locked', val: (Object.values(users) as User[]).filter(u => u.hwidLock).length, icon: <Lock size={16} />, color: 'text-indigo-400', badge: 'Protected' },
+                    { label: 'Used Licenses', val: (Object.values(licenses) as License[]).filter(l => l.used).length, icon: <Key size={16} />, color: 'text-amber-400', badge: 'Redeemed' }
                   ].map((stat, i) => (
-                    <div key={i} className="bg-surface border border-border p-4 rounded-xl shadow-sm">
-                      <div className="text-muted text-[10px] font-bold uppercase tracking-widest mb-1">{stat.label}</div>
-                      <div className={`text-2xl font-black ${stat.color}`}>{stat.val}</div>
+                    <div key={i} className="glass-card-premium p-5 rounded-3xl relative overflow-hidden group">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">{stat.label}</span>
+                        <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-slate-300 group-hover:text-indigo-300 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 transition-colors">
+                          {stat.icon}
+                        </div>
+                      </div>
+                      <div className={`text-3xl font-black tracking-tight ${stat.color} mb-2`}>{stat.val}</div>
+                      <div className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-white/[0.03] px-2 py-0.5 rounded-md border border-white/5">
+                        <span>{stat.badge}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-2xl">
-                  <div className="p-6 border-b border-border flex justify-between items-center bg-surfaceHighlight/30">
-                    <h3 className="text-lg font-bold">Application Details</h3>
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${apps[currentApp || '']?.applicationPaused ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}>
+                <div className="glass-card rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="p-5 border-b border-white/[0.08] flex justify-between items-center bg-white/[0.02]">
+                    <h3 className="text-base font-bold text-white tracking-tight">Application Details</h3>
+                    <div className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${apps[currentApp || '']?.applicationPaused ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
                       {apps[currentApp || '']?.applicationPaused ? 'Paused' : 'Active'}
                     </div>
                   </div>
                   <div className="p-6 space-y-4">
                     <DetailRow label="Application Name" val={currentApp || '-'} />
                     <DetailRow label="Master Secret Key" val={userSecret || '-'} copyable />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2">
-                      <span className="text-muted text-sm">Current Version</span>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 border-b border-white/[0.06]">
+                      <span className="text-slate-400 text-xs font-medium">Current Version</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium mr-4 text-white/50">{apps[currentApp || '']?.version || '1.0'}</span>
+                        <span className="font-medium mr-4 text-slate-400 text-xs">{apps[currentApp || '']?.version || '1.0'}</span>
                         <div className="flex gap-2">
-                          <input id="appVerInput" type="text" placeholder="1.0" className="bg-surfaceHighlight border border-border rounded-lg px-3 py-1.5 text-sm w-24 focus:outline-none focus:border-white/30" />
-                          <button onClick={() => updateAppVersion((document.getElementById('appVerInput') as HTMLInputElement).value)} className="bg-white text-black px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-200">Update</button>
+                          <input id="appVerInput" type="text" placeholder="1.0" className="bg-[#080a10] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white w-24 focus:outline-none focus:border-indigo-500/60 shadow-inner" />
+                          <button onClick={() => updateAppVersion((document.getElementById('appVerInput') as HTMLInputElement).value)} className="btn-saas-primary px-4 py-1.5 text-xs">Update</button>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="p-6 bg-surfaceHighlight/30 border-t border-border flex flex-wrap gap-3">
+                  <div className="p-5 bg-white/[0.02] border-t border-white/[0.08] flex flex-wrap gap-3">
                     <button onClick={async () => {
                       setConfirmModal({
                         show: true,

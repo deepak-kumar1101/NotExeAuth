@@ -11,6 +11,7 @@
     "deploy:api": "cd api && npm install && wrangler deploy"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "crypto-js": "^4.2.0",
     "firebase": "^12.7.0",
     "hono": "^4.0.0",

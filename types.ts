@@ -17,8 +17,20 @@ export interface Customer {
 }
 
 export interface SDK {
+  id: string;
   name: string;
-  link: string;
+  language: string; // e.g. 'python' | 'csharp' | 'cpp' | 'java' | 'rust' | 'go' | 'typescript'
+  icon?: string;
+  githubUrl: string;
+  sdkCode: string;
+  displayOrder: number;
+  visible: boolean;
+  badge?: 'Stable' | 'Beta' | 'Experimental' | 'Coming Soon' | string;
+  version?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  link?: string; // legacy fallback
 }
 
 export interface Reseller {

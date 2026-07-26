@@ -20,10 +20,10 @@ const CustomCheckbox: React.FC<{
     <label className={`flex items-center gap-3 cursor-pointer group select-none ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
         <div 
             onClick={() => !disabled && onChange(!checked)}
-            className={`relative w-6 h-6 rounded-lg border-2 transition-all duration-300 flex items-center justify-center ${
+            className={`relative w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center ${
                 checked 
-                    ? 'bg-white border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
-                    : 'border-border bg-surfaceHighlight group-hover:border-white/30'
+                    ? 'bg-white border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]' 
+                    : 'border-white/15 bg-[#080a10] group-hover:border-white/30'
             }`}
         >
             <input
@@ -32,11 +32,11 @@ const CustomCheckbox: React.FC<{
                 checked={checked}
                 onChange={(e) => onChange(e.target.checked)}
             />
-            <div className={`transition-all duration-300 transform ${checked ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
-                <Check size={14} className="text-black stroke-[4px]" />
+            <div className={`transition-all duration-200 transform ${checked ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
+                <Check size={13} className="text-black stroke-[3.5px]" />
             </div>
         </div>
-        {label && <span className={`text-sm font-semibold transition-all duration-300 ${checked ? 'text-white' : 'text-muted group-hover:text-white/80'}`}>{label}</span>}
+        {label && <span className={`text-xs font-medium transition-colors duration-200 ${checked ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{label}</span>}
     </label>
 );
 
@@ -67,24 +67,24 @@ const CustomSelect: React.FC<{
                 type="button" 
                 onClick={() => !disabled && setOpen(!open)} 
                 disabled={disabled}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight border border-border rounded-xl text-sm hover:border-white/20 transition-all text-left cursor-pointer ${
+                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-[#0b0e17] border border-white/[0.08] rounded-xl text-xs font-semibold hover:border-white/20 transition-all text-left cursor-pointer shadow-sm text-slate-200 hover:text-white ${
                     disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
             >
-                <span className="truncate text-white/90">{selected?.label || placeholder}</span>
-                <ChevronDown size={16} className={`transition-transform text-muted ${open ? 'rotate-180' : ''}`} />
+                <span className="truncate text-white">{selected?.label || placeholder}</span>
+                <ChevronDown size={15} className={`transition-transform text-slate-400 ${open ? 'rotate-180 text-white' : ''}`} />
             </button>
             {open && !disabled && (
-                <div className="absolute top-full left-0 w-full mt-2 bg-surfaceHighlight border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 w-full mt-1.5 bg-[#0e111c] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in max-h-52 overflow-y-auto backdrop-blur-xl p-1">
                     {options.map(opt => (
                         <button
                             key={opt.value}
                             type="button"
                             onClick={() => { onChange(opt.value); setOpen(false); }}
-                            className={`w-full text-left p-3.5 text-sm transition-colors duration-150 hover:bg-white/5 hover:text-white ${
+                            className={`w-full text-left px-3.5 py-2 text-xs font-medium rounded-lg transition-colors hover:bg-white/5 hover:text-white ${
                                 value === opt.value 
-                                    ? 'text-white bg-white/10 font-semibold' 
-                                    : 'text-muted'
+                                    ? 'text-white bg-white/10 font-bold' 
+                                    : 'text-slate-400'
                             }`}
                         >
                             {opt.label}
@@ -97,17 +97,15 @@ const CustomSelect: React.FC<{
 };
 
 const Modal: React.FC<{ title: string, onClose: () => void, children: React.ReactNode }> = ({ title, onClose, children }) => (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-        <div className="bg-surface border border-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-border flex justify-between items-center bg-surfaceHighlight/30">
-                <h3 className="text-lg font-bold text-white">{title}</h3>
-                <button onClick={onClose} className="text-muted hover:text-white transition-colors">
-                    <X size={20} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+        <div className="glass-card-premium border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+                <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
+                <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+                    <X size={18} />
                 </button>
             </div>
-            <div className="p-6 overflow-y-auto custom-scrollbar">
-                {children}
-            </div>
+            <div className="p-6 overflow-y-auto custom-scrollbar">{children}</div>
         </div>
     </div>
 );

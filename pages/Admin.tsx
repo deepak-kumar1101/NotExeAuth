@@ -6,12 +6,15 @@ import {
   Users, BarChart2, Box, LogOut, Trash2, Edit2,
   Plus, Coins, ShieldCheck, Mail, ArrowLeft, Loader2,
   Search, X, Key, Info, AlertTriangle, Crown, Settings,
-  ArrowUp, ArrowDown, Hammer, GripVertical, Code
+  ArrowUp, ArrowDown, Hammer, GripVertical, Code, Eye, EyeOff,
+  Maximize2, Minimize2, Check, Copy, Terminal, Github
 } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 import { auth, db } from '../services/firebase';
 import { encrypt, decrypt } from '../services/encryption';
 import { Customer, SystemPlan, SystemConfig, SDK } from '../types';
 import { ADMIN_EMAIL } from '../constants';
+import { subscribeToSDKs, saveSDK, deleteSDK, toggleSDKVisibility } from '../services/sdkService';
 
 const Modal: React.FC<{ title: string, onClose: () => void, children: React.ReactNode }> = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
@@ -24,6 +27,204 @@ const Modal: React.FC<{ title: string, onClose: () => void, children: React.Reac
     </div>
   </div>
 );
+
+const SDKEditorModal: React.FC<{
+  sdk: SDK | null;
+  onClose: () => void;
+  onSave: (sdk: SDK) => Promise<void>;
+}> = ({ sdk, onClose, onSave }) => {
+  const [name, setName] = useState(sdk?.name || '');
+  const [language, setLanguage] = useState(sdk?.language || 'python');
+  const [icon, setIcon] = useState(sdk?.icon || 'Code');
+  const [githubUrl, setGithubUrl] = useState(sdk?.githubUrl || '');
+  const [sdkCode, setSdkCode] = useState(sdk?.sdkCode || '');
+  const [displayOrder, setDisplayOrder] = useState<number>(sdk?.displayOrder || 1);
+  const [visible, setVisible] = useState<boolean>(sdk?.visible ?? true);
+  const [badge, setBadge] = useState<string>(sdk?.badge || 'Stable');
+  const [version, setVersion] = useState<string>(sdk?.version || 'v1.0.0');
+  const [description, setDescription] = useState<string>(sdk?.description || '');
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isReadOnlyPreview, setIsReadOnlyPreview] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !githubUrl || !sdkCode) return;
+    setIsSaving(true);
+    const id = sdk?.id || name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    await onSave({
+      id,
+      name,
+      language,
+      icon,
+      githubUrl,
+      sdkCode,
+      displayOrder: Number(displayOrder),
+      visible,
+      badge,
+      version,
+      description,
+      createdAt: sdk?.createdAt
+    });
+    setIsSaving(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in font-sans">
+      <div className={`glass-card-premium border border-white/10 rounded-3xl w-full flex flex-col transition-all duration-300 ${isFullscreen ? 'fixed inset-4 max-w-none h-[calc(100vh-2rem)]' : 'max-w-4xl max-h-[90vh]'}`}>
+        
+        {/* Header */}
+        <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+              <Code size={18} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight">{sdk ? `Edit SDK: ${sdk.name}` : 'Register New SDK'}</h3>
+              <p className="text-[11px] text-slate-400 font-medium">Database-driven SDK configuration with Monaco Code Editor</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setIsFullscreen(!isFullscreen)} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+            <button type="button" onClick={onClose} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">SDK Name</label>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Python" className="input-saas w-full p-3 text-xs" required />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Language Syntax</label>
+              <select value={language} onChange={e => setLanguage(e.target.value)} className="input-saas w-full p-3 text-xs bg-[#080a10]">
+                <option value="python">Python</option>
+                <option value="csharp">C# (.NET)</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+                <option value="rust">Rust</option>
+                <option value="go">Go</option>
+                <option value="typescript">TypeScript</option>
+                <option value="javascript">JavaScript</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Display Order</label>
+              <input type="number" value={displayOrder} onChange={e => setDisplayOrder(Number(e.target.value))} className="input-saas w-full p-3 text-xs" required />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Version</label>
+              <input value={version} onChange={e => setVersion(e.target.value)} placeholder="e.g. v1.2.0" className="input-saas w-full p-3 text-xs" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Badge Tag</label>
+              <select value={badge} onChange={e => setBadge(e.target.value)} className="input-saas w-full p-3 text-xs bg-[#080a10]">
+                <option value="Stable">Stable</option>
+                <option value="Beta">Beta</option>
+                <option value="Experimental">Experimental</option>
+                <option value="Coming Soon">Coming Soon</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Visibility Status</label>
+              <button
+                type="button"
+                onClick={() => setVisible(!visible)}
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-between border ${visible ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}
+              >
+                <span>{visible ? 'Visible (Published)' : 'Hidden (Draft)'}</span>
+                {visible ? <Eye size={15} /> : <EyeOff size={15} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">GitHub Repository URL</label>
+            <input value={githubUrl} onChange={e => setGithubUrl(e.target.value)} placeholder="https://github.com/org/repo" className="input-saas w-full p-3 text-xs" required />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Short Description</label>
+            <input value={description} onChange={e => setDescription(e.target.value)} placeholder="One-line summary for docs and landing page" className="input-saas w-full p-3 text-xs" />
+          </div>
+
+          {/* Monaco Editor Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">SDK Source Code (Monaco Editor)</label>
+                <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded font-mono font-bold">{language}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsReadOnlyPreview(!isReadOnlyPreview)}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${isReadOnlyPreview ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}
+                >
+                  {isReadOnlyPreview ? 'Preview Mode' : 'Edit Mode'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(sdkCode);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 flex items-center gap-1"
+                >
+                  {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#1e1e1e] shadow-inner h-72">
+              <Editor
+                height="100%"
+                language={language}
+                theme="vs-dark"
+                value={sdkCode}
+                onChange={(val) => setSdkCode(val || '')}
+                options={{
+                  readOnly: isReadOnlyPreview,
+                  minimap: { enabled: false },
+                  fontSize: 12,
+                  wordWrap: 'on',
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  lineNumbers: 'on',
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+            <button type="button" onClick={onClose} className="btn-saas-secondary px-5 py-2.5 text-xs font-bold">
+              Cancel
+            </button>
+            <button type="submit" disabled={isSaving} className="btn-magnetic-primary px-6 py-2.5 text-xs font-bold flex items-center gap-2">
+              {isSaving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
+              <span>Save SDK</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -41,6 +242,11 @@ const Admin: React.FC = () => {
   const [showGiveCredits, setShowGiveCredits] = useState<string | null>(null);
   const [showCreatePlan, setShowCreatePlan] = useState(false);
   const [showEditPlan, setShowEditPlan] = useState<string | null>(null);
+
+  const [sdksList, setSdksList] = useState<SDK[]>([]);
+  const [showSdkModal, setShowSdkModal] = useState(false);
+  const [editingSdk, setEditingSdk] = useState<SDK | null>(null);
+
   const [confirmModal, setConfirmModal] = useState<{
     show: boolean, title: string, message: string, onConfirm: () => void, danger?: boolean
   }>({ show: false, title: '', message: '', onConfirm: () => { } });
@@ -58,6 +264,8 @@ const Admin: React.FC = () => {
       navigate('/dashboard');
       return;
     }
+
+    const unsubSdks = subscribeToSDKs((loaded) => setSdksList(loaded));
 
     const loadingTimer = setTimeout(() => setLoading(false), 5000);
 
@@ -135,116 +343,117 @@ const Admin: React.FC = () => {
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
   return (
-    <div className="flex h-screen bg-background text-white">
+    <div className="flex h-screen bg-[#06080d] text-white">
 
-      <aside className="w-64 bg-surface border-r border-border p-6 flex flex-col">
-        <div className="flex items-center gap-2 font-black text-xl mb-12">
-          <span className="bg-white text-black px-2 py-0.5 rounded text-sm">DXA</span>
-          <span className="text-muted text-sm uppercase">Admin</span>
+      <aside className="w-64 bg-[#0b0d14]/90 backdrop-blur-xl border-r border-white/[0.08] p-6 flex flex-col gap-6">
+        <div className="flex items-center gap-3 pb-6 border-b border-white/[0.08]">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-black flex items-center justify-center font-black text-xs shadow-lg shadow-amber-500/20">
+            <Crown size={18} />
+          </div>
+          <div>
+            <div className="font-bold text-sm text-white tracking-tight">Admin Console</div>
+            <div className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Super Control</div>
+          </div>
         </div>
-        <nav className="flex-1 space-y-1">
-          <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'users' ? 'bg-white/10 text-white' : 'text-muted'}`}>
-            <Users size={18} /> Customers
+        <nav className="flex-1 space-y-1.5">
+          <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'users' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+            <Users size={16} className={activeTab === 'users' ? 'text-indigo-400' : 'text-slate-400'} /> Customers
           </button>
-          <button onClick={() => setActiveTab('plans')} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'plans' ? 'bg-white/10 text-white' : 'text-muted'}`}>
-            <BarChart2 size={18} /> System Plans
+          <button onClick={() => setActiveTab('plans')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'plans' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+            <BarChart2 size={16} className={activeTab === 'plans' ? 'text-indigo-400' : 'text-slate-400'} /> System Plans
           </button>
-          <button onClick={() => setActiveTab('system')} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'system' ? 'bg-white/10 text-white' : 'text-muted'}`}>
-            <Hammer size={18} /> System Config
+          <button onClick={() => setActiveTab('system')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'system' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+            <Hammer size={16} className={activeTab === 'system' ? 'text-indigo-400' : 'text-slate-400'} /> System Config
           </button>
         </nav>
-        <Link to="/dashboard" className="mt-auto flex items-center gap-2 px-4 py-3 text-sm font-black uppercase tracking-widest text-muted hover:text-white">
-          <ArrowLeft size={18} /> Back to App
+        <Link to="/dashboard" className="mt-auto flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all">
+          <ArrowLeft size={16} /> Back to App
         </Link>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-10 space-y-8 animate-fade-in">
+      <main className="flex-1 overflow-y-auto p-8 space-y-8 animate-fade-in custom-scrollbar">
         <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-black uppercase tracking-tight">Management Console</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">Management Console</h1>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          <div className="bg-surface border border-border p-6 rounded-2xl">
-            <div className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">Total Users</div>
-            <div className="text-3xl font-black">{Object.keys(customers).length}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="glass-card glass-card-hover p-5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
+            <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Total Customers</div>
+            <div className="text-3xl font-black text-white">{Object.keys(customers).length}</div>
           </div>
-          <div className="bg-surface border border-border p-6 rounded-2xl">
-            <div className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">Total Apps</div>
-            <div className="text-3xl font-black">{appCount}</div>
+          <div className="glass-card glass-card-hover p-5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
+            <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Total Applications</div>
+            <div className="text-3xl font-black text-indigo-400">{appCount}</div>
           </div>
-          <div className="bg-surface border border-border p-6 rounded-2xl">
-            <div className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">Active Plans</div>
-            <div className="text-3xl font-black">{Object.keys(plans).length}</div>
-          </div>
-          <div className="bg-surface border border-border p-6 rounded-2xl">
-            <div className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">Active Plans</div>
-            <div className="text-3xl font-black">{Object.keys(plans).length}</div>
+          <div className="glass-card glass-card-hover p-5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
+            <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Active System Plans</div>
+            <div className="text-3xl font-black text-amber-400">{Object.keys(plans).length}</div>
           </div>
         </div>
 
         {activeTab === 'users' ? (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="relative w-96 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-white transition-colors" size={18} />
+            <div className="flex justify-between items-center gap-4">
+              <div className="relative w-80 group">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-white transition-colors" size={16} />
                 <input
                   type="text"
                   placeholder="Search by email or secret..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-surface border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-white/20 transition-all placeholder:text-muted/50"
+                  className="w-full bg-[#080a10] border border-white/[0.08] rounded-xl py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-indigo-500/60 transition-all placeholder:text-slate-500 shadow-inner"
                 />
               </div>
               <button
                 onClick={() => setShowGiveCredits('')}
-                className="bg-white text-black px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs uppercase font-bold tracking-wider flex items-center gap-2 transition-all"
               >
-                <Coins size={14} /> Add Credits
+                <Coins size={15} /> Add Credits
               </button>
             </div>
 
-            <div className="bg-surface border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl">
-              <table className="w-full text-left text-sm text-white">
+            <div className="glass-card rounded-2xl overflow-hidden shadow-2xl bg-white/[0.02] border border-white/[0.05]">
+              <table className="w-full text-left text-xs text-white">
                 <thead>
-                  <tr className="bg-white/[0.02] text-[10px] font-black uppercase tracking-[0.2em] text-muted/60">
-                    <th className="p-6">Customer</th>
-                    <th className="p-6">Plan</th>
-                    <th className="p-6">Credits</th>
-                    <th className="p-6">Joined</th>
-                    <th className="p-6 text-right">Actions</th>
+                  <tr className="bg-white/[0.02] border-b border-white/[0.08] text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="p-4">Customer</th>
+                    <th className="p-4">Plan</th>
+                    <th className="p-4">Credits</th>
+                    <th className="p-4">Joined</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.03]">
+                <tbody className="divide-y divide-white/[0.04]">
                   {(filteredCustomers as [string, Customer][]).map(([key, c]) => (
-                    <tr key={key} className="group hover:bg-white/[0.02] transition-colors">
-                      <td className="p-6">
+                    <tr key={key} className="group hover:bg-white/[0.03] transition-colors">
+                      <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-white group-hover:text-blue-400 transition-colors">{c.email}</span>
-                          <span className="text-[10px] font-mono text-muted/50 uppercase tracking-tighter mt-1">{c.secret}</span>
+                          <span className="font-semibold text-white group-hover:text-indigo-400 transition-colors">{c.email}</span>
+                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-tight mt-0.5">{c.secret}</span>
                         </div>
                       </td>
-                      <td className="p-6">
-                        <span className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/20">
+                      <td className="p-4">
+                        <span className="bg-indigo-500/10 text-indigo-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-indigo-500/20">
                           {c.plan}
                         </span>
                       </td>
-                      <td className="p-6">
-                        <div className="flex items-center gap-2">
-                          <Coins size={14} className="text-yellow-500" />
-                          <span className="font-black text-white">{c.credits}</span>
+                      <td className="p-4">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-400">
+                          <Coins size={14} />
+                          <span>{c.credits}</span>
                         </div>
                       </td>
-                      <td className="p-6 text-muted/60 font-medium">
+                      <td className="p-4 text-slate-400 font-medium">
                         {new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
-                      <td className="p-6 text-right">
+                      <td className="p-4 text-right">
                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => setShowEditUserPlan(key)}
-                            className="p-2.5 bg-white/5 text-muted hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                            className="p-2 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all border border-white/5"
                             title="Edit Plan"
                           >
-                            <Crown size={18} />
+                            <Crown size={15} />
                           </button>
                           <button
                             onClick={() => {
@@ -261,10 +470,10 @@ const Admin: React.FC = () => {
                                 }
                               });
                             }}
-                            className="p-2.5 bg-danger/10 text-danger hover:bg-danger hover:text-white rounded-xl transition-all"
+                            className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg transition-all border border-rose-500/20"
                             title="Delete User"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </td>
@@ -272,7 +481,7 @@ const Admin: React.FC = () => {
                   ))}
                   {filteredCustomers.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="p-20 text-center text-muted uppercase tracking-widest text-xs font-bold opacity-30">
+                      <td colSpan={5} className="p-16 text-center text-slate-500 uppercase tracking-wider text-xs font-bold">
                         No customers found matching your search
                       </td>
                     </tr>
@@ -492,68 +701,140 @@ const Admin: React.FC = () => {
             </div>
 
             <div className="bg-surface border border-white/5 p-10 rounded-[2.5rem] shadow-2xl">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="p-4 bg-white/5 rounded-2xl">
-                  <Code className="text-white" size={24} />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-white/10 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-indigo-400">
+                    <Code size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black uppercase tracking-tight text-white">SDK Management Console</h3>
+                    <p className="text-slate-400 text-xs font-medium mt-0.5">Database-driven SDK system with Monaco Code Editor & Live Sync</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-black uppercase tracking-tight">SDK Management</h3>
-                  <p className="text-muted text-[10px] uppercase font-bold tracking-widest mt-1">Manage Official SDK Links</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingSdk(null);
+                    setShowSdkModal(true);
+                  }}
+                  className="btn-magnetic-primary px-5 py-3 text-xs font-bold flex items-center gap-2 shrink-0"
+                >
+                  <Plus size={16} />
+                  <span>Register New SDK</span>
+                </button>
               </div>
 
-              <div className="space-y-6">
-                <form onSubmit={async (e) => {
-                  e.preventDefault();
-                  const d = new FormData(e.currentTarget);
-                  const name = d.get('sdkName') as string;
-                  const link = d.get('sdkLink') as string;
-                  if (!name || !link) return;
-
-                  const newSdks = { ...(maintenance.sdks || {}), [name]: { name, link } };
-                  await set(ref(db, 'system/config/sdks'), newSdks);
-                  addToast(`SDK ${name} added`);
-                  (e.target as HTMLFormElement).reset();
-                }} className="space-y-4 bg-white/[0.02] p-6 rounded-3xl border border-white/5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black tracking-widest uppercase text-muted/50 ml-2">SDK Name</label>
-                      <input name="sdkName" placeholder="e.g. Cpp" className="w-full bg-surfaceHighlight border border-white/5 p-4 rounded-2xl focus:outline-none focus:border-white/20 text-sm" required />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black tracking-widest uppercase text-muted/50 ml-2">Github Link</label>
-                      <input name="sdkLink" placeholder="https://github.com/..." className="w-full bg-surfaceHighlight border border-white/5 p-4 rounded-2xl focus:outline-none focus:border-white/20 text-sm" required />
-                    </div>
-                  </div>
-                  <button type="submit" className="w-full py-4 bg-white hover:bg-gray-200 text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl transition-all">
-                    Add SDK Link
-                  </button>
-                </form>
-
-                <div className="space-y-2">
-                  {(Object.values(maintenance.sdks || {}) as SDK[]).map((sdk) => (
-                    <div key={sdk.name} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5 group">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-sm">{sdk.name}</span>
-                        <span className="text-[10px] text-muted truncate max-w-[200px]">{sdk.link}</span>
+              <div className="space-y-4">
+                {sdksList.map((sdk) => (
+                  <div 
+                    key={sdk.id} 
+                    className="bg-white/[0.02] hover:bg-white/[0.04] rounded-2xl border border-white/10 p-5 md:p-6 transition-all duration-300 shadow-lg flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative overflow-hidden group"
+                  >
+                    {/* Left: SDK Info */}
+                    <div className="flex items-start gap-4 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center font-black text-xs text-indigo-400 shrink-0 mt-0.5 shadow-sm">
+                        #{sdk.displayOrder || 1}
                       </div>
+                      <div className="space-y-2 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="font-extrabold text-sm md:text-base text-white tracking-tight">{sdk.name}</h4>
+                          <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                            {sdk.language}
+                          </span>
+                          {sdk.version && (
+                            <span className="text-[10px] font-mono text-slate-300 px-2.5 py-0.5 rounded-md bg-white/10 border border-white/5 font-bold">
+                              {sdk.version}
+                            </span>
+                          )}
+                          {sdk.badge && (
+                            <span className="text-[9px] font-black px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
+                              {sdk.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-slate-400 font-medium leading-relaxed break-words max-w-2xl">
+                          {sdk.description || 'Official client library for Deep X Auth.'}
+                        </p>
+
+                        {sdk.githubUrl && (
+                          <a 
+                            href={sdk.githubUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-400 hover:text-indigo-300 transition-colors max-w-full"
+                          >
+                            <Github size={13} className="shrink-0" />
+                            <span className="truncate">{sdk.githubUrl}</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right / Bottom: Action Controls (Self-Contained inside card) */}
+                    <div className="flex flex-wrap items-center gap-2.5 pt-3 lg:pt-0 border-t lg:border-t-0 border-white/5 shrink-0 justify-start lg:justify-end">
+                      {/* Visibility Toggle Button */}
                       <button
+                        type="button"
                         onClick={async () => {
-                          const newSdks = { ...maintenance.sdks };
-                          delete newSdks[sdk.name];
-                          await set(ref(db, 'system/config/sdks'), newSdks);
-                          addToast(`SDK ${sdk.name} removed`);
+                          await toggleSDKVisibility(sdk.id, sdk.visible);
+                          addToast(`SDK ${sdk.name} is now ${!sdk.visible ? 'Visible' : 'Hidden'}`);
                         }}
-                        className="p-2 text-danger hover:bg-danger/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                        className={`h-9 px-3.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border shrink-0 ${
+                          sdk.visible 
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 shadow-sm' 
+                            : 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 shadow-sm'
+                        }`}
                       >
-                        <Trash2 size={16} />
+                        {sdk.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                        <span>{sdk.visible ? 'Visible' : 'Hidden'}</span>
+                      </button>
+
+                      {/* Edit Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingSdk(sdk);
+                          setShowSdkModal(true);
+                        }}
+                        className="h-9 px-3.5 rounded-xl text-xs font-bold text-slate-200 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center gap-1.5 shrink-0"
+                        title="Edit SDK & Code"
+                      >
+                        <Edit2 size={14} />
+                        <span>Edit</span>
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmModal({
+                            show: true,
+                            title: 'Delete SDK',
+                            message: `Are you sure you want to delete ${sdk.name}? It will instantly be removed from the Landing Page and Documentation.`,
+                            danger: true,
+                            onConfirm: async () => {
+                              await deleteSDK(sdk.id);
+                              setConfirmModal(prev => ({ ...prev, show: false }));
+                              addToast(`SDK ${sdk.name} deleted`);
+                            }
+                          });
+                        }}
+                        className="h-9 px-3.5 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all flex items-center gap-1.5 shrink-0"
+                        title="Delete SDK"
+                      >
+                        <Trash2 size={14} />
+                        <span>Delete</span>
                       </button>
                     </div>
-                  ))}
-                  {(!maintenance.sdks || Object.keys(maintenance.sdks).length === 0) && (
-                    <div className="text-center py-6 text-muted text-[10px] uppercase font-bold tracking-widest opacity-30">No SDKs registered</div>
-                  )}
-                </div>
+                  </div>
+                ))}
+
+                {sdksList.length === 0 && (
+                  <div className="text-center py-10 text-slate-500 text-xs font-bold uppercase tracking-widest opacity-50">
+                    No SDKs currently registered in database.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -803,6 +1084,17 @@ const Admin: React.FC = () => {
         )
       }
 
+
+      {showSdkModal && (
+        <SDKEditorModal
+          sdk={editingSdk}
+          onClose={() => setShowSdkModal(false)}
+          onSave={async (sdkData) => {
+            await saveSDK(sdkData);
+            addToast(`SDK ${sdkData.name} saved successfully`);
+          }}
+        />
+      )}
 
       <div className="fixed bottom-8 right-8 z-[500] flex flex-col gap-3">
         {toasts.map(t => (

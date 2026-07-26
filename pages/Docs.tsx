@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../services/firebase';
+import { subscribeToSDKs } from '../services/sdkService';
 import { SDK } from '../types';
 import {
     ArrowLeft, Shield, Key, Share2,
     Code, ChevronRight, Copy, Check, Github,
     Lock, Users, Box, Database, Zap, BookOpen,
-    Terminal, ChevronDown, ChevronUp, Globe
+    Terminal, ChevronDown, ChevronUp, Globe, ExternalLink
 } from 'lucide-react';
 
-const BASE_URL = '...................................................................';
+const BASE_URL = 'https://deepxauth.pages.dev';
 const SDK_PUBLIC_KEY_SNIPPET = `-----BEGIN PUBLIC KEY-----
 MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAh3fjJEqt8/GbGNkhn9ws
 8v7cStTdgEv2712vsJUhyJXS/hhG6wLcTHCk/hY/+jICvAF7lsSAMmz4Nwntp62B
@@ -465,19 +466,29 @@ if (success) {
 const Docs: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState('quickstart');
     const [sdks, setSdks] = useState<SDK[]>([]);
+    const [selectedSdkId, setSelectedSdkId] = useState<string | null>(null);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    const [copiedCode, setCopiedCode] = useState(false);
 
     useEffect(() => {
-        return onValue(ref(db, 'system/config/sdks'), (snap) => {
-            setSdks(Object.values(snap.val() || {}));
+        return subscribeToSDKs((loaded) => {
+            const visible = loaded.filter(s => s.visible !== false);
+            setSdks(visible);
         });
     }, []);
 
     const activeEndpoints = endpoints.filter(ep => ep.category === activeCategory);
     const activeCatInfo = CATEGORIES.find(c => c.id === activeCategory);
+    const currentSelectedSdk = sdks.find(s => s.id === selectedSdkId);
+
+    const copySDKCode = (code: string) => {
+        navigator.clipboard.writeText(code);
+        setCopiedCode(true);
+        setTimeout(() => setCopiedCode(false), 2000);
+    };
 
     return (
-        <div className="min-h-screen bg-background text-white flex flex-col selection:bg-white/10">
+        <div className="min-h-screen bg-background text-white flex flex-col selection:bg-white/10 font-sans">
             
             <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.04]"
                 style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
@@ -499,7 +510,7 @@ const Docs: React.FC = () => {
 
                     <div className="hidden lg:flex items-center gap-4">
                         <span className="text-xs font-mono text-muted/60 bg-white/[0.03] px-3 py-1.5 rounded-lg border border-white/[0.06]">{BASE_URL}</span>
-                        <Link to="/" className="text-sm font-bold text-muted hover:text-white transition-colors flex items-center gap-1.5">
+                        <Link to="/dashboard" className="text-sm font-bold text-muted hover:text-white transition-colors flex items-center gap-1.5">
                             <ArrowLeft size={14} /> Dashboard
                         </Link>
                     </div>
@@ -524,14 +535,18 @@ const Docs: React.FC = () => {
                         {CATEGORIES.map(cat => (
                             <button
                                 key={cat.id}
-                                onClick={() => { setActiveCategory(cat.id); setMobileSidebarOpen(false); }}
+                                onClick={() => { 
+                                    setActiveCategory(cat.id); 
+                                    setSelectedSdkId(null); 
+                                    setMobileSidebarOpen(false); 
+                                }}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm text-left
-                                    ${activeCategory === cat.id
+                                    ${activeCategory === cat.id && !selectedSdkId
                                         ? 'bg-white text-black font-bold shadow-lg shadow-white/5'
                                         : 'text-muted hover:text-white hover:bg-white/[0.05] font-medium'
                                     }`}
                             >
-                                <span className={activeCategory === cat.id ? 'text-black' : 'text-muted/50'}>{cat.icon}</span>
+                                <span className={activeCategory === cat.id && !selectedSdkId ? 'text-black' : 'text-muted/50'}>{cat.icon}</span>
                                 <span className="flex-1">{cat.name}</span>
                                 {cat.badge && (
                                     <span className="text-[8px] font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase tracking-widest">
@@ -544,13 +559,31 @@ const Docs: React.FC = () => {
 
                     {sdks.length > 0 && (
                         <div className="mt-6 pt-5 border-t border-white/[0.06] space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted/40 mb-3 ml-1 px-1">SDKs</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted/40 mb-3 ml-1 px-1">Official SDKs</p>
                             {sdks.map(sdk => (
-                                <a key={sdk.name} href={sdk.link} target="_blank" rel="noopener noreferrer"
-                                    className="flex items-center justify-between px-3 py-2.5 rounded-xl text-muted hover:text-white hover:bg-white/5 transition-all text-sm group">
-                                    <span className="flex items-center gap-2.5 font-medium"><Github size={14} />{sdk.name}</span>
-                                    <Share2 size={12} className="opacity-0 group-hover:opacity-60 transition-opacity" />
-                                </a>
+                                <button
+                                    key={sdk.id}
+                                    onClick={() => {
+                                        setSelectedSdkId(sdk.id);
+                                        setActiveCategory('sdk');
+                                        setMobileSidebarOpen(false);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-sm group ${
+                                        selectedSdkId === sdk.id 
+                                            ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold' 
+                                            : 'text-muted hover:text-white hover:bg-white/5 font-medium'
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-2.5">
+                                        <Code size={14} className={selectedSdkId === sdk.id ? 'text-indigo-400' : 'text-slate-400'} />
+                                        <span>{sdk.name}</span>
+                                    </span>
+                                    {sdk.badge && (
+                                        <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 uppercase">
+                                            {sdk.badge}
+                                        </span>
+                                    )}
+                                </button>
                             ))}
                         </div>
                     )}
@@ -563,7 +596,58 @@ const Docs: React.FC = () => {
 
                 
                 <main className="flex-1 p-6 lg:p-10 min-w-0">
-                    {activeCategory === 'quickstart' ? (
+                    {selectedSdkId && currentSelectedSdk ? (
+                        <div className="space-y-6 animate-fade-in">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold uppercase tracking-widest text-indigo-400">Official SDK Documentation</span>
+                                        {currentSelectedSdk.version && (
+                                            <span className="px-2 py-0.5 rounded-full bg-white/10 text-white text-[10px] font-mono font-bold">
+                                                {currentSelectedSdk.version}
+                                            </span>
+                                        )}
+                                        {currentSelectedSdk.badge && (
+                                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-500/30">
+                                                {currentSelectedSdk.badge}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h1 className="text-3xl font-black text-white tracking-tight">{currentSelectedSdk.name} Integration Guide</h1>
+                                    <p className="text-slate-400 text-sm">{currentSelectedSdk.description || `Integrate ${currentSelectedSdk.name} into your application.`}</p>
+                                </div>
+                                {currentSelectedSdk.githubUrl && (
+                                    <a
+                                        href={currentSelectedSdk.githubUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="btn-saas-secondary px-4 py-2.5 text-xs font-bold flex items-center gap-2 shrink-0 border border-white/10"
+                                    >
+                                        <Github size={15} /> GitHub Repository <ExternalLink size={12} />
+                                    </a>
+                                )}
+                            </div>
+
+                            <div className="glass-card p-6 rounded-3xl border border-white/10 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Terminal size={16} className="text-indigo-400" />
+                                        <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">{currentSelectedSdk.name} Implementation Code</span>
+                                    </div>
+                                    <button
+                                        onClick={() => copySDKCode(currentSelectedSdk.sdkCode)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors"
+                                    >
+                                        {copiedCode ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                                        <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
+                                    </button>
+                                </div>
+                                <pre className="bg-[#090b13] border border-white/10 rounded-2xl p-5 text-xs font-mono text-slate-200 leading-relaxed overflow-x-auto custom-scrollbar">
+                                    <code>{currentSelectedSdk.sdkCode}</code>
+                                </pre>
+                            </div>
+                        </div>
+                    ) : activeCategory === 'quickstart' ? (
                         <QuickStart />
                     ) : (
                         <div className="space-y-6">

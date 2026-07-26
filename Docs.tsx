@@ -10,7 +10,7 @@ import {
     Terminal, ChevronDown, ChevronUp, Globe
 } from 'lucide-react';
 
-const BASE_URL = '...................................................................';
+const BASE_URL = 'https://deepxauth.pages.dev';
 const SDK_PUBLIC_KEY_SNIPPET = `-----BEGIN PUBLIC KEY-----
 <your-response-signing-public-key>
 -----END PUBLIC KEY-----`;
