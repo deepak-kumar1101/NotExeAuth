@@ -7,7 +7,7 @@ import {
   Plus, Coins, ShieldCheck, Mail, ArrowLeft, Loader2,
   Search, X, Key, Info, AlertTriangle, Crown, Settings,
   ArrowUp, ArrowDown, Hammer, GripVertical, Code, Eye, EyeOff,
-  Maximize2, Minimize2, Check, Copy, Terminal, Github,
+  Maximize2, Minimize2, Check, Copy, Terminal, Github, Menu,
   Download, Upload, Filter, FileJson, Sparkles, Layers, Zap,
   Database, Lock, Server, Activity, Rocket, Clock, QrCode, Instagram, Image as ImageIcon, Send, CheckCircle2
 } from 'lucide-react';
@@ -792,11 +792,12 @@ const Admin: React.FC = () => {
     show: boolean, title: string, message: string, onConfirm: () => void, danger?: boolean
   }>({ show: false, title: '', message: '', onConfirm: () => { } });
 
-  const [toasts, setToasts] = useState<{ id: number, msg: string, type: 'success' | 'error' }[]>([]);
+  const [toasts, setToasts] = useState<{ id: string; msg: string; type: 'info' | 'error' }[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const addToast = (msg: string, type: 'success' | 'error' = 'success') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, msg, type }]);
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, msg, type: type === 'success' ? 'info' : 'error' }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
   };
 
@@ -936,35 +937,62 @@ const Admin: React.FC = () => {
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
   return (
-    <div className="flex h-screen bg-[#06080d] text-white">
+    <div className="flex flex-col md:flex-row h-screen bg-[#06080d] text-white relative overflow-hidden">
 
-      <aside className="w-64 bg-[#0b0d14]/90 backdrop-blur-xl border-r border-white/[0.08] p-6 flex flex-col gap-6">
-        <div className="flex items-center gap-3 pb-6 border-b border-white/[0.08]">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-black flex items-center justify-center font-black text-xs shadow-lg shadow-amber-500/20">
-            <Crown size={18} />
-          </div>
-          <div>
-            <div className="font-bold text-sm text-white tracking-tight">Admin Console</div>
-            <div className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Super Control</div>
+      {/* MOBILE TOP HEADER BAR */}
+      <header className="md:hidden h-16 bg-[#0b0d14] border-b border-white/[0.08] px-4 flex items-center justify-between sticky top-0 z-30">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-300 hover:text-white bg-white/5 rounded-xl border border-white/10">
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <div className="flex items-center gap-2">
+            <Crown size={18} className="text-amber-400" />
+            <span className="font-bold text-sm text-white">Admin Console</span>
           </div>
         </div>
+        <Link to="/dashboard" className="p-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] border border-white/[0.08] rounded-xl flex items-center gap-1.5">
+          <ArrowLeft size={14} /> Exit
+        </Link>
+      </header>
+
+      {/* MOBILE BACKDROP */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/80 backdrop-blur-md" onClick={() => setIsMobileMenuOpen(false)} />
+      )}
+
+      {/* SIDEBAR NAVIGATION (RESPONSIVE DRAWER) */}
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#0b0d14] backdrop-blur-xl border-r border-white/[0.08] p-6 flex flex-col gap-6 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="flex items-center justify-between pb-6 border-b border-white/[0.08]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-black flex items-center justify-center font-black text-xs shadow-lg shadow-amber-500/20">
+              <Crown size={18} />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-white tracking-tight">Admin Console</div>
+              <div className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Super Control</div>
+            </div>
+          </div>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-1.5 text-slate-400 hover:text-white">
+            <X size={18} />
+          </button>
+        </div>
         <nav className="flex-1 space-y-1.5">
-          <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'users' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+          <button onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'users' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
             <Users size={16} className={activeTab === 'users' ? 'text-indigo-400' : 'text-slate-400'} /> Customers
           </button>
-          <button onClick={() => setActiveTab('plans')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'plans' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+          <button onClick={() => { setActiveTab('plans'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'plans' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
             <BarChart2 size={16} className={activeTab === 'plans' ? 'text-indigo-400' : 'text-slate-400'} /> System Plans
           </button>
-          <button onClick={() => setActiveTab('credit_packages')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'credit_packages' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+          <button onClick={() => { setActiveTab('credit_packages'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'credit_packages' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
             <Coins size={16} className={activeTab === 'credit_packages' ? 'text-indigo-400' : 'text-slate-400'} /> Credit Pricing
           </button>
-          <button onClick={() => setActiveTab('payment_config')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'payment_config' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+          <button onClick={() => { setActiveTab('payment_config'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'payment_config' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
             <QrCode size={16} className={activeTab === 'payment_config' ? 'text-indigo-400' : 'text-slate-400'} /> Payment & QR Config
           </button>
-          <button onClick={() => setActiveTab('credit_requests')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'credit_requests' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+          <button onClick={() => { setActiveTab('credit_requests'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'credit_requests' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
             <Upload size={16} className={activeTab === 'credit_requests' ? 'text-indigo-400' : 'text-slate-400'} /> Payment Proofs
           </button>
-          <button onClick={() => setActiveTab('system')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'system' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
+          <button onClick={() => { setActiveTab('system'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${activeTab === 'system' ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-white border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}>
             <Hammer size={16} className={activeTab === 'system' ? 'text-indigo-400' : 'text-slate-400'} /> System Config
           </button>
         </nav>
@@ -973,7 +1001,7 @@ const Admin: React.FC = () => {
         </Link>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-8 space-y-8 animate-fade-in custom-scrollbar">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 sm:space-y-8 animate-fade-in custom-scrollbar">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-white">Management Console</h1>
         </div>
@@ -995,8 +1023,8 @@ const Admin: React.FC = () => {
 
         {activeTab === 'users' ? (
           <div className="space-y-4">
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative w-80 group">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="relative w-full sm:w-80 group">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-white transition-colors" size={16} />
                 <input
                   type="text"
@@ -1008,14 +1036,14 @@ const Admin: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowGiveCredits('')}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs uppercase font-bold tracking-wider flex items-center gap-2 transition-all"
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs uppercase font-bold tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg"
               >
                 <Coins size={15} /> Add Credits
               </button>
             </div>
 
-            <div className="glass-card rounded-2xl overflow-hidden shadow-2xl bg-white/[0.02] border border-white/[0.05]">
-              <table className="w-full text-left text-xs text-white">
+            <div className="glass-card rounded-2xl overflow-hidden shadow-2xl bg-white/[0.02] border border-white/[0.05] overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left text-xs text-white min-w-[650px]">
                 <thead>
                   <tr className="bg-white/[0.02] border-b border-white/[0.08] text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="p-4">Customer</th>
@@ -1847,15 +1875,16 @@ const Admin: React.FC = () => {
                     <p className="text-xs text-slate-400">Review customer payment screenshots and approve credit requests with 1 click.</p>
                   </div>
 
-                  <div className="glass-card rounded-2xl overflow-hidden shadow-2xl bg-white/[0.02] border border-white/[0.05]">
-                    <table className="w-full text-left text-xs text-white">
+                  {/* DESKTOP TABLE VIEW */}
+                  <div className="hidden md:block glass-card rounded-2xl overflow-hidden shadow-2xl bg-white/[0.02] border border-white/[0.05] overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-left text-xs text-white min-w-[850px]">
                       <thead>
                         <tr className="bg-white/[0.02] border-b border-white/[0.08] text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           <th className="p-4">Customer</th>
                           <th className="p-4">Package</th>
                           <th className="p-4">Credits</th>
                           <th className="p-4">Amount</th>
-                          <th className="p-4">Proof Screenshot</th>
+                          <th className="p-4">Proof & Notes</th>
                           <th className="p-4">Status</th>
                           <th className="p-4 text-right">Action</th>
                         </tr>
@@ -1863,20 +1892,29 @@ const Admin: React.FC = () => {
                       <tbody className="divide-y divide-white/[0.04]">
                         {Object.entries(creditRequests).map(([reqId, req]) => (
                           <tr key={reqId} className="hover:bg-white/[0.03] transition-colors">
-                            <td className="p-4 font-semibold text-white">{req.userEmail}</td>
+                            <td className="p-4 font-semibold text-white">
+                              <div>{req.userEmail}</div>
+                              <div className="text-[10px] text-slate-500 font-mono mt-0.5">{new Date(req.timestamp).toLocaleString()}</div>
+                            </td>
                             <td className="p-4 text-slate-300 font-bold">{req.selectedPackage}</td>
                             <td className="p-4 font-mono font-bold text-indigo-400">+{req.creditsRequested} PTS</td>
                             <td className="p-4 font-mono font-bold text-emerald-400">₹{req.priceINR}</td>
-                            <td className="p-4">
+                            <td className="p-4 space-y-1.5">
                               {req.screenshotBase64 ? (
                                 <button
                                   onClick={() => setShowQrLightbox(req.screenshotBase64 || null)}
-                                  className="p-1 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-500 transition-all inline-flex items-center gap-1.5 text-xs text-indigo-400"
+                                  className="px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all inline-flex items-center gap-1.5 text-xs text-indigo-300 font-medium"
                                 >
                                   <ImageIcon size={14} /> View Screenshot
                                 </button>
                               ) : (
-                                <span className="text-slate-500 text-[10px]">No File Attached</span>
+                                <span className="text-slate-500 text-[10px] block">No Screenshot</span>
+                              )}
+                              {req.note && (
+                                <div className="text-[11px] text-slate-300 bg-white/5 p-2 rounded-lg border border-white/10 font-mono break-all max-w-xs">
+                                  <span className="text-[9px] text-slate-400 uppercase font-bold block mb-0.5">User Note / UTR:</span>
+                                  {req.note}
+                                </div>
                               )}
                             </td>
                             <td className="p-4">
@@ -1935,6 +1973,102 @@ const Admin: React.FC = () => {
                         )}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* MOBILE CARDS VIEW */}
+                  <div className="md:hidden space-y-4">
+                    {Object.keys(creditRequests).length === 0 ? (
+                      <div className="glass-card p-8 text-center text-xs font-bold text-slate-500 uppercase tracking-widest rounded-2xl">
+                        No credit top-up requests submitted yet.
+                      </div>
+                    ) : (
+                      Object.entries(creditRequests).map(([reqId, req]) => (
+                        <div key={reqId} className="glass-card p-5 rounded-2xl border border-white/10 space-y-4 bg-white/[0.03]">
+                          <div className="flex justify-between items-start gap-2 border-b border-white/10 pb-3">
+                            <div>
+                              <div className="font-bold text-sm text-white break-all">{req.userEmail}</div>
+                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">{new Date(req.timestamp).toLocaleString()}</div>
+                            </div>
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shrink-0 ${req.status === 'approved'
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                : req.status === 'rejected'
+                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                  : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              }`}>
+                              {req.status}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 bg-black/30 p-3 rounded-xl border border-white/5">
+                            <div>
+                              <span className="text-[10px] text-slate-400 uppercase font-bold block">Package</span>
+                              <span className="text-xs font-bold text-slate-200">{req.selectedPackage}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 uppercase font-bold block">Amount & Credits</span>
+                              <span className="text-xs font-mono font-bold text-emerald-400">₹{req.priceINR}</span>
+                              <span className="text-[10px] font-mono text-indigo-400 block font-bold">+{req.creditsRequested} PTS</span>
+                            </div>
+                          </div>
+
+                          {/* PROOF SCREENSHOT / NOTE */}
+                          <div className="space-y-2">
+                            <span className="text-[10px] text-slate-400 uppercase font-extrabold block">Proof & Reference:</span>
+                            {req.screenshotBase64 ? (
+                              <button
+                                onClick={() => setShowQrLightbox(req.screenshotBase64 || null)}
+                                className="w-full py-2.5 px-4 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center justify-center gap-2 hover:bg-indigo-500/25 transition-all"
+                              >
+                                <ImageIcon size={16} /> View Attached Screenshot
+                              </button>
+                            ) : (
+                              <span className="text-slate-500 text-xs italic block">No image file attached</span>
+                            )}
+
+                            {req.note && (
+                              <div className="text-xs text-slate-200 bg-white/5 p-3 rounded-xl border border-white/10 font-mono break-all">
+                                <span className="text-[9px] text-slate-400 uppercase font-bold block mb-1">User Note / Transaction Note:</span>
+                                {req.note}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* ACTIONS */}
+                          {req.status === 'pending' && (
+                            <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                              <button
+                                onClick={async () => {
+                                  const emailKey = req.userEmail.replace(/\./g, ',');
+                                  const snap = await get(ref(db, `customers/${emailKey}`));
+                                  if (snap.exists()) {
+                                    const currentCust = decrypt(snap.val()) as Customer;
+                                    const updatedCust: Customer = {
+                                      ...currentCust,
+                                      credits: (currentCust.credits || 0) + req.creditsRequested
+                                    };
+                                    await set(ref(db, `customers/${emailKey}`), encrypt(updatedCust));
+                                  }
+                                  await set(ref(db, `system/creditRequests/${reqId}`), encrypt({ ...req, status: 'approved' }));
+                                  addToast(`Approved request & added +${req.creditsRequested} PTS to ${req.userEmail}`);
+                                }}
+                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+                              >
+                                <CheckCircle2 size={16} /> Approve & Add Credits
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  await set(ref(db, `system/creditRequests/${reqId}`), encrypt({ ...req, status: 'rejected' }));
+                                  addToast(`Rejected request from ${req.userEmail}`, 'error');
+                                }}
+                                className="w-full py-2.5 bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider border border-rose-500/20"
+                              >
+                                Reject Request
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               ) : null}

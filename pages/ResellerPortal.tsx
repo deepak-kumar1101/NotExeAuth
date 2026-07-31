@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ref, onValue, set, update, get, remove } from 'firebase/database';
 import {
     Users, Box, Key, LogOut, Plus, Search, CheckCircle2, AlertCircle, Loader2,
-    Trash2, ShieldAlert, Share2, Palette, Database, Settings, RefreshCcw, Edit, X,
+    Trash2, ShieldAlert, Share2, Palette, Database, Settings, RefreshCcw, Edit, X, Menu,
     ChevronDown, Copy, Check, AlertTriangle, ShieldCheck, Settings2, Monitor
 } from 'lucide-react';
 import { auth, db } from '../services/firebase';
@@ -116,6 +116,7 @@ const ResellerPortal: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [reseller, setReseller] = useState<Reseller | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
@@ -695,11 +696,29 @@ const ResellerPortal: React.FC = () => {
     );
 
     return (
-        <div className="flex h-screen overflow-hidden bg-background text-white font-sans selection:bg-white/20">
+        <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-background text-white font-sans selection:bg-white/20 relative">
             <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.05]" style={{ 
                 backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', 
                 backgroundSize: '50px 50px' 
             }}></div>
+
+            {/* MOBILE TOP HEADER BAR */}
+            <header className="md:hidden h-16 bg-surface border-b border-border px-4 flex items-center justify-between sticky top-0 z-30">
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-300 hover:text-white bg-white/5 rounded-xl border border-white/10">
+                        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                    <span className="font-bold text-sm text-white truncate">{reseller?.panelName || 'RESELLER PORTAL'}</span>
+                </div>
+                <button onClick={handleLogout} className="p-2 text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 rounded-xl">
+                    <LogOut size={16} />
+                </button>
+            </header>
+
+            {/* MOBILE BACKDROP */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden fixed inset-0 z-40 bg-black/80 backdrop-blur-md" onClick={() => setIsMobileMenuOpen(false)} />
+            )}
 
             <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none">
                 {toasts.map(t => (
@@ -714,15 +733,20 @@ const ResellerPortal: React.FC = () => {
                 ))}
             </div>
 
-            <aside className="w-64 border-r border-border bg-surface flex flex-col p-6 relative z-10">
-                <div className="mb-10 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black font-black">
-                        {reseller.panelName?.charAt(0) || 'R'}
+            <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 border-r border-border bg-surface flex flex-col p-6 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+                <div className="mb-10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black font-black">
+                            {reseller.panelName?.charAt(0) || 'R'}
+                        </div>
+                        <div className="overflow-hidden">
+                            <div className="font-bold leading-none truncate text-white">{reseller.panelName || 'RESELLER'}</div>
+                            <div className="text-[10px] text-muted font-mono truncate">{reseller.username}</div>
+                        </div>
                     </div>
-                    <div className="overflow-hidden">
-                        <div className="font-bold leading-none truncate text-white">{reseller.panelName || 'RESELLER'}</div>
-                        <div className="text-[10px] text-muted font-mono truncate">{reseller.username}</div>
-                    </div>
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-1.5 text-slate-400 hover:text-white">
+                        <X size={18} />
+                    </button>
                 </div>
 
                 <div className="mb-8 space-y-2">
@@ -740,7 +764,7 @@ const ResellerPortal: React.FC = () => {
 
                 <nav className="space-y-1 flex-1">
                     <button 
-                        onClick={() => setActiveTab('users')} 
+                        onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }} 
                         className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
                             activeTab === 'users' 
                                 ? 'bg-white/10 text-white' 
@@ -750,7 +774,7 @@ const ResellerPortal: React.FC = () => {
                         <Users size={18} /> Users
                     </button>
                     <button 
-                        onClick={() => setActiveTab('licenses')} 
+                        onClick={() => { setActiveTab('licenses'); setIsMobileMenuOpen(false); }} 
                         className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
                             activeTab === 'licenses' 
                                 ? 'bg-white/10 text-white' 
@@ -760,7 +784,7 @@ const ResellerPortal: React.FC = () => {
                         <Key size={18} /> Licenses
                     </button>
                     <button 
-                        onClick={() => setActiveTab('webhooks')} 
+                        onClick={() => { setActiveTab('webhooks'); setIsMobileMenuOpen(false); }} 
                         className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
                             activeTab === 'webhooks' 
                                 ? 'bg-white/10 text-white' 
@@ -858,9 +882,9 @@ const ResellerPortal: React.FC = () => {
                             </form>
                         </div>
 
-                        <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+                        <div className="bg-surface border border-border rounded-2xl overflow-hidden overflow-x-auto custom-scrollbar">
                             <div className="p-4 bg-surfaceHighlight/30 border-b border-border">
-                                <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2">
+                                <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2 min-w-[600px]">
                                     <div className="col-span-4">User</div>
                                     <div className="col-span-2">Status</div>
                                     <div className="col-span-4">Expiry</div>
@@ -869,7 +893,7 @@ const ResellerPortal: React.FC = () => {
                             </div>
                             <div className="divide-y divide-border">
                                 {(Object.entries(users) as [string, User][]).map(([name, user]) => (
-                                    <div key={name} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors">
+                                    <div key={name} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors min-w-[600px]">
                                         <div className="col-span-4 font-bold truncate text-white">{name}</div>
                                         <div className="col-span-2">
                                             {user.isBanned ? (
@@ -983,9 +1007,9 @@ const ResellerPortal: React.FC = () => {
                             </form>
                         </div>
 
-                        <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+                        <div className="bg-surface border border-border rounded-2xl overflow-hidden overflow-x-auto custom-scrollbar">
                             <div className="p-4 bg-surfaceHighlight/30 border-b border-border">
-                                <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2">
+                                <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2 min-w-[600px]">
                                     <div className="col-span-3">License Key</div>
                                     <div className="col-span-2">Status</div>
                                     <div className="col-span-3">Display Name</div>
@@ -995,7 +1019,7 @@ const ResellerPortal: React.FC = () => {
                             </div>
                             <div className="divide-y divide-border">
                                 {(Object.entries(licenses) as [string, License][]).map(([key, lic]) => (
-                                    <div key={key} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors">
+                                    <div key={key} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors min-w-[600px]">
                                         <div className="col-span-3 font-mono text-[10px] text-blue-400 font-bold truncate select-all">{key}</div>
                                         <div className="col-span-2">
                                             <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${

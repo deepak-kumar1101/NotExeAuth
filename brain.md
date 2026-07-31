@@ -804,6 +804,10 @@ npm run deploy:api
 - **File Naming**: PascalCase for React components and pages (`Admin.tsx`, `Dashboard.tsx`), camelCase for services and utilities (`encryption.ts`, `sdkService.ts`).
 - **Database Key Format**: Email keys replace `.` with `,`. Customer secrets start with `DXA-`.
 - **CSS Styling**: Pure Vanilla CSS relying on CSS variable tokens in `index.css`. Glassmorphism effects use `.glass-card-premium` and `.glass-reflection`.
+- **Mobile Responsiveness**:
+  - `Admin.tsx` and `ResellerPortal.tsx` feature collapsible mobile navigation drawers (`isMobileMenuOpen` state, top mobile header with `Menu`/`X` icon toggle, and dark backdrop overlay).
+  - All data tables (Users, Licenses, Customers, Variables) are wrapped in `overflow-x-auto custom-scrollbar` with `min-w-[600px]` inner column containers, ensuring data tables scroll horizontally smoothly on mobile phones without breaking layouts.
+  - **Payment Proof Submissions (`Admin.tsx`)**: Features dual layout rendering. Desktop devices render a 7-column scrollable table (`min-w-[850px]`) displaying Customer, Package, Credits, Amount, Proof Screenshot button, User Note/UTR text, Status, and Action buttons. Mobile devices (`md:hidden`) render a stacked card view displaying full proof image buttons, UTR text, status badges, and full-width `Approve & Add Credits` / `Reject` action buttons.
 
 ---
 

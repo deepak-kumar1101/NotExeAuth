@@ -780,7 +780,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
             
             {activeTab === 'application' && (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   {[
                     { label: 'Total Units', val: Object.keys(users).length + Object.keys(licenses).length, icon: <Box size={16} />, color: 'text-white', badge: 'Realtime' },
                     { label: 'Active Users', val: (Object.values(users) as User[]).filter(u => !u.isBanned).length, icon: <Users size={16} />, color: 'text-emerald-400', badge: 'Active' },
@@ -902,9 +902,9 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                     <CustomSelect value={userFilter} options={[{ label: 'All Status', value: 'all' }, { label: 'Active', value: 'active' }, { label: 'Banned', value: 'banned' }, { label: 'Lifetime', value: 'lifetime' }]} onChange={setUserFilter} />
                   </div>
                 </div>
-                <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+                <div className="bg-surface border border-border rounded-2xl overflow-hidden overflow-x-auto custom-scrollbar">
                   <div className="p-4 bg-surfaceHighlight/30 border-b border-border">
-                    <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2">
+                    <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2 min-w-[600px]">
                       <div className="col-span-4">User</div>
                       <div className="col-span-2">Status</div>
                       <div className="col-span-4">Expiry</div>
@@ -915,7 +915,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                     {filteredUsers.length === 0 ? (
                       <div className="p-10 text-center text-muted">No users found.</div>
                     ) : filteredUsers.map(([name, user]) => (
-                      <div key={name} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors group">
+                      <div key={name} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors group min-w-[600px]">
                         <div className="col-span-4 font-bold truncate">{user.username || name}</div>
                         <div className="col-span-2">
                           {user.isBanned ? <span className="text-[10px] bg-danger/10 text-danger px-2 py-0.5 rounded font-bold uppercase">Banned</span> : <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded font-bold uppercase">Active</span>}
@@ -975,9 +975,9 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                     <CustomSelect value={licenseFilter} options={[{ label: 'All Status', value: 'all' }, { label: 'Unused', value: 'unused' }, { label: 'Used', value: 'used' }]} onChange={setLicenseFilter} />
                   </div>
                 </div>
-                <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+                <div className="bg-surface border border-border rounded-2xl overflow-hidden overflow-x-auto custom-scrollbar">
                   <div className="p-4 bg-surfaceHighlight/30 border-b border-border">
-                    <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2">
+                    <div className="grid grid-cols-12 gap-4 text-xs font-bold uppercase tracking-wider text-muted px-2 min-w-[600px]">
                       <div className="col-span-3">License Key</div>
                       <div className="col-span-2">Status</div>
                       <div className="col-span-3">Display Name</div>
@@ -991,7 +991,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                     ) : filteredLicenses.map(([key, lic]) => {
                       const connectedUser = lic.associatedUser;
                       return (
-                        <div key={key} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors group">
+                        <div key={key} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors group min-w-[600px]">
                           <div className="col-span-3 font-mono text-[10px] text-blue-400 font-bold truncate select-all">{key}</div>
                           <div className="col-span-2">
                             <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${lic.used ? 'bg-gray-800 text-muted' : 'bg-success/10 text-success'}`}>{lic.used ? 'Used' : 'Unused'}</span>
@@ -1161,11 +1161,11 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                     <Plus size={16} /> Add Variable
                   </button>
                 </div>
-                <div className="bg-surface border border-border rounded-2xl overflow-hidden divide-y divide-border">
+                <div className="bg-surface border border-border rounded-2xl overflow-hidden overflow-x-auto custom-scrollbar divide-y divide-border">
                   {Object.entries(variables).length === 0 ? (
                     <div className="p-10 text-center text-muted">No variables defined.</div>
                   ) : Object.entries(variables).map(([name, val]) => (
-                    <div key={name} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors group">
+                    <div key={name} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-white/5 transition-colors group min-w-[600px]">
                       <div className="col-span-4 font-mono text-sm text-blue-400 font-bold truncate">{name}</div>
                       <div className="col-span-6 font-mono text-sm text-muted bg-black/20 px-2 py-1 rounded truncate select-all">{val}</div>
                       <div className="col-span-2 text-right flex justify-end gap-2">
