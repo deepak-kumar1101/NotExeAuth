@@ -14,6 +14,7 @@ import { auth, db } from '../services/firebase';
 import { encrypt, decrypt } from '../services/encryption';
 import { Customer, AppMetadata, User, License, WebhookSettings, SystemPlan, Reseller } from '../types';
 import { ADMIN_EMAIL } from '../constants';
+import { checkAndDowngradeIfExpired } from '../services/subscriptionService';
 
 type Tab = 'application' | 'users' | 'license' | 'variables' | 'interrogation' | 'settings' | 'resellers' | 'earn';
 
@@ -201,8 +202,10 @@ const Dashboard: React.FC = () => {
     const emailKey = auth.currentUser.email.replace(/\./g, ',');
 
     onValue(ref(db, `customers/${emailKey}`), async (snap) => {
-      const data = decrypt(snap.val());
-      if (data) {
+      const rawData = decrypt(snap.val());
+      if (rawData) {
+        const { downgraded, updatedCustomer } = await checkAndDowngradeIfExpired(rawData);
+        const data = (downgraded && updatedCustomer) ? updatedCustomer : rawData;
         setCustomer(data);
         setUserSecret(data.secret);
         const planSnap = await get(ref(db, `system/plans/${data.plan}`));
@@ -1522,6 +1525,13 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
       {showOnboarding && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-background/95 backdrop-blur-xl animate-fade-in">
           <div className="bg-surface border border-white/10 rounded-[40px] p-12 max-w-xl text-center shadow-2xl animate-scale-up relative overflow-hidden group">
+            <button
+              onClick={() => setShowOnboarding(false)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all z-30"
+              title="Close"
+            >
+              <X size={20} />
+            </button>
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <div className="relative z-10">
               <div className="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-8 group-hover:scale-110 transition-transform duration-500">
@@ -1531,7 +1541,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
               <p className="text-muted text-lg font-medium mb-12 leading-relaxed max-w-md mx-auto">
                 Protect your software with industry-leading encryption. Let's start by creating your first application profile to generate your master keys.
               </p>
-              <div className="flex flex-col items-center gap-6">
+              <div className="flex flex-col items-center gap-4">
                 <button
                   onClick={() => { setShowOnboarding(false); setShowCreateApp(true); }}
                   className="group relative bg-white text-black font-black py-5 px-16 rounded-2xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-95 uppercase tracking-[0.2em] text-xs overflow-hidden"
@@ -1539,7 +1549,14 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                   <span className="relative z-10">Create Application</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-black/0 via-black/5 to-black/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                 </button>
-                <p className="text-[10px] text-muted font-bold uppercase tracking-widest flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowOnboarding(false)}
+                  className="text-xs text-muted hover:text-white transition-colors underline font-medium"
+                >
+                  Skip for now
+                </button>
+                <p className="text-[10px] text-muted font-bold uppercase tracking-widest flex items-center gap-2 pt-2">
                   <span className="w-1 h-1 bg-white/20 rounded-full" />
                   Pointing you To the app selector next
                   <span className="w-1 h-1 bg-white/20 rounded-full" />

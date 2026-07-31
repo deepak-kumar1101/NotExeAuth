@@ -16,6 +16,33 @@
       "sdks": {
         ".read": true,
         ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "creditPackages": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "paymentConfig": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "creditRequests": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "planAuditLogs": {
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "subscriptionEvents": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+
+    "customerNotifications": {
+      "$emailKey": {
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
     },
 

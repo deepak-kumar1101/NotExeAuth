@@ -13,3 +13,56 @@ export const FIREBASE_CONFIG = {
 
 export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "";
 export const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "";
+
+export const DEFAULT_CREDIT_PACKAGES = [
+  {
+    id: 'starter_pack',
+    name: 'Starter Pack',
+    credits: 50,
+    priceINR: 499,
+    popular: false,
+    recommendedFor: 'Starter Plan (Monthly)',
+    badge: 'Standard',
+    order: 1
+  },
+  {
+    id: 'pro_pack',
+    name: 'Pro Infrastructure Pack',
+    credits: 150,
+    priceINR: 1299,
+    popular: true,
+    recommendedFor: 'Pro Plan (Monthly)',
+    badge: 'Popular • Save 13%',
+    order: 2
+  },
+  {
+    id: 'enterprise_pack',
+    name: 'Enterprise Pack',
+    credits: 300,
+    priceINR: 2499,
+    popular: false,
+    recommendedFor: 'Enterprise Plan (Monthly)',
+    badge: 'Best Scale',
+    order: 3
+  },
+  {
+    id: 'scale_pack',
+    name: 'Developer Scale Pack',
+    credits: 500,
+    priceINR: 3999,
+    popular: false,
+    recommendedFor: 'Multi-App Scale',
+    badge: 'Save 20%',
+    order: 4
+  },
+  {
+    id: 'yearly_pack',
+    name: 'Annual Infrastructure Pack',
+    credits: 1500,
+    priceINR: 9999,
+    popular: false,
+    recommendedFor: 'Yearly Subscriptions',
+    badge: 'Ultimate Value',
+    order: 5
+  }
+];
