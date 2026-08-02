@@ -1,147 +1,187 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deep X Authentication Advanced Licensing</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deep X Authentication Advanced Licensing</title>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-    rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            background: '#07080c',
-            surface: '#0d0f17',
-            surfaceHighlight: '#141824',
-            border: 'rgba(255, 255, 255, 0.08)',
-            borderHighlight: 'rgba(255, 255, 255, 0.18)',
-            primary: '#ffffff',
-            muted: '#94a3b8',
-            mutedDark: '#64748b',
-            success: '#10b981',
-            danger: '#f43f5e',
-            accent: '#6366f1',
-            accentHover: '#4f46e5'
+<meta name="description" content="Enterprise authentication, licensing and subscription platform." />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Deep X Authentication Advanced Licensing" />
+<meta property="og:description" content="Enterprise authentication, licensing and subscription platform." />
+<meta property="og:image" content="https://cdn.corenexis.com/f/zLuXBYxRhDC.png" />
+<meta property="og:url" content="https://deepxauth.pages.dev" />
+<meta property="og:site_name" content="DeepXAuth" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Deep X Authentication Advanced Licensing" />
+<meta name="twitter:description" content="Enterprise authentication, licensing and subscription platform." />
+<meta name="twitter:image" content="https://cdn.corenexis.com/f/zLuXBYxRhDC.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+            colors: {
+              background: "#07080c",
+              surface: "#0d0f17",
+              surfaceHighlight: "#141824",
+              border: "rgba(255, 255, 255, 0.08)",
+              borderHighlight: "rgba(255, 255, 255, 0.18)",
+              primary: "#ffffff",
+              muted: "#94a3b8",
+              mutedDark: "#64748b",
+              success: "#10b981",
+              danger: "#f43f5e",
+              accent: "#6366f1",
+              accentHover: "#4f46e5",
+            },
+            boxShadow: {
+              glass:
+                "0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 30px 0 rgba(99, 102, 241, 0.03)",
+              "glow-sm": "0 0 20px -5px rgba(99, 102, 241, 0.25)",
+              "glow-md": "0 0 40px -10px rgba(99, 102, 241, 0.35)",
+              "card-hover":
+                "0 25px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)",
+            },
+            animation: {
+              "fade-in": "fadeIn 0.25s ease-out forwards",
+              "slide-up":
+                "slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              "pulse-glow":
+                "pulseGlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            },
+            keyframes: {
+              fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+              slideUp: {
+                "0%": { opacity: "0", transform: "translateY(16px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+              pulseGlow: {
+                "0%, 100%": { opacity: "0.03", transform: "scale(1)" },
+                "50%": { opacity: "0.08", transform: "scale(1.05)" },
+              },
+            },
           },
-          boxShadow: {
-            'glass': '0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 30px 0 rgba(99, 102, 241, 0.03)',
-            'glow-sm': '0 0 20px -5px rgba(99, 102, 241, 0.25)',
-            'glow-md': '0 0 40px -10px rgba(99, 102, 241, 0.35)',
-            'card-hover': '0 25px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)'
-          },
-          animation: {
-            'fade-in': 'fadeIn 0.25s ease-out forwards',
-            'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'pulse-glow': 'pulseGlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-          },
-          keyframes: {
-            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            slideUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            pulseGlow: { '0%, 100%': { opacity: '0.03', transform: 'scale(1)' }, '50%': { opacity: '0.08', transform: 'scale(1.05)' } }
-          }
+        },
+      };
+    </script>
+    <style>
+      body {
+        background-color: #07080c;
+        color: #f8fafc;
+        overflow-x: hidden;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      }
+
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 9999px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .glass {
+        background: rgba(13, 15, 23, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .glass-card {
+        background: linear-gradient(
+          180deg,
+          rgba(18, 22, 34, 0.6) 0%,
+          rgba(11, 14, 22, 0.8) 100%
+        );
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
+      }
+
+      .glass-card-hover {
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .glass-card-hover:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        transform: translateY(-2px);
+        box-shadow:
+          0 25px 60px -15px rgba(0, 0, 0, 0.7),
+          0 0 30px 0 rgba(99, 102, 241, 0.08);
+      }
+
+      .grid-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.04;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+
+      .blur-glow {
+        position: fixed;
+        z-index: -1;
+        border-radius: 100%;
+        filter: blur(140px);
+        pointer-events: none;
+      }
+    </style>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "react": "https://esm.sh/react@^19.2.3",
+          "firebase/": "https://esm.sh/firebase@^12.7.0/",
+          "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+          "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
         }
       }
-    }
-  </script>
-  <style>
-    body {
-      background-color: #07080c;
-      color: #f8fafc;
-      overflow-x: hidden;
-      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    }
+    </script>
+    <script type="module" crossorigin src="/assets/index-Dy4naI1r.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BSXinZs7.css">
+  </head>
 
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 9999px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .glass {
-      background: rgba(13, 15, 23, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .glass-card {
-      background: linear-gradient(180deg, rgba(18, 22, 34, 0.6) 0%, rgba(11, 14, 22, 0.8) 100%);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
-    }
-
-    .glass-card-hover {
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .glass-card-hover:hover {
-      border-color: rgba(255, 255, 255, 0.18);
-      transform: translateY(-2px);
-      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px 0 rgba(99, 102, 241, 0.08);
-    }
-
-    .grid-bg {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      opacity: 0.04;
-      background-image: linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-
-    .blur-glow {
-      position: fixed;
-      z-index: -1;
-      border-radius: 100%;
-      filter: blur(140px);
-      pointer-events: none;
-    }
-  </style>
-
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
-  }
-}
-</script>
-  <script type="module" crossorigin src="/assets/index-D8VvaPpG.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BSXinZs7.css">
-</head>
-
-<body>
-  <div id="root"></div>
-  <div class="grid-bg"></div>
-  <div class="blur-glow bg-white w-[500px] h-[500px] top-[-10%] left-[-10%]"></div>
-  <div class="blur-glow bg-blue-500 w-[400px] h-[400px] bottom-[-10%] right-[-10%]"></div>
-</body>
-
+  <body>
+    <div id="root"></div>
+    <div class="grid-bg"></div>
+    <div
+      class="blur-glow bg-white w-[500px] h-[500px] top-[-10%] left-[-10%]"
+    ></div>
+    <div
+      class="blur-glow bg-blue-500 w-[400px] h-[400px] bottom-[-10%] right-[-10%]"
+    ></div>
+  </body>
 </html>

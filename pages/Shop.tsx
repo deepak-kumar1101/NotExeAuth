@@ -265,6 +265,7 @@ const CreditTopUpPortalModal: React.FC<{
   const [qrRevealed, setQrRevealed] = useState(false);
   const [screenshotBase64, setScreenshotBase64] = useState<string>('');
   const [userNote, setUserNote] = useState('');
+  const [proofError, setProofError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
@@ -301,6 +302,7 @@ const CreditTopUpPortalModal: React.FC<{
         alert("Image size should be less than 5MB.");
         return;
       }
+      setProofError('');
       const reader = new FileReader();
       reader.onloadend = () => {
         setScreenshotBase64(reader.result as string);
@@ -313,6 +315,12 @@ const CreditTopUpPortalModal: React.FC<{
     e.preventDefault();
     if (!auth.currentUser?.email) return;
 
+    if (!screenshotBase64 && !userNote.trim()) {
+      setProofError("Please upload your payment screenshot proof or enter a transaction reference UTR note first.");
+      return;
+    }
+
+    setProofError('');
     setSubmitting(true);
     try {
       const reqId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -567,12 +575,22 @@ const CreditTopUpPortalModal: React.FC<{
                     </label>
                     <textarea
                       value={userNote}
-                      onChange={e => setUserNote(e.target.value)}
+                      onChange={e => {
+                        setUserNote(e.target.value);
+                        if (proofError) setProofError('');
+                      }}
                       placeholder="e.g. UTR / Ref No: 420918291029 or special instructions..."
                       rows={3}
                       className="w-full p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#8B5CF6] font-mono"
                     />
                   </div>
+
+                  {proofError && (
+                    <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2.5 animate-fade-in">
+                      <AlertTriangle size={16} className="shrink-0 text-rose-400" />
+                      <span>{proofError}</span>
+                    </div>
+                  )}
 
                   <button
                     type="submit"
