@@ -8,15 +8,19 @@ import {
   Crown, Coins, Plus, Copy, Trash2, Pause, Play, Search,
   CheckCircle2, AlertCircle, Loader2, X, Edit2, ShieldAlert,
   ChevronDown, Monitor, RefreshCcw, Info, Hash, ShoppingCart, Menu,
-  Settings2, AlertTriangle, Check, MessageSquare, Bot, Share2, ShieldCheck, Lock
+  Settings2, AlertTriangle, Check, MessageSquare, Bot, Share2, ShieldCheck, Lock, BookOpen, Terminal, Activity
 } from 'lucide-react';
 import { auth, db } from '../services/firebase';
 import { encrypt, decrypt } from '../services/encryption';
 import { Customer, AppMetadata, User, License, WebhookSettings, SystemPlan, Reseller } from '../types';
 import { ADMIN_EMAIL } from '../constants';
 import { checkAndDowngradeIfExpired } from '../services/subscriptionService';
+import { commandPaletteService } from '../services/commandPaletteService';
+import { SDKSandbox } from '../components/docs/SDKSandbox';
+import { Timeline } from './Timeline';
+import { auditService } from '../services/auditService';
 
-type Tab = 'application' | 'users' | 'license' | 'variables' | 'interrogation' | 'settings' | 'resellers' | 'earn';
+type Tab = 'application' | 'users' | 'license' | 'variables' | 'interrogation' | 'settings' | 'resellers' | 'earn' | 'sandbox' | 'timeline';
 
 
 const CustomCheckbox: React.FC<{ checked: boolean, onChange: (val: boolean) => void, label?: string }> = ({ checked, onChange, label }) => (
@@ -351,7 +355,34 @@ const Dashboard: React.FC = () => {
       });
     };
     loadResellers();
+  }, [userSecret]);
 
+  useEffect(() => {
+    commandPaletteService.updateContextData({
+      userRole: auth.currentUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'admin' : 'developer',
+      apps,
+      users,
+      licenses,
+      variables,
+      resellers,
+      currentApp,
+      userSecret,
+      actions: {
+        openCreateAppModal: () => setShowCreateApp(true),
+        openCreateUserModal: () => setShowCreateUser(true),
+        openCreateLicenseModal: () => setShowCreateLicense(true),
+        openCreateVariableModal: () => setShowCreateVariable(true),
+        openCreateResellerModal: () => setShowCreateReseller(true),
+        switchTab: (tab: string) => setActiveTab(tab as any),
+        selectApp: (appName: string) => {
+          setCurrentApp(appName);
+          localStorage.setItem('mtc_selected_app', appName);
+        }
+      }
+    });
+  }, [apps, users, licenses, variables, resellers, currentApp, userSecret]);
+
+  useEffect(() => {
     onValue(ref(db, 'system/plans'), (snap) => {
       const raw = snap.val() || {};
       const dec: Record<string, SystemPlan> = {};
@@ -421,7 +452,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
     creditPrice: 0,
     price: '$0',
     order: 1,
-    features: ['multi_app', 'user_data']
+    features: ['multi_app', 'user_data', 'sandbox', 'timeline']
   },
   'Starter Plan': {
     maxApps: 5,
@@ -430,7 +461,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
     creditPrice: 50,
     price: '50 Credits',
     order: 2,
-    features: ['multi_app', 'user_data', 'webhooks']
+    features: ['multi_app', 'user_data', 'webhooks', 'sandbox', 'timeline']
   },
   'Pro Plan': {
     maxApps: 15,
@@ -439,7 +470,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
     creditPrice: 150,
     price: '150 Credits',
     order: 3,
-    features: ['multi_app', 'user_data', 'webhooks', 'cloud_vars', 'variables']
+    features: ['multi_app', 'user_data', 'webhooks', 'cloud_vars', 'variables', 'sandbox', 'timeline']
   },
   'Enterprise Plan': {
     maxApps: -1,
@@ -448,11 +479,17 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
     creditPrice: 300,
     price: '300 Credits',
     order: 4,
-    features: ['multi_app', 'user_data', 'webhooks', 'cloud_vars', 'variables', 'reseller', 'resellers']
+    features: ['multi_app', 'user_data', 'webhooks', 'cloud_vars', 'variables', 'reseller', 'resellers', 'sandbox', 'timeline']
   }
 };
 
   const isFeatureLocked = (featureId: string): { locked: boolean, requiredPlan?: string } => {
+    // Super Admin Bypass: Admin email always unlocks all features regardless of plan tier
+    const currentEmail = auth.currentUser?.email || '';
+    if (currentEmail.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+      return { locked: false };
+    }
+
     if (!customer?.plan) return { locked: true, requiredPlan: 'Any Plan' };
 
     let targetFeature = featureId;
@@ -489,7 +526,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
       return;
     }
 
-    if (planLimits && planLimits.maxApps !== -1) {
+    if (planLimits && planLimits.maxApps !== -1 && (auth.currentUser?.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase())) {
       const currentAppCount = Object.keys(apps).length;
       if (currentAppCount >= planLimits.maxApps) {
         addToast(`Application limit reached (${planLimits.maxApps}). Upgrade your plan in Shop.`, 'error');
@@ -715,12 +752,52 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
           </button>
 
           <button
+            onClick={() => { setActiveTab('sandbox'); setSidebarOpen(false); }}
+            className={`w-full flex items-center justify-between px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'sandbox' ? 'nav-item-active' : 'nav-item-inactive'}`}
+          >
+            <div className="flex items-center gap-3">
+              <Terminal size={17} className={activeTab === 'sandbox' ? 'text-indigo-400' : 'text-slate-400'} />
+              <span>SDK Sandbox</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {isFeatureLocked('sandbox').locked && <Lock size={13} className="text-slate-500" />}
+              <span className="text-[9px] font-black bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Live API
+              </span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('timeline'); setSidebarOpen(false); }}
+            className={`w-full flex items-center justify-between px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'timeline' ? 'nav-item-active' : 'nav-item-inactive'}`}
+          >
+            <div className="flex items-center gap-3">
+              <Activity size={17} className={activeTab === 'timeline' ? 'text-indigo-400' : 'text-slate-400'} />
+              <span>Activity Timeline</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {isFeatureLocked('timeline').locked && <Lock size={13} className="text-slate-500" />}
+              <span className="text-[9px] font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Audit
+              </span>
+            </div>
+          </button>
+
+          <button
             onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-all ${activeTab === 'settings' ? 'nav-item-active' : 'nav-item-inactive'}`}
           >
             <Settings size={17} className={activeTab === 'settings' ? 'text-indigo-400' : 'text-slate-400'} /> 
             <span>Settings</span>
           </button>
+
+          <Link
+            to="/docs"
+            className="w-full flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+          >
+            <BookOpen size={17} className="text-sky-400" />
+            <span>Docs & SDK Sandbox</span>
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-white/[0.08] space-y-2">
@@ -752,8 +829,19 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                 placeholder="Select Application"
               />
             </div>
-            <button onClick={() => setShowCreateApp(true)} className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/10 shadow-sm">
+            <button onClick={() => setShowCreateApp(true)} className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/10 shadow-sm" title="Create New App">
               <Plus size={18} />
+            </button>
+            <button
+              onClick={() => {
+                window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
+              }}
+              className="hidden lg:flex items-center gap-2 px-3.5 py-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl text-xs text-slate-400 hover:text-white transition-all shadow-sm cursor-pointer"
+              title="Open Command Palette (Ctrl+K)"
+            >
+              <Search size={14} className="text-indigo-400" />
+              <span className="text-[11px] font-medium">Quick Search...</span>
+              <kbd className="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-slate-300">Ctrl+K</kbd>
             </button>
           </div>
 
@@ -1514,6 +1602,56 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
                     <p className="text-sm text-muted">Permanently remove your account and all data.</p>
                   </button>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'sandbox' && (
+              <div className="space-y-6">
+                {isFeatureLocked('sandbox').locked ? (
+                  <div className="p-12 text-center space-y-4 glass-card rounded-3xl max-w-lg mx-auto border border-amber-500/20 bg-amber-500/5 my-8">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+                      <Lock size={28} />
+                    </div>
+                    <h3 className="text-xl font-extrabold text-white">Live API Testing Locked</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Live API Testing (SDK Sandbox) is not enabled on your current <strong>{customer?.plan || 'Free'}</strong> plan.
+                      Ask your Administrator to enable this feature for your plan.
+                    </p>
+                    <button
+                      onClick={() => navigate('/shop')}
+                      className="px-6 py-3 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all shadow-lg cursor-pointer"
+                    >
+                      Upgrade Plan in Shop
+                    </button>
+                  </div>
+                ) : (
+                  <SDKSandbox />
+                )}
+              </div>
+            )}
+
+            {activeTab === 'timeline' && (
+              <div className="space-y-6">
+                {isFeatureLocked('timeline').locked ? (
+                  <div className="p-12 text-center space-y-4 glass-card rounded-3xl max-w-lg mx-auto border border-amber-500/20 bg-amber-500/5 my-8">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+                      <Lock size={28} />
+                    </div>
+                    <h3 className="text-xl font-extrabold text-white">Activity Timeline Locked</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Activity Timeline & Audit Logging is not enabled on your current <strong>{customer?.plan || 'Free'}</strong> plan.
+                      Ask your Administrator to enable this feature for your plan.
+                    </p>
+                    <button
+                      onClick={() => navigate('/shop')}
+                      className="px-6 py-3 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all shadow-lg cursor-pointer"
+                    >
+                      Upgrade Plan in Shop
+                    </button>
+                  </div>
+                ) : (
+                  <Timeline userSecret={userSecret} />
+                )}
               </div>
             )}
           </div>

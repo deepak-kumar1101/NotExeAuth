@@ -67,6 +67,84 @@ async function verifyAppOwnership(c, ownerEmailKey, secret) {
     return data && data.secret === secret;
 }
 
+async function dispatchEdgeWebhook(c, secret, eventType, eventData) {
+    try {
+        if (!secret) return;
+        const rawSettings = await dbRequest(c.env, `webhookSettings/${secret}`);
+        if (!rawSettings) return;
+        const dbSecret = getDbSecret(c.env);
+        let settings = typeof rawSettings === 'string' ? decrypt(rawSettings, dbSecret) : rawSettings;
+        if (typeof settings === 'string') {
+            try { settings = JSON.parse(settings); } catch (e) {}
+        }
+        if (!settings || !settings.url || !settings[eventType]) return;
+
+        const embed = {
+            title: eventData.title || '🛡️ DXA Security Alert',
+            description: eventData.description || '',
+            color: eventData.color || 0xEF4444,
+            fields: eventData.fields || [],
+            timestamp: new Date().toISOString(),
+            footer: { text: 'DeepXAuth Edge Security System' }
+        };
+
+        const fetchPromise = fetch(settings.url.trim(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [embed] })
+        });
+
+        if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+            c.executionCtx.waitUntil(fetchPromise);
+        } else {
+            await fetchPromise;
+        }
+    } catch (e) {
+        console.error('Edge webhook error:', e);
+    }
+}
+
+async function dispatchEdgeAuditLog(c, auditData) {
+    try {
+        const eventId = `evt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        const timestamp = new Date().toISOString();
+        const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || '127.0.0.1';
+        const country = c.req.header('cf-ipcountry') || 'Global';
+        const userAgent = c.req.header('user-agent') || 'Edge Worker API';
+
+        const logItem = {
+            eventId,
+            timestamp,
+            type: auditData.type,
+            category: auditData.category || 'Security',
+            severity: auditData.severity || 'Info',
+            actorType: auditData.actorType || 'worker',
+            actorEmail: auditData.actorEmail || auditData.username || 'API Client',
+            actorSecret: auditData.actorSecret ? `${auditData.actorSecret.substring(0, 8)}...` : undefined,
+            application: auditData.application,
+            username: auditData.username,
+            licenseKey: auditData.licenseKey,
+            ip,
+            country,
+            device: userAgent,
+            os: 'Cloudflare Worker Edge',
+            hwid: auditData.hwid,
+            description: auditData.description,
+            metadata: auditData.metadata || {},
+            status: auditData.status || 'SUCCESS'
+        };
+
+        const fetchPromise = dbRequest(c.env, `system/auditLogs/${eventId}`, 'PUT', logItem);
+        if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+            c.executionCtx.waitUntil(fetchPromise);
+        } else {
+            await fetchPromise;
+        }
+    } catch (e) {
+        console.error('Edge audit log error:', e);
+    }
+}
+
 let cachedToken = null;
 let tokenExpiry = 0;
 
@@ -292,11 +370,46 @@ app.post('/login', async (c) => {
         
         const serverVer = appData.version || '1.0';
         if (serverVer !== 'UNKNOWN' && serverVer !== appVersion) {
+            dispatchEdgeWebhook(c, secret, 'notifyVersionMismatch', {
+                title: '⚠️ Version Mismatch / Tampering Alert',
+                description: `Outdated or modified client software connected to **${appName}**.`,
+                color: 0xF59E0B,
+                fields: [
+                    { name: 'User', value: username || 'Unknown', inline: true },
+                    { name: 'Client Version', value: appVersion, inline: true },
+                    { name: 'Server Version', value: serverVer, inline: true },
+                    { name: 'IP Address', value: ip, inline: true }
+                ]
+            });
+            dispatchEdgeAuditLog(c, {
+                type: 'VERSION_MISMATCH',
+                category: 'Security',
+                severity: 'Warning',
+                status: 'BLOCKED',
+                actorType: 'user',
+                username,
+                application: appName,
+                actorSecret: secret,
+                description: `Version mismatch for ${username} on ${appName}`
+            });
             return sdkJson(c, 'login', body, false, 'VERSION_MISMATCH', { serverVersion: serverVer }, 409);
         }
 
         const userDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
-        if (!userDataRaw) return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
+        if (!userDataRaw) {
+            dispatchEdgeAuditLog(c, {
+                type: 'FAILED_LOGIN',
+                category: 'Authentication',
+                severity: 'Warning',
+                status: 'FAILURE',
+                actorType: 'user',
+                username,
+                application: appName,
+                actorSecret: secret,
+                description: `Failed login for non-existent user ${username}`
+            });
+            return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
+        }
 
         let userData = userDataRaw;
         if (typeof userData === 'string') {
@@ -310,8 +423,55 @@ app.post('/login', async (c) => {
             return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
         }
 
-        if (userData.password !== password) return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
-        if (userData.isBanned) return sdkJson(c, 'login', body, false, 'USER_BANNED', {}, 403);
+        if (userData.password !== password) {
+            dispatchEdgeWebhook(c, secret, 'notifyFailedLogin', {
+                title: '🔑 Failed Password Attempt',
+                description: `Invalid password entered for user **${username}** on app **${appName}**.`,
+                color: 0xF59E0B,
+                fields: [
+                    { name: 'User', value: username, inline: true },
+                    { name: 'IP Address', value: ip, inline: true }
+                ]
+            });
+            dispatchEdgeAuditLog(c, {
+                type: 'FAILED_LOGIN',
+                category: 'Authentication',
+                severity: 'Warning',
+                status: 'FAILURE',
+                actorType: 'user',
+                username,
+                application: appName,
+                actorSecret: secret,
+                description: `Invalid password attempt for user ${username}`
+            });
+            return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
+        }
+
+        if (userData.isBanned) {
+            dispatchEdgeWebhook(c, secret, 'notifyUserBanned', {
+                title: '⛔ Banned User Access Attempt',
+                description: `Banned user account **${username}** attempted to authenticate on app **${appName}**.`,
+                color: 0xEF4444,
+                fields: [
+                    { name: 'User', value: username, inline: true },
+                    { name: 'HWID', value: hwid || 'N/A', inline: true },
+                    { name: 'IP Address', value: ip, inline: true }
+                ]
+            });
+            dispatchEdgeAuditLog(c, {
+                type: 'USER_BANNED',
+                category: 'Security',
+                severity: 'Critical',
+                status: 'BLOCKED',
+                actorType: 'user',
+                username,
+                application: appName,
+                actorSecret: secret,
+                hwid,
+                description: `Banned user ${username} attempted authentication`
+            });
+            return sdkJson(c, 'login', body, false, 'USER_BANNED', {}, 403);
+        }
 
         if (userData.hwidLock !== false) {
             const currentSid = userData.sid || "";
@@ -319,8 +479,43 @@ app.post('/login', async (c) => {
                 if (hwid && hwid !== "" && hwid !== "HWID_FAIL") {
                     userData.sid = hwid;
                     await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(userData, dbSecret));
+                    dispatchEdgeAuditLog(c, {
+                        type: 'HWID_BOUND',
+                        category: 'User',
+                        severity: 'Success',
+                        status: 'SUCCESS',
+                        actorType: 'user',
+                        username,
+                        application: appName,
+                        actorSecret: secret,
+                        hwid,
+                        description: `Bound HWID fingerprint for user ${username}`
+                    });
                 }
             } else if (hwid && hwid !== "" && hwid !== "HWID_FAIL" && currentSid !== hwid) {
+                dispatchEdgeWebhook(c, secret, 'notifyHwidMismatch', {
+                    title: '🚨 HWID Mismatch Security Threat',
+                    description: `Unauthorized computer/HWID login attempt detected on locked account **${username}** for app **${appName}**.`,
+                    color: 0xEF4444,
+                    fields: [
+                        { name: 'Target Account', value: username, inline: true },
+                        { name: 'Registered HWID', value: userData.sid || 'Locked', inline: false },
+                        { name: 'Attempted HWID', value: hwid || 'Unknown', inline: false },
+                        { name: 'IP Address', value: ip, inline: true }
+                    ]
+                });
+                dispatchEdgeAuditLog(c, {
+                    type: 'HWID_MISMATCH',
+                    category: 'Security',
+                    severity: 'Critical',
+                    status: 'BLOCKED',
+                    actorType: 'user',
+                    username,
+                    application: appName,
+                    actorSecret: secret,
+                    hwid,
+                    description: `HWID mismatch threat blocked on user ${username}`
+                });
                 return sdkJson(c, 'login', body, false, 'HWID_MISMATCH', {}, 403);
             }
         }
@@ -330,6 +525,30 @@ app.post('/login', async (c) => {
         }
 
         if (userData.oneTime === true) await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'DELETE');
+
+        dispatchEdgeWebhook(c, secret, 'notifyLogin', {
+            title: '✅ User Authenticated',
+            description: `User **${username}** logged into app **${appName}** successfully.`,
+            color: 0x10B981,
+            fields: [
+                { name: 'User', value: username, inline: true },
+                { name: 'Subscription', value: userData.subscription || 'default', inline: true },
+                { name: 'Expiry', value: userData.expiry || 'lifetime', inline: true }
+            ]
+        });
+
+        dispatchEdgeAuditLog(c, {
+            type: 'USER_LOGIN',
+            category: 'Authentication',
+            severity: 'Success',
+            status: 'SUCCESS',
+            actorType: 'user',
+            username,
+            application: appName,
+            actorSecret: secret,
+            hwid,
+            description: `User ${username} logged in successfully to ${appName}`
+        });
 
         return sdkJson(c, 'login', body, true, 'LOGIN_SUCCESS', {
             username: username, subscription: userData.subscription || 'default', expiry: userData.expiry || 'lifetime'

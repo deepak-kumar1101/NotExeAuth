@@ -18,6 +18,8 @@ import { Customer, SystemPlan, SystemConfig, SDK, PlanVisibility, PlanAuditLog, 
 import { ADMIN_EMAIL, DEFAULT_CREDIT_PACKAGES } from '../constants';
 import { subscribeToSDKs, saveSDK, deleteSDK, toggleSDKVisibility } from '../services/sdkService';
 import { adminExtendSubscription, adminSuspendSubscription, adminRestoreSubscription } from '../services/subscriptionService';
+import { commandPaletteService } from '../services/commandPaletteService';
+import { auditService } from '../services/auditService';
 
 const Modal: React.FC<{ title: string, onClose: () => void, children: React.ReactNode }> = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -271,6 +273,8 @@ const InfrastructurePlanEditorModal: React.FC<{
   });
 
   const ALL_FEATURES = [
+    { id: 'sandbox', label: 'Live API Testing (SDK Sandbox)', icon: <Terminal size={13} className="text-[#8B5CF6]" /> },
+    { id: 'timeline', label: 'Activity Timeline (Audit Logs)', icon: <Activity size={13} className="text-[#8B5CF6]" /> },
     { id: 'cloud_vars', label: 'Cloud Variables', icon: <Database size={13} className="text-[#8B5CF6]" /> },
     { id: 'multi_app', label: 'Multiple Apps', icon: <Layers size={13} className="text-[#8B5CF6]" /> },
     { id: 'webhooks', label: 'Webhooks Support', icon: <Activity size={13} className="text-[#8B5CF6]" /> },
@@ -713,6 +717,18 @@ const Admin: React.FC = () => {
   const [planFilter, setPlanFilter] = useState<'all' | 'public' | 'hidden' | 'beta' | 'archived'>('all');
   const [planSearchTerm, setPlanSearchTerm] = useState<string>('');
   const [editPlanTab, setEditPlanTab] = useState<'general' | 'pricing' | 'limits' | 'features' | 'visibility' | 'advanced'>('general');
+
+  useEffect(() => {
+    commandPaletteService.updateContextData({
+      userRole: 'admin',
+      actions: {
+        switchTab: (tab: string) => setActiveTab(tab as any),
+        toggleMaintenance: async () => {
+          await set(ref(db, 'system/config/maintenanceMode'), !maintenance?.maintenanceMode);
+        }
+      }
+    });
+  }, [maintenance]);
 
   const logPlanAction = async (planName: string, action: 'create' | 'update' | 'delete' | 'duplicate' | 'reorder', details: string) => {
     try {

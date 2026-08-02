@@ -13,10 +13,12 @@ import ResellerPortal from './pages/ResellerPortal';
 import Shop from './pages/Shop';
 import TOS from './pages/TOS';
 import Docs from './pages/Docs';
+import Timeline from './pages/Timeline';
 import NotFound from './pages/NotFound';
 
 import LoadingScreen from './components/LoadingScreen';
 import CursorGlow from './components/CursorGlow';
+import { CommandPalette } from './components/CommandPalette';
 
 import { onValue, ref } from 'firebase/database';
 import { db } from './services/firebase';
@@ -84,9 +86,12 @@ const App: React.FC = () => {
     return <MaintenanceView status={maintenance?.maintenanceStatus} message={maintenance?.maintenanceMessage} />;
   }
 
+  const userRole = isAdmin ? 'admin' : (user ? 'developer' : 'guest');
+
   return (
     <HashRouter>
       <CursorGlow />
+      <CommandPalette userRole={userRole} />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
@@ -99,6 +104,7 @@ const App: React.FC = () => {
 
         <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/shop" element={user ? <Shop /> : <Navigate to="/login" />} />
+        <Route path="/timeline" element={user ? <Timeline /> : <Navigate to="/login" />} />
         <Route path="/admin" element={user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? <Admin /> : <Navigate to="/dashboard" />} />
         <Route path="/reseller/:hash" element={<ResellerPortal />} />
 

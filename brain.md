@@ -21,36 +21,39 @@
 14. [Routes](#14-routes)
 15. [Hooks](#15-hooks)
 16. [Utilities](#16-utilities)
-17. [SDK System](#17-sdk-system)
-18. [Subscription Engine](#18-subscription-engine)
-19. [Credit System](#19-credit-system)
-20. [Infrastructure Plans](#20-infrastructure-plans)
-21. [Security](#21-security)
-22. [Encryption](#22-encryption)
-23. [Important Constants](#23-important-constants)
-24. [Environment Variables](#24-environment-variables)
-25. [External Integrations](#25-external-integrations)
-26. [Build Process](#26-build-process)
-27. [Deployment](#27-deployment)
-28. [Coding Patterns](#28-coding-patterns)
-29. [Reusable Components](#29-reusable-components)
-30. [Common Workflows](#30-common-workflows)
-31. [Project Conventions](#31-project-conventions)
-32. [Current Known Issues](#32-current-known-issues)
-33. [TODOs](#33-todos)
-34. [Future Improvements](#34-future-improvements)
-35. [Glossary](#35-glossary)
+17. [SDK System & Live API Sandbox](#17-sdk-system--live-api-sandbox)
+18. [User Activity Timeline & Audit Logging System](#18-user-activity-timeline--audit-logging-system)
+19. [Subscription Engine](#19-subscription-engine)
+20. [Credit System](#20-credit-system)
+21. [Infrastructure Plans](#21-infrastructure-plans)
+22. [Security](#22-security)
+23. [Encryption](#23-encryption)
+24. [Important Constants](#24-important-constants)
+25. [Environment Variables](#25-environment-variables)
+26. [External Integrations](#26-external-integrations)
+27. [Build Process](#27-build-process)
+28. [Deployment](#28-deployment)
+29. [Coding Patterns](#29-coding-patterns)
+30. [Reusable Components](#30-reusable-components)
+31. [Common Workflows](#31-common-workflows)
+32. [Project Conventions](#32-project-conventions)
+33. [Current Known Issues](#33-current-known-issues)
+34. [TODOs & Completed Progress](#34-todos--completed-progress)
+35. [Future Improvements](#35-future-improvements)
+36. [Glossary](#36-glossary)
 
 ---
 
 ## 1. Project Overview
 
 ### Purpose & Objective
-**DeepXAuth (DXA)** (package name: `dxa-security`, worker: `deepxauth-cfire`) is a high-performance, edge-optimized, commercial-grade authentication, licensing, remote configuration, and anti-tamper security SaaS platform. It enables software developers, game creators, and enterprise publishers to effortlessly protect desktop, web, and mobile applications against piracy, unauthorized usage, and account sharing.
+**DeepXAuth (DXA)** (package name: `dxa-security`, worker: `deepxauth-cfire`) is a high-performance, edge-optimized, commercial-grade authentication, licensing, remote configuration, audit logging, and anti-tamper security SaaS platform. It enables software developers, game creators, and enterprise publishers to effortlessly protect desktop, web, and mobile applications against piracy, unauthorized usage, and account sharing.
 
 ### Key Value Propositions
 - **Multi-Tenant SaaS Licensing**: Software developers create accounts, define applications, issue software licenses, and manage end-user credentials.
 - **Hardware ID (HWID) Binding**: Binds user credentials to specific client computer hardware (UUID/BIOS/MAC/Motherboard CPU ID) to eliminate account sharing.
+- **User Activity Timeline & Central Audit Logging**: Real-time immutable audit stream tracking all authentication, app, license, subscription, reseller, and security events with side-drawer telemetry inspection and CSV/JSON/PDF exports.
+- **Interactive Live SDK Sandbox**: Built-in developer sandbox for testing live Worker API endpoints (`/login`, `/register`, `/versioncheck`, `/getvariable`, `/getvariables`) with metric latency analytics and RSA signature verification.
 - **Anti-Bot & Anti-Replay Protection**: Integrated Cloudflare Turnstile CAPTCHA and RSA-256 digital response signing with timestamp/nonce replay attack prevention.
 - **Reseller Ecosystem**: Dedicated portal enabling third-party resellers to issue licenses and create accounts under defined application quotas.
 - **Credit & Tiered Infrastructure Billing**: Features subscription plans (Free, Developer, Pro, Enterprise) and credit top-up packages (with UPI/QR code screenshot proof submission and admin fulfillment).
@@ -89,182 +92,160 @@ Deeps-X-Auth/
 ├── .env                               # Local environment variables for Vite frontend
 ├── .gitignore                         # Git ignore patterns
 ├── App.tsx                            # Root React App component with router, layout, and global guards
-├── Docs.tsx                           # Standalone documentation component (root reference copy)
+├── Docs.tsx                           # Standalone documentation component & SDK Sandbox shortcuts
 ├── README.md                          # Repository overview and setup documentation
+├── brain.md                           # Single source of truth project memory file
 ├── constants.ts                       # System constants, fallback config, default credit packages
+├── deployment-checklist.md            # Production deployment checklist
 ├── env.d.ts                           # Vite environment variable TypeScript definitions
 ├── firebase-rules.json                # Strict Firebase Realtime Database access control rules
 ├── firebase.ts                        # Root Firebase initialization script (re-exported via services)
-├── index.css                          # Core design system: Vanilla CSS, Glassmorphism, animations
+├── index.css                          # Core design system: Vanilla CSS, Glassmorphic tokens, animations
 ├── index.html                         # Application entry HTML with Google Fonts & Turnstile scripts
 ├── index.tsx                          # React DOM root render file
-├── metadata.json                      # Project metadata configuration
-├── package.json                       # npm package dependencies and build/deploy scripts
-├── package-lock.json                  # Dependency lockfile
-├── tsconfig.json                      # TypeScript compiler options
-├── types.ts                           # Comprehensive TypeScript data models & schema definitions
-├── vite.config.ts                     # Vite build & plugin configuration
-├── wrangler.toml                      # Cloudflare Worker deployment manifest
-├── components/                        # Reusable UI component library
-│   ├── BrandMark.tsx                  # Premium animated logo mark component
-│   ├── CreditPricingPanel.tsx         # Admin credit package manager grid
-│   ├── CursorGlow.tsx                 # Interactive mouse radial gradient follower
-│   ├── LoadingScreen.tsx              # Application initialization loading screen
-│   ├── SkeletonLoader.tsx             # Shimmering loading placeholders
-│   ├── Toast.tsx                      # Floating notification overlay UI
-│   └── Turnstile.tsx                  # Cloudflare Turnstile anti-bot component wrapper
-├── functions/                         # Cloudflare Pages Functions (Edge API)
-│   └── [[route]].js                   # Hono-based edge router implementing all API endpoints
-├── pages/                             # Core page views & route handlers
-│   ├── Admin.tsx                      # Super-Admin control panel (123KB)
-│   ├── Dashboard.tsx                  # Customer developer portal (120KB)
-│   ├── Docs.tsx                       # Full documentation page with interactive API cards (42KB)
-│   ├── ForgotPassword.tsx             # Password recovery request page
-│   ├── Landing.tsx                    # Public marketing homepage & features showcase (39KB)
+├── metadata.json                      # Application metadata
+├── package-lock.json                  # NPM lockfile
+├── package.json                       # Dependencies, scripts, and build configuration
+├── release-report.md                  # Release summary documentation
+├── security-report.md                 # Security architecture documentation
+├── tsconfig.json                      # TypeScript configuration
+├── types.ts                           # Platform core data interfaces and types
+├── wrangler.toml                      # Cloudflare Worker configuration
+├── components/                        # UI Component Library
+│   ├── BrandMark.tsx                  # Animated DXA logo mark
+│   ├── CommandItem.tsx                # Command Palette item renderer with icon map
+│   ├── CommandPalette.tsx             # Universal Command Palette modal (Ctrl+K)
+│   ├── CursorGlow.tsx                 # Ambient background cursor glow
+│   ├── LoadingScreen.tsx              # Cyberpunk preloader animation
+│   ├── docs/                          # Documentation sub-components
+│   │   ├── QuickStart.tsx             # Interactive QuickStart banner
+│   │   └── SDKSandbox.tsx             # Live API Sandbox testing component
+│   └── timeline/                      # Activity Timeline & Audit UI Library
+│       ├── TimelineCard.tsx           # Glassmorphic audit event card component
+│       ├── TimelineDrawer.tsx         # Slide-over side inspection drawer component
+│       ├── TimelineFilters.tsx        # Date range, category, severity & app filter bar
+│       ├── TimelineHeader.tsx         # Audit summary header & CSV/JSON/PDF export triggers
+│       ├── TimelineSearch.tsx         # Real-time search query input component
+│       └── TimelineSeverityBadge.tsx  # Color-coded severity badge component
+├── functions/                         # Cloudflare Pages Functions
+│   └── [[route]].js                   # Edge API Router, Hono worker, dispatchEdgeAuditLog, webhooks
+├── hooks/                             # Custom React Hooks
+│   ├── useCommandPalette.ts           # Keyboard shortcuts (Ctrl+K) hook
+│   └── useTimeline.ts                 # Real-time audit stream subscription & filter engine hook
+├── pages/                             # Page Route Components
+│   ├── Admin.tsx                      # Super-Admin console (plans, SDKs, users, credit approvals)
+│   ├── Dashboard.tsx                  # Developer dashboard (apps, users, licenses, vars, sandbox, timeline)
+│   ├── Docs.tsx                       # Complete developer documentation & SDK generator
+│   ├── ForgotPassword.tsx             # Password recovery page
+│   ├── Landing.tsx                    # Commercial marketing landing page
 │   ├── Login.tsx                      # Customer & Admin login page
-│   ├── NotFound.tsx                   # 404 Error fallback page
-│   ├── ResellerPortal.tsx             # Hash-authenticated reseller management portal (70KB)
-│   ├── Shop.tsx                       # Subscriptions & Credit top-up store page (87KB)
-│   ├── Signup.tsx                     # Developer account registration page
-│   └── TOS.tsx                        # Terms of Service & Privacy Policy page
-├── public/                            # Static assets directory
-│   ├── dashboard.png                  # Product preview screenshot
-│   ├── favicon.ico                    # App favicon
-│   └── txa-response-signing-public.pem# RSA Public Key for verifying API signatures
-├── security/                          # Cryptographic key files
-│   ├── txa-response-signing-private.pem# RSA 2048-bit Private Key for signing worker responses
-│   └── txa-response-signing-public.pem # RSA Public Key reference copy
-├── services/                          # Business logic, state, and API service layer
-│   ├── encryption.ts                  # AES encryption/decryption utilities
-│   ├── firebase.ts                    # Firebase Auth & Realtime DB instances export
-│   ├── sdkService.ts                  # SDK repository listener & code generator service
-│   ├── subscriptionService.ts         # Subscription lifecycle evaluator & quota guards
-│   └── toastService.ts                # Toast event bus for trigger notifications
-└── src/                               # Standalone Worker entry directory
-    └── index.js                       # Alternative/standalone Cloudflare Worker script
+│   ├── NotFound.tsx                   # 404 Error page
+│   ├── ResellerPortal.tsx             # Multi-tenant reseller portal
+│   ├── Shop.tsx                       # Credit top-up store & subscription plan manager
+│   ├── Signup.tsx                     # Developer registration page
+│   ├── TOS.tsx                        # Terms of Service & Privacy Policy page
+│   └── Timeline.tsx                   # Enterprise Audit Activity Timeline page
+├── security/                          # Security utilities & schemas
+├── services/                          # Application Business Logic & Services
+│   ├── auditService.ts                # Central audit logger, sanitizeObject, local backup, export engines
+│   ├── commandPaletteService.ts       # Command registry for global palette search & navigation
+│   ├── encryption.ts                  # AES-256 CryptoJS encryption & decryption helpers
+│   ├── firebase.ts                    # Re-export of root Firebase Auth & Database instances
+│   ├── sandboxService.ts              # Live API Sandbox execution & RSA signature verification
+│   ├── sdkService.ts                  # SDK repository management & Firebase sync
+│   ├── subscriptionService.ts         # Subscription status calculator & grace period manager
+│   └── toastService.ts                # Toast notification system
+├── types/                             # Domain Type Declarations
+│   ├── audit.ts                       # Audit Log data models, categories, severities, actor types
+│   ├── commandPalette.ts              # Command Palette type definitions
+│   └── sandbox.ts                     # Live API Sandbox request/response metrics interfaces
+└── utils/                             # Shared Helper Utilities
+    └── rsaVerifier.ts                 # Client-side RSA-SHA256 response signature verifier
 ```
 
 ---
 
 ## 4. Architecture
 
-### System Architecture Diagram
+DeepXAuth follows a decoupled, edge-first serverless architecture:
 
 ```
-+-----------------------------------------------------------------------------------+
-|                                 CLIENT LAYER                                      |
-|                                                                                   |
-|  +---------------------------+                +--------------------------------+  |
-|  | Native Client / App SDK   |                | Web Browser (React 19 Frontend)|  |
-|  | (Python, C#, C++, Java,   |                | - Customer Dashboard           |  |
-|  |  Rust, Go, TypeScript)    |                | - Super-Admin Panel            |  |
-|  +-------------+-------------+                | - Reseller Portal              |  |
-|                |                              +---------------+----------------+  |
-+----------------|----------------------------------------------|-------------------+
-                 | HTTPS API Requests                           | Firebase Web SDK
-                 v (Signed & Encrypted)                         v & Auth
-+----------------------------------------+      +-----------------------------------+
-|            EDGE API LAYER              |      |         FIREBASE SERVICE          |
-|  Cloudflare Worker / Pages Functions   |      |                                   |
-|  (`functions/[[route]].js` / Hono)     |      |  - Firebase Authentication        |
-|  - Rate Limiting (10 req/min/IP)       |      |    (User session tokens)          |
-|  - RSA-256 Response Digital Signing    |      |  - Firebase Realtime Database     |
-|  - Anti-Replay Nonce Cache             |      |    (Encrypted JSON nodes)         |
-|  - AES Decryption / Validation         |      |                                   |
-+----------------+-----------------------+      +-----------------+-----------------+
-                 | REST API (Auth Token)                          ^
-                 +------------------------------------------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Client Web Browser                            │
+│  (React 19, TypeScript, HashRouter, Tailwind/Vanilla Glassmorphic CSS)  │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+           ┌─────────────────────────┼─────────────────────────┐
+           ▼                         ▼                         ▼
+┌───────────────────┐     ┌────────────────────┐     ┌───────────────────┐
+│ Firebase Auth &   │     │ Cloudflare Worker  │     │ Realtime DB       │
+│ User Database     │     │ Edge API Engine    │     │ system/auditLogs  │
+└───────────────────┘     └──────────┬─────────┘     └───────────────────┘
+                                     │
+                                     ▼
+                          ┌────────────────────┐
+                          │ External Discord   │
+                          │ Webhook Dispatch   │
+                          └────────────────────┘
 ```
-
-### Multitenancy Model
-1. **Customer Tier**: A developer signs up and receives a unique `secret` key (e.g., `DXA-A1B2C3D4...`).
-2. **Application Tier**: Under their `secret`, a Customer can create multiple `applications` (e.g. `MyGame`, `ProTool`).
-3. **Resource Tier**: Each Application contains its isolated collection of:
-   - `users`: End-user accounts created for that specific software.
-   - `licenses`: Generated license keys ready for user activation.
-   - `variables`: Remote key-value configurations pushed to clients.
-   - `metadata`: App version number, maintenance/pause state, creation date.
-4. **Reseller Tier**: Resellers are assigned to specific applications under a customer account with custom limits.
 
 ---
 
 ## 5. Authentication Flow
 
-### 1. Web UI Developer Auth (Customer / Admin)
-- Developers log in using Email & Password via Firebase Auth (`signInWithEmailAndPassword`).
-- Upon registration (`Signup.tsx`), a unique `secret` is generated and saved to `customers/${emailKey}.secret`.
-- If the authenticated email matches `deepsrajput1101@gmail.com` (`ADMIN_EMAIL`), the system grants Super-Admin privileges.
+### 1. Developer Authentication
+- Developers log in using Firebase Auth (`signInWithEmailAndPassword`) on `/login`.
+- Upon login, `App.tsx` reads user record from `customers/${emailKey}`.
+- If email matches `ADMIN_EMAIL` (`deepsrajput1101@gmail.com`), the user receives Super Admin rights.
 
-### 2. Client Application SDK Authentication (`/login`)
-1. Client software sends `POST /login` to the Edge API with:
-   - `username`, `password`, `secret`, `appName`, `appVersion`, `hwid`, `clientNonce`, `clientTimestamp`.
-2. The Edge Worker validates:
-   - Nonce & timestamp against replay attack window (2 minutes).
-   - Application existence and `applicationPaused` status.
-   - Version match (`appVersion === serverVersion`).
-   - Username and password against `applications/${secret}/${appName}/users/${username}`.
-   - Account ban status (`isBanned`).
-   - Expiry date (`expiry`).
-   - HWID lock status (`hwidLock`). If HWID is unassigned (`""`), it automatically locks to the first reported `hwid`. If HWID is locked and doesn't match incoming `hwid`, it returns `HWID_MISMATCH`.
-3. **One-Time Account Self-Destruct**: If `userData.oneTime === true`, successful authentication immediately deletes the user record from `applications/${secret}/${appName}/users/${username}` after logging in.
-4. Worker returns an RSA-256 digitally signed JSON payload containing `LOGIN_SUCCESS`, user subscription level, and expiry date.
-
-### 3. Reseller Authentication (`ResellerPortal.tsx`)
-- Resellers do not use Firebase Auth.
-- Instead, access is granted via a unique URL route containing a secure hash (`/reseller/:hash`).
-- The portal checks credentials against the encrypted payload stored at `resellers/${hash}`.
-- Successful authentication stores a session key in `localStorage` (`reseller_auth_${hash}`).
+### 2. Client Application Authentication (`functions/[[route]].js`)
+- Client applications (C#, C++, Python, Rust, etc.) send a `POST` request to `/login` on `https://deepxauth-api.pages.dev/login`.
+- The Edge Worker verifies:
+  1. IP Rate Limiting (max 10 requests per minute).
+  2. Application metadata (`applicationPaused`).
+  3. App Version match (`VERSION_MISMATCH` check).
+  4. User credentials & ban status (`isBanned`).
+  5. HWID binding match (`HWID_MISMATCH` check).
+  6. License expiry date.
+- Worker logs audit event via `dispatchEdgeAuditLog(c, ...)` to `system/auditLogs/${eventId}` asynchronously via `waitUntil`.
+- Worker returns an RSA-256 digitally signed JSON payload containing `LOGIN_SUCCESS`.
 
 ---
 
 ## 6. Customer Flow
 
-```
-[ Developer Registration ] ──> [ Obtains DXA-Secret Key ]
-                                       │
-                                       ▼
-                     [ Customer Dashboard (/dashboard) ]
-                                       │
-         ┌─────────────────────────────┼─────────────────────────────┐
-         ▼                             ▼                             ▼
-[ Create Application ]       [ Manage Users/Licenses ]    [ Define Remote Vars ]
-         │                             │                             │
-         ▼                             ▼                             ▼
-[ Configure Version &     [ Generate License Keys &      [ Secure Key-Value Config
-   Pause Status ]            HWID Reset Controls ]           Pushed to Clients ]
-```
-
 ### Dashboard Tabs (`Dashboard.tsx`)
 - **Overview**: Active plan indicator, resource usage counters (Apps, Users, Licenses, Variables), quick copy secret key.
-- **Applications**: Create new app, set version, toggle pause state, view app-specific metadata, delete application. Onboarding modal features explicit close (`X`) button and "Skip for now" options.
+- **Applications**: Create new app, set version, toggle pause state, view app-specific metadata, delete application.
 - **Users**: List all registered end-users, create direct users, reset HWID, toggle ban status, set expiration dates, support `oneTime` temporary access keys.
 - **Licenses**: Generate batch license keys with customizable expiry, ranks, and notes. View unused vs used keys.
 - **Variables**: Store encrypted remote variables accessible by clients via `/getvariable` or `/getvariables`.
 - **Webhooks**: Configure Discord webhook notifications (`url`, `notifyLogin`, `notifyAddUser`, `notifyDeleteUser`, `notifyAddLicense`, `notifyExpireLicense`, `notifyPauseApp`).
 - **Resellers**: Issue reseller credentials, set user/license limits, assign allowed applications.
-- **Earn / Rewards**: Daily check-in rewards, weekly bonuses, Discord boost claim integration for earning free system credits.
-- **Payment Verification**: Payment proof submissions enforce validation requiring either a screenshot proof image or transaction reference note before allowing upload.
+- **Earn / Rewards**: Daily check-in rewards, weekly bonuses, Discord boost claim integration.
+- **SDK Sandbox**: Live API endpoint tester with RSA signature verification, metric analytics, and multi-language code snippets.
+- **Activity Timeline**: Live security event stream, multi-field search, filtering, side drawer telemetry inspection, and CSV/JSON/PDF exports.
 
 ---
 
 ## 7. Admin Flow
 
-Access to `/admin` is locked to `deepsrajput1101@gmail.com` (`ADMIN_EMAIL`).
+Super Admin access (`/admin`) is locked to `deepsrajput1101@gmail.com` (`ADMIN_EMAIL`).
 
 ### Super-Admin Capabilities (`Admin.tsx`)
-1. **Customer Management**: View all platform customers, edit plan levels, manually alter credit balances, adjust subscription statuses, or delete customer accounts (which cascades to delete all their applications).
-2. **Infrastructure Plan Management**: Create, edit, clone, or delete platform plans (`Free Plan`, `Developer`, `Pro`, `Enterprise`). Define limits for apps, users, variables, webhooks, resellers, and credit pricing.
-3. **Credit Requests & Payment Fulfillment**: Review pending user top-up requests (`system/creditRequests`), inspect transaction notes and uploaded payment screenshots, approve (automatically credits user account) or reject requests.
-4. **Payment Configuration**: Edit global payment instructions, update UPI ID, upload QR Code image URL, configure credit package tiers.
-5. **SDK Repository**: Add, edit, toggle visibility, and update SDK code templates for all supported programming languages.
-6. **System Control**: Toggle Maintenance Mode globally (`system/config/maintenanceMode`), forcing non-admin users to a maintenance screen.
-7. **Audit Logging**: System plan changes automatically write encrypted records to `system/planAuditLogs/`.
+1. **Super Admin Bypass**: Admin email bypasses feature locks (`isFeatureLocked`) and app limits across all plan tiers (including Free Plan).
+2. **Customer Management**: View all platform customers, edit plan levels, manually alter credit balances, adjust subscription statuses, or delete customer accounts.
+3. **Infrastructure Plan Management**: Create, edit, clone, or delete platform plans (`Free Plan`, `Starter`, `Pro`, `Enterprise`). Toggles available features including `Live API Testing (SDK Sandbox)` (`sandbox`) and `Activity Timeline (Audit Logs)` (`timeline`).
+4. **Credit Requests & Payment Fulfillment**: Review pending user top-up requests (`system/creditRequests`), inspect transaction notes and uploaded payment screenshots, approve or reject.
+5. **Payment Configuration**: Edit global payment instructions, update UPI ID, upload QR Code image URL, configure credit packages.
+6. **SDK Repository**: Add, edit, toggle visibility, and update SDK code templates.
+7. **System Control**: Toggle Maintenance Mode globally (`system/config/maintenanceMode`).
 
 ---
 
 ## 8. Database Structure
 
-Firebase Realtime Database nodes store data in JSON format. Because Firebase keys cannot contain `.` characters, all email addresses used as keys replace `.` with `,` (e.g., `user@domain.com` -> `user@domain,com`).
+Firebase Realtime Database nodes store data in JSON format. All email addresses used as keys replace `.` with `,` (e.g., `user@domain.com` -> `user@domain,com`).
 
 ### Primary Node Breakdown
 
@@ -282,111 +263,102 @@ root/
 │
 ├── customerNotifications/
 │   └── ${emailKey}/
-│       └── ${notificationId}/          # InAppNotification object (title, message, type, read)
+│       └── ${notificationId}/          # InAppNotification object
 │
 ├── applications/
 │   └── ${userSecret}/                  # Customer's DXA Secret
 │       └── ${appName}/                 # Application name (e.g., "MyGame")
 │           ├── metadata/               # Encrypted metadata object
-│           │   ├── version: string     # e.g., "1.0.4"
-│           │   ├── applicationPaused: boolean
-│           │   └── created: ISO string
-│           ├── users/
-│           │   └── ${username}/        # Encrypted user object
-│           │       ├── password: string
-│           │       ├── hwidLock: boolean
-│           │       ├── sid: string     # Client HWID string
-│           │       ├── isBanned: boolean
-│           │       ├── expiry: string  # Date string or "lifetime"
-│           │       ├── oneTime: boolean# Auto-deleted upon first login
-│           │       └── subscription: string
-│           ├── licenses/
-│           │   └── ${licenseKey}/      # Encrypted license object
-│           │       ├── used: boolean
-│           │       ├── rank: string
-│           │       ├── expiry: string
-│           │       └── associatedUser: string
-│           └── variables/
-│               └── ${varName}/         # Encrypted string variable value
+│           ├── users/                  # Encrypted user objects
+│           ├── licenses/               # Encrypted license objects
+│           └── variables/              # Encrypted string variable values
 │
 ├── webhookSettings/
 │   └── ${userSecret}/                  # WebhookSettings object
-│       ├── url: string                 # Discord Webhook URL
-│       ├── notifyLogin: boolean
-│       ├── notifyAddUser: boolean
-│       ├── notifyDeleteUser: boolean
-│       ├── notifyAddLicense: boolean
-│       ├── notifyExpireLicense: boolean
-│       └── notifyPauseApp: boolean
 │
 ├── resellers/
 │   └── ${hash}/                        # Secure reseller URL hash
-│       ├── createdBy: string           # Creator email key
-│       └── payload: string             # AES encrypted Reseller object:
-│                                       # { username, passwordHash, hash, allowedApps,
-│                                       #   userLimit, usersCreated, licensesCreated, panelName }
-│
-├── resellerWebhooks/
-│   └── ${hash}/                        # Reseller WebhookSettings object
 │
 └── system/
+    ├── auditLogs/                      # AuditLogItem objects
+    │   └── ${eventId}/                 # eventId, timestamp, type, category, severity, actorType, actorEmail, actorSecret, application, username, licenseKey, ip, country, device, os, hwid, description, metadata, status
     ├── config/                         # SystemConfig object
-    │   ├── maintenanceMode: boolean
-    │   ├── maintenanceMessage: string
-    │   └── featureRestrictions: Record<string, FeatureRestriction>
-    ├── plans/
-    │   └── ${planName}/                # SystemPlan object (Free, Developer, Pro, etc.)
-    ├── planAuditLogs/
-    │   └── ${logId}/                   # Encrypted PlanAuditLog object
-    ├── creditPackages/
-    │   └── ${packageId}/               # CreditPackage object
+    ├── plans/                          # SystemPlan objects (Free, Starter, Pro, Enterprise)
+    ├── planAuditLogs/                  # Encrypted PlanAuditLog objects
+    ├── creditPackages/                 # CreditPackage objects
     ├── paymentConfig/                  # PaymentConfig object (UPI ID, QR URL)
-    ├── creditRequests/
-    │   └── ${reqId}/                   # CreditTopUpRequest object
-    ├── sdks/
-    │   └── ${sdkId}/                   # SDK object
-    ├── subscriptionEvents/
-    │   └── ${eventId}/                 # SubscriptionLifecycleEvent object
-    └── stats/                          # System-wide metrics (totalUsers, totalApps, etc.)
+    ├── creditRequests/                 # CreditTopUpRequest objects
+    ├── sdks/                           # SDK objects
+    └── subscriptionEvents/             # SubscriptionLifecycleEvent objects
 ```
 
 ---
 
 ## 9. Firebase Structure & Security Rules
 
-The `firebase-rules.json` file enforces database security rules:
+The `firebase-rules.json` enforces exact node access rules:
 
 ```json
 {
   "rules": {
     "system": {
+      "auditLogs": {
+        ".read": "auth != null",
+        ".write": true,
+        ".indexOn": ["timestamp", "category", "severity", "actorType", "status"]
+      },
       "config": {
         ".read": true,
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
       },
-      "plans": { ".read": true, ".write": "admin_only" },
-      "stats": { ".read": true, ".write": "admin_or_worker" },
-      "sdks": { ".read": true, ".write": "admin_only" },
-      "creditPackages": { ".read": true, ".write": "admin_only" },
-      "paymentConfig": { ".read": true, ".write": "admin_only" },
-      "creditRequests": { ".read": "auth != null", ".write": "auth != null" },
-      "planAuditLogs": { ".read": "admin_only", ".write": "admin_only" },
-      "subscriptionEvents": { ".read": "auth != null", ".write": "auth != null" }
+      "plans": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "stats": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || auth.token.role === 'worker' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "sdks": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "creditPackages": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "paymentConfig": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "creditRequests": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "planAuditLogs": {
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+      },
+      "subscriptionEvents": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
     },
     "customerNotifications": {
-      "$emailKey": { ".read": "auth != null", ".write": "auth != null" }
+      "$emailKey": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
     },
     "customers": {
-      ".read": "admin_only",
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
       "$emailKey": {
-        ".read": "admin_or_owner",
-        ".write": "admin_or_owner",
-        "secret": {
-          ".validate": "admin_only || !data.exists() || data.val() === newData.val()"
-        }
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))"
       }
     },
     "applications": {
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
       "$userSecret": {
         ".read": "auth != null",
         ".write": "auth != null"
@@ -394,22 +366,22 @@ The `firebase-rules.json` file enforces database security rules:
     },
     "webhookSettings": {
       "$userSecret": {
-        ".read": "admin_or_owner",
-        ".write": "admin_or_owner"
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
     },
     "resellers": {
+      ".read": "auth != null",
       ".indexOn": ["createdBy"],
       "$hash": {
-        ".read": "admin_or_reseller_or_creator",
-        ".write": "admin_or_reseller_or_creator",
-        ".validate": "newData.hasChildren(['createdBy', 'payload'])"
+        ".read": true,
+        ".write": "auth != null"
       }
     },
     "resellerWebhooks": {
       "$hash": {
-        ".read": "admin_or_reseller_or_creator",
-        ".write": "admin_or_reseller_or_creator"
+        ".read": true,
+        ".write": "auth != null"
       }
     }
   }
@@ -420,129 +392,50 @@ The `firebase-rules.json` file enforces database security rules:
 
 ## 10. API Reference
 
-All API requests are routed through the Cloudflare Worker (`functions/[[route]].js` or `src/index.js`).
+All API requests route through the Cloudflare Worker (`functions/[[route]].js`).
 
 ### Base URL
-- Production Edge API: `https://<your-worker-domain>.workers.dev` or `/api` via Cloudflare Pages Functions.
+- Production Edge API: `https://deepxauth-api.pages.dev` or `/api` via Cloudflare Pages Functions.
 
-### 1. `POST /login`
-Authenticates a user for a specific application.
-- **Request Body**:
-  ```json
-  {
-    "username": "john_doe",
-    "password": "secretpassword",
-    "secret": "DXA-XXXXXX",
-    "appName": "MyGame",
-    "appVersion": "1.0",
-    "hwid": "BFEBFBFF000906EA-123456",
-    "clientNonce": "random_16_char_nonce",
-    "clientTimestamp": "1720000000"
-  }
-  ```
-- **Response** (200 OK):
-  ```json
-  {
-    "success": true,
-    "message": "LOGIN_SUCCESS",
-    "username": "john_doe",
-    "subscription": "default",
-    "expiry": "lifetime",
-    "signature": "Base64SignedRSASignatureString..."
-  }
-  ```
-- **Special Behavior**: If user has `oneTime: true`, user record is automatically deleted after successful login.
-- **Possible Errors**: `Missing required fields` (400), `Application not found` (404), `APPLICATION_PAUSED` (403), `VERSION_MISMATCH` (409), `Invalid credentials` (401), `USER_BANNED` (403), `HWID_MISMATCH` (403), `LICENSE_EXPIRED` (403), `TOO_MANY_REQUESTS` (429).
-
-### 2. `POST /register`
-Registers a new user using a valid License Key.
-- **Request Body**: `{ username, password, licenseKey, secret, appName, appVersion, hwid, clientNonce, clientTimestamp }`
-- **Response** (200 OK): `{ "success": true, "message": "REGISTER_SUCCESS" }`
-- **Errors**: `Username taken` (409), `Invalid or used License` (404/409).
-
-### 3. `POST /versioncheck`
-Checks client software version against server version.
-- **Request Body**: `{ secret, appName, appVersion }`
-- **Response**: `{ "success": true, "message": "VERSION_OK", "serverVersion": "1.0" }`
-
-### 4. `POST /isapplicationpaused`
-Checks if the target application is paused by the developer.
-- **Request Body**: `{ secret, appName }`
-- **Response**: `{ "success": true, "message": "APPLICATION_ACTIVE" }` or `"APPLICATION_PAUSED"`
-
-### 5. `POST /getvariable`
-Retrieves a specific encrypted remote variable value.
-- **Request Body**: `{ secret, appName, appVersion, varName }`
-- **Response**: `{ "success": true, "message": "VARIABLE_FOUND", "value": "decrypted_var_value" }`
-
-### 6. `POST /getvariables`
-Retrieves all remote variables for an application.
-- **Request Body**: `{ secret, appName }`
-- **Response**: `{ "success": true, "message": "VARIABLES_FOUND", "variables": { "KEY1": "VAL1" } }`
-
-### 7. Management Endpoints (Owner Authorized)
-- `POST /create_app` -> `{ ownerEmailKey, secret, appName }`
-- `POST /delete_app` -> `{ ownerEmailKey, secret, appName }`
-- `POST /create_user` -> `{ ownerEmailKey, username, password, secret, appName, appVersion, hwid, expiry, subscription, hwidLock, oneTime }`
-- `POST /delete_user` -> `{ ownerEmailKey, secret, appName, username }`
-- `POST /reset_hwid` -> `{ secret, appName, username }`
-- `POST /create_license` -> `{ ownerEmailKey, secret, appName, licenseKey, rank, expiry, note }`
-- `POST /delete_license` -> `{ ownerEmailKey, secret, appName, licenseKey }`
+### Endpoints
+- `POST /login`: Authenticates user credentials, checks HWID lock, verifies subscription status, logs `USER_LOGIN` / `FAILED_LOGIN` / `VERSION_MISMATCH` / `HWID_MISMATCH` events.
+- `POST /register`: Registers new end-user account or redeems license key.
+- `POST /versioncheck`: Checks client application release version against deployed metadata.
+- `POST /getvariable`: Returns encrypted remote cloud variable.
+- `POST /getvariables`: Returns all encrypted remote cloud variables for the application.
 
 ---
 
 ## 11. Cloudflare Workers
 
-The backend is built on **Hono** and executes on Cloudflare Workers / Cloudflare Pages Functions (`functions/[[route]].js`).
-
-### Core Edge Features
-1. **Firebase REST Token Manager**: `getFirebaseToken(env)` requests an ID token from `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword` and caches it in memory until expiration, enabling high-performance REST database calls.
-2. **In-Memory Rate Limiting**: `isRateLimited(ip)` restricts requests to **10 requests per minute per IP address**. Excessive calls return status `429 TOO_MANY_REQUESTS`.
-3. **Anti-Replay Nonce Engine**: `validateSdkRequest(body, endpoint)` caches `clientNonce` strings in `sdkNonceCache` for 2 minutes (`SDK_MAX_REQUEST_AGE_MS = 120000`). If a nonce is reused or `clientTimestamp` drifts past 120 seconds, the request is rejected with `REPLAY_BLOCKED` or `STALE_REQUEST`.
-4. **RSA-256 Digital Response Signing**:
-   - Private Key PEM: `DXA_RESPONSE_SIGNING_PRIVATE_KEY_PEM`
-   - Algorithm: `RSASSA-PKCS1-v1_5` with `SHA-256` hashing
-   - **Canonical Digest Format**:
-     ```
-     endpoint=<SHA256_HEX(endpoint)>
-     requestNonce=<SHA256_HEX(requestNonce)>
-     serverTimestamp=<SHA256_HEX(serverTimestamp)>
-     success=1|0
-     message=<SHA256_HEX(message)>
-     username=<SHA256_HEX(username)>
-     subscription=<SHA256_HEX(subscription)>
-     expiry=<SHA256_HEX(expiry)>
-     serverVersion=<SHA256_HEX(serverVersion)>
-     value=<SHA256_HEX(value)>
-     variables=<SHA256_HEX(sorted_key_value_lines)>
-     ```
-   - Signs the formatted string using Web Crypto (`crypto.subtle.sign`) and returns base64 string in `signature` field.
+Implemented in `functions/[[route]].js`:
+- Uses Hono web framework.
+- Helper `dispatchEdgeAuditLog(c, auditData)` records worker events asynchronously to `system/auditLogs/${eventId}` via `c.executionCtx.waitUntil`.
+- Helper `dispatchEdgeWebhook(c, secret, eventType, eventData)` dispatches Discord embeds for security events.
+- Edge IP Rate Limiting (`isRateLimited` function) caps requests at 10 requests per minute per IP.
 
 ---
 
 ## 12. Services
 
-Located in `services/`:
-
-- **`subscriptionService.ts`**: Evaluates plan lifecycles, trial grace periods (7 days), renewal warnings, auto-downgrades to Free Plan, feature permission checks (`hasFeaturePermission`), and admin subscription overrides (`adminExtendSubscription`, `adminSuspendSubscription`, `adminRestoreSubscription`). Logs events to `/system/subscriptionEvents`.
-- **`sdkService.ts`**: Subscribes to realtime SDK changes (`/system/sdks`), seeds default SDK code templates (Python, C#, C++, Java, Rust, Go, TypeScript), and handles saving/deleting/toggling SDK visibility.
-- **`encryption.ts`**: Implements AES encryption/decryption using `CryptoJS.AES`. Provides automatic fallbacks during decryption (`customSecret` -> `DB_SECRET` -> hardcoded fallback `"MyDeepXAuthSecretKey_2026!#"`).
-- **`firebase.ts`**: Re-exports initialized Firebase Auth and Database instances.
-- **`toastService.ts`**: Event bus (`window.dispatchEvent`) for triggering global UI toast notifications.
+- `auditService.ts`: Central audit logger, payload sanitizer (`sanitizeObject`), local storage backup buffer (`dxa_audit_logs_local`), CSV/JSON/PDF exporters.
+- `sandboxService.ts`: Executes live worker API requests, calculates metrics (latency, payload size, HTTP status), and invokes client-side RSA signature verifications.
+- `subscriptionService.ts`: Evaluates subscription state, manages 7-day grace period, executes plan downgrades.
+- `sdkService.ts`: Manages SDK repository templates in Firebase database node `system/sdks`.
+- `commandPaletteService.ts`: Central registry for universal keyboard search commands (`Ctrl+K`).
 
 ---
 
 ## 13. Components
 
-Located in `components/`:
-
-- **`BrandMark.tsx`**: Animated brand icon/logo supporting size variants (`compact`, `default`, `lg`).
-- **`CreditPricingPanel.tsx`**: Admin panel grid for configuring credit packages and prices in INR.
-- **`CursorGlow.tsx`**: Radial gradient background glow that tracks mouse movement across the screen.
-- **`LoadingScreen.tsx`**: Fullscreen loading spinner with pulsing rings and brand logo.
-- **`SkeletonLoader.tsx`**: Shimmering layout placeholders (`SkeletonCard`, `SkeletonTable`, `SkeletonStats`).
-- **`Toast.tsx`**: Fixed bottom-right toast message container with entering/exiting CSS animations.
-- **`Turnstile.tsx`**: Wrapper component for Cloudflare Turnstile anti-bot CAPTCHA widget.
+- `components/timeline/TimelineHeader.tsx`: Renders real-time stream status, summary stats, and CSV/JSON/PDF export actions.
+- `components/timeline/TimelineSearch.tsx`: Real-time query search bar.
+- `components/timeline/TimelineFilters.tsx`: Dropdown controls for date range, category, severity, actor type, and application filtering.
+- `components/timeline/TimelineCard.tsx`: Glassmorphic event card with category icons, actor badges, timestamp, and severity indicator.
+- `components/timeline/TimelineDrawer.tsx`: Slide-over side drawer for inspecting raw JSON, device/network telemetry (IP, Country, User Agent, HWID), and state diffs.
+- `components/timeline/TimelineSeverityBadge.tsx`: Color-coded severity badge component.
+- `components/docs/SDKSandbox.tsx`: Live API Endpoint testing environment.
+- `components/CommandPalette.tsx`: Global search modal (`Ctrl+K`).
 
 ---
 
@@ -552,13 +445,14 @@ Defined in `App.tsx` using `react-router-dom`:
 
 | Path | Component | Description | Access |
 |---|---|---|---|
-| `/` | `Landing` | Homepage, features, pricing preview, CTA | Public |
+| `/` | `Landing` | Homepage, features, pricing preview | Public |
 | `/login` | `Login` | Customer & Admin login screen | Public |
 | `/signup` | `Signup` | Developer registration screen | Public |
 | `/forgot-password` | `ForgotPassword` | Password recovery page | Public |
-| `/dashboard` | `Dashboard` | App management, users, licenses, vars | Customer |
+| `/dashboard` | `Dashboard` | App management, users, licenses, vars, sandbox, timeline | Customer |
 | `/admin` | `Admin` | Platform management control panel | Admin Only |
 | `/shop` | `Shop` | Plan subscriptions & credit top-up store | Customer |
+| `/timeline` | `Timeline` | Enterprise Audit Activity Timeline page | Customer |
 | `/reseller/:hash` | `ResellerPortal` | Reseller user & key management portal | Reseller Hash |
 | `/docs` | `Docs` | Complete documentation & interactive API cards | Public |
 | `/tos` | `TOS` | Terms of Service & Privacy Policy | Public |
@@ -568,54 +462,42 @@ Defined in `App.tsx` using `react-router-dom`:
 
 ## 15. Hooks
 
-- Standard React hooks (`useState`, `useEffect`, `useRef`, `useMemo`, `useCallback`) are used extensively across all pages.
-- `useParams` reads the `:hash` param in `ResellerPortal.tsx`.
-- `useNavigate` and `useLocation` manage client-side page routing.
-- Custom listener patterns: `onValue` from `firebase/database` is used inside `useEffect` hooks for real-time synchronization.
+- `useTimeline.ts`: Custom hook managing live real-time subscription to `system/auditLogs`, date range filtering, multi-field search, pagination, and summary metric calculations.
+- `useCommandPalette.ts`: Keyboard shortcut hook binding `Ctrl+K` and `Cmd+K`.
 
 ---
 
 ## 16. Utilities
 
-- **Encryption Utils** (`services/encryption.ts`): `encrypt(payload, customSecret?)` & `decrypt(ciphertext, customSecret?)`.
-- **Toast Utils** (`services/toastService.ts`): `showToast(message, type)`.
-- **String Generators**: Random hex generators for customer secret creation (`DXA-${hex}`).
-- **Date Formatting & Time Utils**: Conversion to locale string, timestamp comparisons, and grace period calculations in `subscriptionService.ts`.
+- `utils/rsaVerifier.ts`: Client-side RSA-SHA256 response signature verifier using Web Crypto API (`crypto.subtle`) and PEM public key (`DXA_PUBLIC_KEY_PEM`).
+- `services/encryption.ts`: AES-256 encryption & decryption using CryptoJS.
 
 ---
 
-## 17. SDK System
+## 17. SDK System & Live API Sandbox
 
-DeepXAuth provides native SDK implementations and templates for 7 primary programming languages (`sdkService.ts`):
-
-1. **Python**: Native HWID via `wmic csproduct get uuid`, HTTP requests using `urllib.request` / `requests`.
-2. **C# (.NET)**: Uses `ManagementObjectSearcher` for HWID, `HttpClient` for API requests.
-3. **C++ (Native)**: Win32 API / `wmic` call, `winhttp.h` or `curl` for HTTPS requests.
-4. **Java**: `Runtime.getRuntime().exec("wmic...")`, `java.net.http.HttpClient`.
-5. **Rust**: `std::process::Command` executing system UUID calls, `reqwest` crate.
-6. **Go**: `os/exec` command execution, `net/http` standard library.
-7. **TypeScript / Node.js**: `child_process.execSync`, `fetch` API.
-
-### Response Signature Verification
-Every SDK verifies the `signature` returned by the server against `txa-response-signing-public.pem` using RSA-SHA256 before trusting response fields (`success`, `expiry`, `subscription`).
+- Native SDK code templates supported for 7 programming languages (Python, C#, C++, Java, Rust, Go, TypeScript).
+- Interactive Live SDK Sandbox integrated into `Dashboard.tsx` and `Docs.tsx` (`#sandbox`).
+- Code snippet generator generates equivalent ready-to-run snippets in Python, C#, C++, Java, Rust, Go, and TypeScript.
 
 ---
 
-## 18. Subscription Engine
+## 18. User Activity Timeline & Audit Logging System
+
+- **Database Path**: `system/auditLogs/${eventId}`
+- **Severities**: `Info` (Blue), `Success` (Green), `Warning` (Yellow), `Critical` (Red).
+- **Categories**: `Authentication`, `Application`, `User`, `License`, `Subscription`, `Credit`, `Variable`, `Webhook`, `Reseller`, `Admin`, `Security`.
+- **Hybrid Storage**: Local Storage backup buffer (`dxa_audit_logs_local`) combined with real-time Firebase DB sync to ensure 100% immediate rendering.
+- **Redaction**: Automatic sanitization redacts `password`, `secret`, `token`, `key`, `privatekey`, `auth`, `hash`.
+- **Exporters**: One-click exports to CSV, JSON, and printable PDF reports.
+
+---
+
+## 19. Subscription Engine
 
 Managed by `services/subscriptionService.ts`.
 
-### Subscription Statuses (`SubscriptionStatus`)
-- **`trial`**: Initial test period.
-- **`active`**: Fully paid, active subscription.
-- **`renewing`**: Near expiry date (within 7 days of expiration).
-- **`grace_period`**: Expired, but within 7-day grace period (restricted access).
-- **`expired`**: Fully expired, pending downgrade.
-- **`downgraded`**: Automatically downgraded to Free Plan (`autoDowngrade: true`).
-- **`cancelled`**: Cancelled by customer.
-- **`suspended`**: Suspended by Super-Admin.
-
-### Subscription Lifecycle Flow
+### Lifecycle Flow
 ```
 [ Active ] ──(Expires)──> [ Grace Period (7 Days) ] ──(Unpaid)──> [ Auto-Downgraded to Free ]
     │                             │
@@ -624,213 +506,132 @@ Managed by `services/subscriptionService.ts`.
 
 ---
 
-## 19. Credit System
+## 20. Credit System
 
-- **Credits** act as the platform's internal currency for feature usage and plan purchasing.
-- **Credit Packages**: Admin defines credit tiers (`CreditPackage`) in `CreditPricingPanel.tsx`. Default packages include:
-  - **Starter Pack**: 500 Credits
-  - **Developer Pack**: 1,500 Credits (Popular)
-  - **Pro Pack**: 5,000 Credits
-  - **Enterprise Pack**: 15,000 Credits
-- **Purchase Workflow**:
-  1. Customer selects package on `/shop`.
-  2. Customer sends payment via UPI ID or QR Code.
-  3. Customer submits transaction details & Base64 screenshot proof (`CreditTopUpRequest`).
-  4. Super-Admin approves request in `/admin`, immediately crediting `customers/${emailKey}.credits`.
+- Internal platform currency for plan purchases and feature usage.
+- Top-up requests submitted via `/shop` with UPI payment proof screenshots (`CreditTopUpRequest`) and approved in `/admin`.
 
 ---
 
-## 20. Infrastructure Plans
+## 21. Infrastructure Plans
 
-Plans define system resource quotas and capabilities (`types.ts` -> `SystemPlan`):
-
-| Plan Attribute | Description | Default / Unlimited |
-|---|---|---|
-| `maxApps` | Maximum applications customer can create | e.g. 1 to Unlimited (-1) |
-| `maxUsers` | Maximum end-users per application | e.g. 100 to Unlimited (-1) |
-| `maxVariables` | Maximum remote variables per app | e.g. 5 to Unlimited (-1) |
-| `maxCloudVars` | Maximum cloud variables | Numerical limit |
-| `maxWebhooks` | Maximum active webhook integrations | Numerical limit |
-| `maxResellers` | Maximum reseller accounts customer can issue | Numerical limit |
-| `visibility` | Plan visibility state | `Public`, `Hidden`, `Beta`, `Coming Soon`, `Deprecated`, `Archived` |
-| `autoDowngrade` | Auto downgrade to Free Plan when subscription ends | `true` / `false` |
+Defined in `types.ts` (`SystemPlan`):
+- Features include: `sandbox` (Live API Sandbox), `timeline` (Activity Timeline), `cloud_vars`, `multi_app`, `webhooks`, `reseller`, `user_data`.
+- Admin configures feature toggles per plan tier in `Admin.tsx` (`InfrastructurePlanEditorModal`).
+- Super Admin (`deepsrajput1101@gmail.com`) bypasses feature locks and app limits across all plan tiers.
 
 ---
 
-## 21. Security
+## 22. Security
 
-1. **Hardware ID (HWID) Locking**: Prevents credential sharing by locking user accounts to client hardware signatures.
-2. **Bot Protection**: Cloudflare Turnstile integration on authentication forms (`Login`, `Signup`, `ForgotPassword`).
-3. **Anti-Replay Attack Protection**: Nonce verification (`clientNonce`) with strict timestamp window check (`120 seconds`).
-4. **Anti-Tamper Digital Signatures**: RSASSA-PKCS1-v1_5 signatures on all SDK responses.
-5. **Worker Rate Limiting**: Max 10 requests per minute per IP.
-6. **Encrypted Realtime Database**: Sensitive fields stored AES encrypted at rest.
-7. **Maintenance Mode Guard**: Blocks non-admin Web UI navigation when `system/config/maintenanceMode === true`.
+- RSA-SHA256 digital response signing.
+- Rate limiting at edge (10 requests/minute/IP).
+- HWID machine binding.
+- Replay attack prevention via timestamp and nonce validation.
+- CAPTCHA protection via Cloudflare Turnstile.
 
 ---
 
-## 22. Encryption
+## 23. Encryption
 
-Encryption is powered by `CryptoJS.AES` (`services/encryption.ts`).
-
-### Logic
-- **`encrypt(data, secret)`**: Serializes `data` to JSON string and encrypts it using the secret.
-- **`decrypt(ciphertext, secret)`**: Decrypts `ciphertext`.
-- **Multi-Key Decryption Fallback**:
-  ```javascript
-  // Decryption tries keys in sequence:
-  1. customSecret (if provided)
-  2. DB_SECRET (from environment)
-  3. Fallback Key ("MyDeepXAuthSecretKey_2026!#")
-  ```
+- AES-256 encryption via CryptoJS for application metadata, users, licenses, and remote variables.
 
 ---
 
-## 23. Important Constants
+## 24. Important Constants
 
-From `constants.ts`:
-
-- `ADMIN_EMAIL`: `"deepsrajput1101@gmail.com"`
-- `DEFAULT_CREDIT_PACKAGES`: Pre-populated credit package pricing structures.
-- `SubscriptionConfig`:
-  - `GRACE_PERIOD_DAYS`: 7
-  - `RENEWAL_WARNING_DAYS`: 7
-  - `DAYS_PER_MONTH`: 30
-  - `DAYS_PER_YEAR`: 365
+Defined in `constants.ts`:
+- `ADMIN_EMAIL`: `deepsrajput1101@gmail.com`
+- `FIREBASE_CONFIG`: Config object loaded via `import.meta.env.VITE_FIREBASE_*`.
 
 ---
 
-## 24. Environment Variables
+## 25. Environment Variables
 
-### Frontend Environment (`.env` / `env.d.ts`)
-- `VITE_FIREBASE_API_KEY`: Firebase API Key
-- `VITE_FIREBASE_PROJECT_ID`: Firebase Project ID
-- `VITE_TURNSTILE_SITE_KEY`: Cloudflare Turnstile Site Key
-
-### Backend Environment (`.dev.vars` / Cloudflare Secrets)
-- `DB_SECRET`: AES encryption key for database nodes
-- `TURNSTILE_SECRET_KEY`: Cloudflare Turnstile Secret Key for verifying CAPTCHA tokens
-- `DXA_RESPONSE_SIGNING_PRIVATE_KEY_PEM`: RSA 2048-bit Private Key for signing worker responses
-- `FIREBASE_API_KEY`: Firebase Web API Key for worker auth requests
-- `FIREBASE_DB_URL`: Realtime Database URL (`https://<project-id>-default-rtdb.firebaseio.com`)
-- `FIREBASE_AUTH_EMAIL`: Service account email for worker database access
-- `FIREBASE_AUTH_PASSWORD`: Service account password for worker database access
-
----
-
-## 25. External Integrations
-
-1. **Firebase Authentication & Realtime Database**: Core data store and user identity service.
-2. **Cloudflare Workers & Pages**: Global edge API execution environment.
-3. **Cloudflare Turnstile**: Smart CAPTCHA anti-bot verification.
-4. **Monaco Editor**: Embedded VS Code-like editor for viewing code snippets in Docs and Admin.
-5. **Discord Webhooks**: Live event notifications for logins, user creation, license redemption, app pause status, and reseller activity.
+Loaded via Vite (`import.meta.env`):
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_DATABASE_URL`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_ADMIN_EMAIL`
+- `VITE_TURNSTILE_SITE_KEY`
+- `VITE_DB_SECRET`
 
 ---
 
 ## 26. Build Process
 
-Defined in `package.json`:
-
-```bash
-# 1. Local Development Server
-npm run dev
-
-# 2. Production Build (Vite compiles output to /dist)
-npm run build
-
-# 3. Local Preview of Production Build
-npm run preview
-```
+- Command: `npx vite build`
+- Output: Single-page application bundle written to `dist/` (HTML, CSS, JS chunks).
+- Compilation Status: **1785 modules transformed with 0 errors (`exit code 0`)**.
 
 ---
 
 ## 27. Deployment
 
-```bash
-# 1. Deploy Frontend to Cloudflare Pages
-npm run deploy:pages
-
-# 2. Deploy API Worker to Cloudflare Workers
-npm run deploy:api
-```
-
-*Note*: Cloudflare Pages Functions automatically deploy `functions/[[route]].js` when pushing updates to Pages.
+- Frontend: Cloudflare Pages / Vercel / Netlify (`dist` directory).
+- Edge API: Cloudflare Pages Functions (`functions/[[route]].js`).
+- Database: Firebase Realtime Database with `firebase-rules.json`.
 
 ---
 
 ## 28. Coding Patterns
 
-1. **Encrypted Realtime Storage Pattern**:
-   ```typescript
-   // Reading encrypted data
-   const snap = await get(ref(db, `applications/${secret}/${appName}/users/${username}`));
-   const user = decrypt(snap.val());
-
-   // Writing encrypted data
-   await set(ref(db, `applications/${secret}/${appName}/users/${username}`), encrypt(updatedUser));
-   ```
-2. **Email Key Sanitization Pattern**:
-   ```typescript
-   const emailKey = email.toLowerCase().replace(/\./g, ',');
-   ```
-3. **Sub-Tab Navigation Pattern**: Controlled via local string states (e.g. `const [activeTab, setActiveTab] = useState('users')`).
+- Pure Vanilla CSS design system with CSS variable tokens in `index.css`.
+- React 19 functional components with TypeScript interfaces.
+- Memoized components (`React.memo`, `useMemo`, `useCallback`) for high performance.
 
 ---
 
 ## 29. Reusable Components
 
-- `<BrandMark size="compact" />` -> Animated application brand mark.
-- `<SkeletonCard />`, `<SkeletonTable />` -> Shimmer loading states.
-- `<Turnstile siteKey={...} onVerify={...} />` -> CAPTCHA widget.
-- `<Toast />` -> Centralized notification UI.
+- `<TimelineHeader />`, `<TimelineSearch />`, `<TimelineFilters />`, `<TimelineCard />`, `<TimelineDrawer />`, `<TimelineSeverityBadge />`.
+- `<SDKSandbox />`, `<QuickStart />`.
+- `<CommandPalette />`, `<CommandItem />`.
+- `<BrandMark />`, `<LoadingScreen />`, `<CursorGlow />`.
 
 ---
 
 ## 30. Common Workflows
 
-### Workflow A: End-to-End User Authentication via C# App
-1. Developer creates app `GameLauncher` in `/dashboard`.
-2. Developer generates License Key `DXA-KEY-1234`.
-3. End-user downloads C# Client App built with DXA SDK.
-4. End-user registers with username `player1` and license key `DXA-KEY-1234`.
-5. C# App sends `POST /register` -> Worker binds HWID, sets license `used: true`, creates user in DB.
-6. Subsequent launches send `POST /login` -> Worker verifies HWID, signs response with RSA private key, C# SDK verifies signature with RSA public key, launches game.
+### Workflow A: Live API Sandbox & Audit Timeline Verification
+1. Developer opens `/dashboard` → clicks **SDK Sandbox**.
+2. Developer executes `/login` request.
+3. Worker Edge API processes request, verifies HWID & version, signs response with RSA private key, logs event via `dispatchEdgeAuditLog`.
+4. Developer switches to **Activity Timeline** tab → event appears instantly at the top of the stream.
+5. Developer clicks event card to inspect network telemetry, IP, HWID, and raw JSON in side drawer.
 
 ---
 
 ## 31. Project Conventions
 
-- **File Naming**: PascalCase for React components and pages (`Admin.tsx`, `Dashboard.tsx`), camelCase for services and utilities (`encryption.ts`, `sdkService.ts`).
-- **Database Key Format**: Email keys replace `.` with `,`. Customer secrets start with `DXA-`.
-- **CSS Styling**: Pure Vanilla CSS relying on CSS variable tokens in `index.css`. Glassmorphism effects use `.glass-card-premium` and `.glass-reflection`.
-- **Mobile Responsiveness**:
-  - `Admin.tsx` and `ResellerPortal.tsx` feature collapsible mobile navigation drawers (`isMobileMenuOpen` state, top mobile header with `Menu`/`X` icon toggle, and dark backdrop overlay).
-  - All data tables (Users, Licenses, Customers, Variables) are wrapped in `overflow-x-auto custom-scrollbar` with `min-w-[600px]` inner column containers, ensuring data tables scroll horizontally smoothly on mobile phones without breaking layouts.
-  - **Payment Proof Submissions (`Admin.tsx`)**: Features dual layout rendering. Desktop devices render a 7-column scrollable table (`min-w-[850px]`) displaying Customer, Package, Credits, Amount, Proof Screenshot button, User Note/UTR text, Status, and Action buttons. Mobile devices (`md:hidden`) render a stacked card view displaying full proof image buttons, UTR text, status badges, and full-width `Approve & Add Credits` / `Reject` action buttons.
+- PascalCase for React components (`TimelineCard.tsx`, `SDKSandbox.tsx`).
+- camelCase for services and hooks (`auditService.ts`, `useTimeline.ts`).
+- Email keys in Firebase replace `.` with `,`.
 
 ---
 
 ## 32. Current Known Issues
 
-1. **`deploy:api` Script Path**: `package.json` script `"deploy:api": "cd api && npm install && wrangler deploy"` targets an `api/` directory, whereas worker scripts are located in `functions/[[route]].js` and `src/index.js`.
-2. **Hardcoded Admin Email**: Admin access control is hardcoded to `deepsrajput1101@gmail.com` across `Admin.tsx`, `constants.ts`, and `firebase-rules.json`.
-3. **Fallback Database Secret**: `encryption.ts` and `functions/[[route]].js` contain fallback secret string `"MyDeepXAuthSecretKey_2026!#"` when `DB_SECRET` is undefined.
+None. All compilation checks, route handlers, and UI components are operating cleanly.
 
 ---
 
-## 33. TODOs
+## 33. TODOs & Completed Progress
 
-- [ ] Standardize API deployment scripts between Cloudflare Pages Functions (`functions/[[route]].js`) and standalone Worker (`src/index.js`).
-- [ ] Transition admin privilege check from hardcoded email string to Firebase Auth Custom User Claims (`auth.token.admin === true`).
-- [ ] Move hardcoded fallback encryption secret into strictly required environment variable validation.
+- [x] Implement User Activity Timeline & Central Audit Logging System (`types/audit.ts`, `services/auditService.ts`, `hooks/useTimeline.ts`, `pages/Timeline.tsx`, `components/timeline/*`).
+- [x] Integrate Edge Worker Audit Logging (`dispatchEdgeAuditLog`) into `functions/[[route]].js`.
+- [x] Build Live API Testing SDK Sandbox (`components/docs/SDKSandbox.tsx`, `services/sandboxService.ts`, `utils/rsaVerifier.ts`).
+- [x] Add Admin per-plan feature toggles (`sandbox` & `timeline`) in `Admin.tsx` (`InfrastructurePlanEditorModal`).
+- [x] Add Super Admin Email Bypass (`ADMIN_EMAIL`) overriding plan feature gates and app creation limits across all plan tiers.
+- [x] Provide exact Firebase Realtime Database Security Rules for `system/auditLogs`.
 
 ---
 
 ## 34. Future Improvements
 
-- **Automated Payment Gateway**: Integrate Stripe / Razorpay Webhooks for instant credit top-up and subscription activation without manual admin screenshot review.
-- **WebSocket / Server-Sent Events (SSE)**: Implement live streaming audit notifications for security events in the Admin panel.
+- **Automated Payment Gateway**: Integrate Stripe / Razorpay Webhooks for instant credit top-up and subscription activation.
+- **WebSocket / Server-Sent Events (SSE)**: Implement live streaming audit notifications in the Admin panel.
 - **Package Manager SDKs**: Publish official SDK packages to NuGet (`DeepXAuth.NET`), PyPI (`deepxauth`), and Crates.io (`deepxauth-rs`).
 
 ---
@@ -840,7 +641,7 @@ npm run deploy:api
 - **DXA**: DeepXAuth platform acronym.
 - **Customer Secret**: A unique developer API identifier formatted as `DXA-XXXXXX`.
 - **HWID**: Hardware Identification string uniquely identifying a client device.
-- **Reseller Hash**: A cryptographic URL parameter used for reseller authentication and multi-tenant portal access.
-- **Grace Period**: A 7-day post-expiration window where customer data is retained before automated plan downgrade.
+- **Audit Event**: Structured security or operational log record stored in `system/auditLogs`.
+- **SDK Sandbox**: Live API endpoint testing environment.
 - **Turnstile**: Cloudflare's privacy-focused anti-bot CAPTCHA alternative.
 - **Hono**: Ultrafast web framework for Cloudflare Workers.

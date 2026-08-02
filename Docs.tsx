@@ -9,6 +9,7 @@ import {
     Lock, Users, Box, Database, Zap, BookOpen,
     Terminal, ChevronDown, ChevronUp, Globe
 } from 'lucide-react';
+import { SDKSandbox } from './components/docs/SDKSandbox';
 
 const BASE_URL = 'https://deepxauth.pages.dev';
 const SDK_PUBLIC_KEY_SNIPPET = `-----BEGIN PUBLIC KEY-----
@@ -17,6 +18,7 @@ const SDK_PUBLIC_KEY_SNIPPET = `-----BEGIN PUBLIC KEY-----
 
 const CATEGORIES = [
     { id: 'quickstart', name: 'Quick Start', icon: <Zap size={16} />, badge: 'Start Here' },
+    { id: 'sandbox', name: 'Interactive SDK Sandbox', icon: <Terminal size={16} />, badge: 'Live API' },
     { id: 'auth', name: 'Authentication', icon: <Lock size={16} /> },
     { id: 'users', name: 'User Management', icon: <Users size={16} /> },
     { id: 'licenses', name: 'License Management', icon: <Key size={16} /> },
@@ -365,8 +367,29 @@ const EndpointCard: React.FC<{ ep: Endpoint; baseUrl: string }> = ({ ep, baseUrl
     );
 };
 
-const QuickStart: React.FC = () => (
+const QuickStart: React.FC<{ onOpenSandbox: () => void }> = ({ onOpenSandbox }) => (
     <div className="space-y-8">
+        {/* Interactive Sandbox Hero Banner */}
+        <div className="p-6 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-transparent border border-indigo-500/30 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 text-xs font-mono font-bold text-indigo-400">
+                    <Terminal size={14} className="animate-pulse" />
+                    <span>Interactive Live Playground</span>
+                </div>
+                <h3 className="text-lg font-black text-white">Test API Endpoints in Live SDK Sandbox</h3>
+                <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+                    Execute real Cloudflare Worker authentication requests, verify RSA signatures, inspect latency metrics, and generate ready-to-use SDK code snippets.
+                </p>
+            </div>
+            <button
+                onClick={onOpenSandbox}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shrink-0 flex items-center gap-2 cursor-pointer"
+            >
+                <span>Open Live Sandbox</span>
+                <ChevronRight size={14} />
+            </button>
+        </div>
+
         <div>
             <h1 className="text-4xl font-black tracking-tight mb-3">Quick Start</h1>
             <p className="text-muted text-base leading-relaxed max-w-2xl">
@@ -455,7 +478,10 @@ if (success) {
 );
 
 const Docs: React.FC = () => {
-    const [activeCategory, setActiveCategory] = useState('quickstart');
+    const [activeCategory, setActiveCategory] = useState<string>(() => {
+        if (window.location.hash.includes('sandbox')) return 'sandbox';
+        return 'quickstart';
+    });
     const [sdks, setSdks] = useState<SDK[]>([]);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -484,10 +510,23 @@ const Docs: React.FC = () => {
                         <span className="font-black tracking-tight text-lg">DXA <span className="text-muted font-light">Docs</span></span>
                     </Link>
 
-                    
-                    <button onClick={() => setMobileSidebarOpen(o => !o)} className="lg:hidden text-muted hover:text-white transition-colors p-2 bg-white/5 rounded-lg">
-                        <BookOpen size={18} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setActiveCategory('sandbox')}
+                            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                activeCategory === 'sandbox'
+                                    ? 'bg-indigo-600 text-white shadow-lg'
+                                    : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20'
+                            }`}
+                        >
+                            <Terminal size={14} className="text-indigo-400" />
+                            <span>SDK Sandbox</span>
+                        </button>
+
+                        <button onClick={() => setMobileSidebarOpen(o => !o)} className="lg:hidden text-muted hover:text-white transition-colors p-2 bg-white/5 rounded-lg">
+                            <BookOpen size={18} />
+                        </button>
+                    </div>
 
                     <div className="hidden lg:flex items-center gap-4">
                         <span className="text-xs font-mono text-muted/60 bg-white/[0.03] px-3 py-1.5 rounded-lg border border-white/[0.06]">{BASE_URL}</span>
@@ -555,8 +594,10 @@ const Docs: React.FC = () => {
 
                 
                 <main className="flex-1 p-6 lg:p-10 min-w-0">
-                    {activeCategory === 'quickstart' ? (
-                        <QuickStart />
+                    {activeCategory === 'sandbox' ? (
+                        <SDKSandbox />
+                    ) : activeCategory === 'quickstart' ? (
+                        <QuickStart onOpenSandbox={() => setActiveCategory('sandbox')} />
                     ) : (
                         <div className="space-y-6">
                             <div className="mb-8">
