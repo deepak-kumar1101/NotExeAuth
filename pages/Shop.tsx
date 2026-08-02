@@ -265,7 +265,6 @@ const CreditTopUpPortalModal: React.FC<{
   const [qrRevealed, setQrRevealed] = useState(false);
   const [screenshotBase64, setScreenshotBase64] = useState<string>('');
   const [userNote, setUserNote] = useState('');
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
@@ -305,7 +304,6 @@ const CreditTopUpPortalModal: React.FC<{
       const reader = new FileReader();
       reader.onloadend = () => {
         setScreenshotBase64(reader.result as string);
-        setValidationError(null);
       };
       reader.readAsDataURL(file);
     }
@@ -314,12 +312,6 @@ const CreditTopUpPortalModal: React.FC<{
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.currentUser?.email) return;
-
-    if (!screenshotBase64 && !userNote.trim()) {
-      setValidationError("Please attach a payment proof screenshot or enter a transaction reference note before submitting.");
-      return;
-    }
-    setValidationError(null);
 
     setSubmitting(true);
     try {
@@ -575,22 +567,12 @@ const CreditTopUpPortalModal: React.FC<{
                     </label>
                     <textarea
                       value={userNote}
-                      onChange={e => {
-                        setUserNote(e.target.value);
-                        if (e.target.value.trim()) setValidationError(null);
-                      }}
+                      onChange={e => setUserNote(e.target.value)}
                       placeholder="e.g. UTR / Ref No: 420918291029 or special instructions..."
                       rows={3}
                       className="w-full p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#8B5CF6] font-mono"
                     />
                   </div>
-
-                  {validationError && (
-                    <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center gap-2 animate-fade-in">
-                      <AlertTriangle size={16} className="text-rose-400 flex-shrink-0" />
-                      <span>{validationError}</span>
-                    </div>
-                  )}
 
                   <button
                     type="submit"
@@ -1483,7 +1465,7 @@ const Shop: React.FC = () => {
               onClick={() => setShowCreditPortalModal(true)}
               className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-[#8B5CF6]/30 transition-all flex items-center justify-center gap-2 effect-magnetic"
             >
-              <PlusCircle size={15} /> Add Credits Portal
+              <PlusCircle size={15} /> Add Credits
             </button>
           </div>
         </div>
