@@ -853,6 +853,363 @@ app.post('/delete_license', async (c) => {
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });
 
+async function getCustomerRecord(c, identifier) {
+    if (!identifier) return null;
+    const dbSecret = getDbSecret(c.env);
+    
+    let emailKey = identifier.includes('@') ? identifier.replace(/\./g, ',') : identifier;
+    if (emailKey.includes(',')) {
+        const record = await dbRequest(c.env, `customers/${emailKey}`);
+        if (record) {
+            let data = typeof record === 'string' ? decrypt(record, dbSecret) : record;
+            if (data && data.metadata) data = decrypt(data.metadata, dbSecret);
+            if (typeof data === 'string') { try { data = JSON.parse(data); } catch(e){} }
+            if (data && typeof data === 'object') return data;
+        }
+    }
+    
+    const allCustomers = await dbRequest(c.env, 'customers');
+    if (allCustomers && typeof allCustomers === 'object') {
+        for (const key in allCustomers) {
+            let record = allCustomers[key];
+            let data = typeof record === 'string' ? decrypt(record, dbSecret) : record;
+            if (data && data.metadata) data = decrypt(data.metadata, dbSecret);
+            if (typeof data === 'string') { try { data = JSON.parse(data); } catch(e){} }
+            if (data && typeof data === 'object') {
+                if (data.secret === identifier || data.email === identifier || key === emailKey) {
+                    return data;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+async function getCustomerStats(c, secret) {
+    const stats = { totalApps: 0, totalUsers: 0, totalLicenses: 0, totalVariables: 0 };
+    if (!secret) return stats;
+    const dbSecret = getDbSecret(c.env);
+    const appsRaw = await dbRequest(c.env, `applications/${secret}`);
+    if (appsRaw && typeof appsRaw === 'object') {
+        const appNames = Object.keys(appsRaw);
+        stats.totalApps = appNames.length;
+        for (const appName of appNames) {
+            const app = appsRaw[appName];
+            if (app && typeof app === 'object') {
+                if (app.users && typeof app.users === 'object') {
+                    stats.totalUsers += Object.keys(app.users).length;
+                }
+                if (app.licenses && typeof app.licenses === 'object') {
+                    stats.totalLicenses += Object.keys(app.licenses).length;
+                }
+                if (app.variables && typeof app.variables === 'object') {
+                    stats.totalVariables += Object.keys(app.variables).length;
+                }
+            }
+        }
+    }
+    return stats;
+}
+
+app.post('/profile', async (c) => {
+    try {
+        const body = await c.req.json().catch(() => ({}));
+        const identifier = (body.ownerEmailKey || body.emailKey || body.email || body.secret || body.appSecret || body.userSecret || body.developerSecret)?.trim();
+        if (!identifier) return c.json(sendResponse(false, 'Missing required identification field'), 400);
+
+        const customer = await getCustomerRecord(c, identifier);
+        if (!customer) return c.json(sendResponse(false, 'Customer profile not found'), 404);
+
+        const stats = await getCustomerStats(c, customer.secret);
+
+        const profileData = {
+            email: customer.email || '',
+            secret: customer.secret || '',
+            plan: customer.plan || 'Free Plan',
+            credits: customer.credits !== undefined ? customer.credits : 0,
+            createdAt: customer.createdAt || '',
+            subscription: customer.subscription || { planId: 'free', status: 'active' },
+            stats: stats
+        };
+
+        return c.json({
+            success: true,
+            message: 'PROFILE_FOUND',
+            data: profileData,
+            profile: profileData,
+            plan: profileData.plan,
+            credits: profileData.credits,
+            subscription: profileData.subscription,
+            secret: profileData.secret,
+            stats: profileData.stats
+        }, 200);
+    } catch (error) {
+        return c.json(sendResponse(false, 'Server error: ' + error.message), 500);
+    }
+});
+
+app.post('/customer', async (c) => {
+    try {
+        const body = await c.req.json().catch(() => ({}));
+        const identifier = (body.ownerEmailKey || body.emailKey || body.email || body.secret || body.appSecret || body.userSecret || body.developerSecret)?.trim();
+        if (!identifier) return c.json(sendResponse(false, 'Missing required identification field'), 400);
+
+        const customer = await getCustomerRecord(c, identifier);
+        if (!customer) return c.json(sendResponse(false, 'Customer not found'), 404);
+
+        const stats = await getCustomerStats(c, customer.secret);
+        const fullCustomer = { ...customer, stats };
+
+        return c.json({
+            success: true,
+            message: 'CUSTOMER_FOUND',
+            data: fullCustomer,
+            customer: fullCustomer
+        }, 200);
+    } catch (error) {
+        return c.json(sendResponse(false, 'Server error: ' + error.message), 500);
+    }
+});
+
+app.post('/list_apps', async (c) => {
+    try {
+        const body = await c.req.json().catch(() => ({}));
+        let secret = (body.secret || body.appSecret || body.userSecret || body.developerSecret)?.trim();
+        const ownerEmailKey = (body.ownerEmailKey || body.emailKey || body.email)?.trim();
+
+        if (!secret && ownerEmailKey) {
+            const cust = await getCustomerRecord(c, ownerEmailKey);
+            if (cust) secret = cust.secret;
+        }
+
+        if (!secret) return c.json(sendResponse(false, 'Missing required secret key'), 400);
+
+        if (ownerEmailKey) {
+            const formattedEmailKey = ownerEmailKey.includes('@') ? ownerEmailKey.replace(/\./g, ',') : ownerEmailKey;
+            const isOwner = await verifyAppOwnership(c, formattedEmailKey, secret);
+            if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'), 401);
+        }
+
+        const dbSecret = getDbSecret(c.env);
+        const appsRaw = await dbRequest(c.env, `applications/${secret}`);
+        const appsList = [];
+        const appsMap = {};
+
+        if (appsRaw && typeof appsRaw === 'object') {
+            for (const appName in appsRaw) {
+                const appData = await getAppMetadata(c, secret, appName);
+                const userCount = appsRaw[appName]?.users ? Object.keys(appsRaw[appName].users).length : 0;
+                const licenseCount = appsRaw[appName]?.licenses ? Object.keys(appsRaw[appName].licenses).length : 0;
+                const variableCount = appsRaw[appName]?.variables ? Object.keys(appsRaw[appName].variables).length : 0;
+
+                const appObj = {
+                    name: appName,
+                    version: appData?.version || '1.0',
+                    applicationPaused: !!appData?.applicationPaused,
+                    created: appData?.created || '',
+                    userCount,
+                    licenseCount,
+                    variableCount
+                };
+
+                appsList.push(appObj);
+                appsMap[appName] = appObj;
+            }
+        }
+
+        return c.json({
+            success: true,
+            message: appsList.length > 0 ? 'APPLICATIONS_FOUND' : 'NO_APPLICATIONS',
+            data: appsList,
+            apps: appsMap
+        }, 200);
+    } catch (error) {
+        return c.json(sendResponse(false, 'Server error: ' + error.message), 500);
+    }
+});
+
+app.post('/list_users', async (c) => {
+    try {
+        const body = await c.req.json().catch(() => ({}));
+        let secret = (body.secret || body.appSecret || body.userSecret || body.developerSecret)?.trim();
+        const appName = body.appName?.trim();
+        const ownerEmailKey = (body.ownerEmailKey || body.emailKey || body.email)?.trim();
+
+        if (!secret && ownerEmailKey) {
+            const cust = await getCustomerRecord(c, ownerEmailKey);
+            if (cust) secret = cust.secret;
+        }
+
+        if (!secret || !appName) return c.json(sendResponse(false, 'Missing required fields (secret, appName)'), 400);
+
+        if (ownerEmailKey) {
+            const formattedEmailKey = ownerEmailKey.includes('@') ? ownerEmailKey.replace(/\./g, ',') : ownerEmailKey;
+            const isOwner = await verifyAppOwnership(c, formattedEmailKey, secret);
+            if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'), 401);
+        }
+
+        const dbSecret = getDbSecret(c.env);
+        const usersRaw = await dbRequest(c.env, `applications/${secret}/${appName}/users`);
+        const usersList = [];
+        const usersMap = {};
+
+        if (usersRaw && typeof usersRaw === 'object') {
+            for (const username in usersRaw) {
+                let user = usersRaw[username];
+                if (typeof user === 'string') {
+                    let dec = decrypt(user, secret);
+                    if (typeof dec === 'string') dec = decrypt(user, dbSecret);
+                    if (typeof dec === 'string') dec = decrypt(user, 'MyDeepXAuthSecretKey_2026!#');
+                    if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch(e){} }
+                    user = dec;
+                }
+
+                if (user && typeof user === 'object') {
+                    const formattedUser = {
+                        username,
+                        password: user.password || '',
+                        hwidLock: user.hwidLock !== undefined ? user.hwidLock : true,
+                        sid: user.sid || user.hwid || '',
+                        hwid: user.sid || user.hwid || '',
+                        isBanned: !!user.isBanned,
+                        license: user.license || 'direct',
+                        expiry: user.expiry || 'lifetime',
+                        subscription: user.subscription || 'default',
+                        oneTime: !!user.oneTime,
+                        created: user.created || ''
+                    };
+                    usersList.push(formattedUser);
+                    usersMap[username] = formattedUser;
+                }
+            }
+        }
+
+        return c.json({
+            success: true,
+            message: usersList.length > 0 ? 'USERS_FOUND' : 'NO_USERS',
+            data: usersList,
+            users: usersMap
+        }, 200);
+    } catch (error) {
+        return c.json(sendResponse(false, 'Server error: ' + error.message), 500);
+    }
+});
+
+app.post('/list_licenses', async (c) => {
+    try {
+        const body = await c.req.json().catch(() => ({}));
+        let secret = (body.secret || body.appSecret || body.userSecret || body.developerSecret)?.trim();
+        const appName = body.appName?.trim();
+        const ownerEmailKey = (body.ownerEmailKey || body.emailKey || body.email)?.trim();
+
+        if (!secret && ownerEmailKey) {
+            const cust = await getCustomerRecord(c, ownerEmailKey);
+            if (cust) secret = cust.secret;
+        }
+
+        if (!secret || !appName) return c.json(sendResponse(false, 'Missing required fields (secret, appName)'), 400);
+
+        if (ownerEmailKey) {
+            const formattedEmailKey = ownerEmailKey.includes('@') ? ownerEmailKey.replace(/\./g, ',') : ownerEmailKey;
+            const isOwner = await verifyAppOwnership(c, formattedEmailKey, secret);
+            if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'), 401);
+        }
+
+        const dbSecret = getDbSecret(c.env);
+        const licensesRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses`);
+        const licensesList = [];
+        const licensesMap = {};
+
+        if (licensesRaw && typeof licensesRaw === 'object') {
+            for (const licenseKey in licensesRaw) {
+                let lic = licensesRaw[licenseKey];
+                if (typeof lic === 'string') {
+                    let dec = decrypt(lic, secret);
+                    if (typeof dec === 'string') dec = decrypt(lic, dbSecret);
+                    if (typeof dec === 'string') dec = decrypt(lic, 'MyDeepXAuthSecretKey_2026!#');
+                    if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch(e){} }
+                    lic = dec;
+                }
+
+                if (lic && typeof lic === 'object') {
+                    const formattedLic = {
+                        key: licenseKey,
+                        used: !!lic.used,
+                        associatedUser: lic.associatedUser || null,
+                        rank: lic.rank || lic.subscription || 'default',
+                        expiry: lic.expiry || 'lifetime',
+                        createdBy: lic.createdBy || 'api',
+                        note: lic.note || '',
+                        created: lic.created || ''
+                    };
+                    licensesList.push(formattedLic);
+                    licensesMap[licenseKey] = formattedLic;
+                }
+            }
+        }
+
+        return c.json({
+            success: true,
+            message: licensesList.length > 0 ? 'LICENSES_FOUND' : 'NO_LICENSES',
+            data: licensesList,
+            licenses: licensesMap
+        }, 200);
+    } catch (error) {
+        return c.json(sendResponse(false, 'Server error: ' + error.message), 500);
+    }
+});
+
+app.post('/list_variables', async (c) => {
+    try {
+        const body = await c.req.json().catch(() => ({}));
+        let secret = (body.secret || body.appSecret || body.userSecret || body.developerSecret)?.trim();
+        const appName = body.appName?.trim();
+        const ownerEmailKey = (body.ownerEmailKey || body.emailKey || body.email)?.trim();
+
+        if (!secret && ownerEmailKey) {
+            const cust = await getCustomerRecord(c, ownerEmailKey);
+            if (cust) secret = cust.secret;
+        }
+
+        if (!secret || !appName) return c.json(sendResponse(false, 'Missing required fields (secret, appName)'), 400);
+
+        if (ownerEmailKey) {
+            const formattedEmailKey = ownerEmailKey.includes('@') ? ownerEmailKey.replace(/\./g, ',') : ownerEmailKey;
+            const isOwner = await verifyAppOwnership(c, formattedEmailKey, secret);
+            if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'), 401);
+        }
+
+        const dbSecret = getDbSecret(c.env);
+        const varsRaw = await dbRequest(c.env, `applications/${secret}/${appName}/variables`);
+        const varsList = [];
+        const varsMap = {};
+
+        if (varsRaw && typeof varsRaw === 'object') {
+            for (const varName in varsRaw) {
+                let val = varsRaw[varName];
+                if (typeof val === 'string') {
+                    let dec = decrypt(val, secret);
+                    if (typeof dec === 'string') dec = decrypt(val, dbSecret);
+                    if (typeof dec === 'string') dec = decrypt(val, 'MyDeepXAuthSecretKey_2026!#');
+                    val = dec;
+                }
+
+                varsList.push({ name: varName, value: val });
+                varsMap[varName] = val;
+            }
+        }
+
+        return c.json({
+            success: true,
+            message: varsList.length > 0 ? 'VARIABLES_FOUND' : 'NO_VARIABLES',
+            data: varsList,
+            variables: varsMap
+        }, 200);
+    } catch (error) {
+        return c.json(sendResponse(false, 'Server error: ' + error.message), 500);
+    }
+});
+
 app.notFound(async (c) => {
     if (c.env && c.env.ASSETS) {
         return c.env.ASSETS.fetch(c.req.raw);
