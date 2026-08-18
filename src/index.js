@@ -250,10 +250,24 @@ async function getAppMetadata(c, secret, appName) {
 app.post('/login', async (c) => {
     try {
         const body = await c.req.json();
-        let { username, password, secret, appName, appVersion, hwid } = body;
-        username = username?.trim(); password = password?.trim(); secret = secret?.trim();
-        appName = appName?.trim(); appVersion = appVersion?.trim(); hwid = hwid?.trim();
-        if (!username || !password || !secret || !appName || !appVersion) return sdkJson(c, 'login', body, false, 'Missing required fields', {}, 400);
+        let { username, password, licenseKey, license, key, secret, appName, appVersion, hwid } = body;
+        username = username?.trim();
+        password = password?.trim();
+        secret = secret?.trim();
+        appName = appName?.trim();
+        appVersion = appVersion?.trim();
+        hwid = hwid?.trim();
+        const effectiveLicenseKey = (licenseKey || license || key || (!password ? username : null))?.trim();
+
+        if (!secret || !appName || !appVersion) {
+            return sdkJson(c, 'login', body, false, 'Missing required fields', {}, 400);
+        }
+
+        const isLicenseOnly = !!effectiveLicenseKey && !password;
+
+        if (!isLicenseOnly && (!username || !password)) {
+            return sdkJson(c, 'login', body, false, 'Missing required fields (username & password, or license key)', {}, 400);
+        }
         
         const dbSecret = getDbSecret(c.env);
         const appData = await getAppMetadata(c, secret, appName);
@@ -265,6 +279,52 @@ app.post('/login', async (c) => {
             return sdkJson(c, 'login', body, false, 'VERSION_MISMATCH', { serverVersion: serverVer }, 409);
         }
 
+        // 1. LICENSE-ONLY FLOW
+        if (isLicenseOnly) {
+            const targetKey = effectiveLicenseKey;
+            const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${targetKey}`);
+            if (!licenseDataRaw) return sdkJson(c, 'login', body, false, 'Invalid or non-existent license key', {}, 401);
+
+            let licenseData = licenseDataRaw;
+            if (typeof licenseData === 'string') {
+                let dec = decrypt(licenseData, dbSecret);
+                if (typeof dec === 'string') dec = decrypt(licenseData, 'MyDeepXAuthSecretKey_2026!#');
+                if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch (e) {} }
+                licenseData = dec;
+            }
+
+            if (typeof licenseData !== 'object' || licenseData === null) {
+                return sdkJson(c, 'login', body, false, 'Invalid license data', {}, 401);
+            }
+
+            if (licenseData.isBanned) return sdkJson(c, 'login', body, false, 'USER_BANNED', {}, 403);
+
+            if (licenseData.hwidLock !== false) {
+                const currentSid = licenseData.sid || "";
+                if (!currentSid || currentSid === "" || currentSid === "HWID_FAIL") {
+                    if (hwid && hwid !== "" && hwid !== "HWID_FAIL") {
+                        licenseData.sid = hwid;
+                        licenseData.used = true;
+                        await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${targetKey}`, 'PUT', encrypt(licenseData, dbSecret));
+                    }
+                } else if (hwid && hwid !== "" && hwid !== "HWID_FAIL" && currentSid !== hwid) {
+                    return sdkJson(c, 'login', body, false, 'HWID_MISMATCH', {}, 403);
+                }
+            }
+
+            if (licenseData.expiry && licenseData.expiry !== 'lifetime') {
+                if (new Date(licenseData.expiry) < new Date()) return sdkJson(c, 'login', body, false, 'LICENSE_EXPIRED', {}, 403);
+            }
+
+            return sdkJson(c, 'login', body, true, 'LOGIN_SUCCESS', {
+                username: licenseData.associatedUser || targetKey,
+                license: targetKey,
+                subscription: licenseData.rank || licenseData.subscription || 'default',
+                expiry: licenseData.expiry || 'lifetime'
+            });
+        }
+
+        // 2. USERNAME + PASSWORD FLOW
         const userDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (!userDataRaw) return sdkJson(c, 'login', body, false, 'Invalid credentials', {}, 401);
 
@@ -302,6 +362,15 @@ app.post('/login', async (c) => {
             username: username, subscription: userData.subscription || 'default', expiry: userData.expiry || 'lifetime'
         });
     } catch (error) { return c.json(sendResponse(false, 'Internal Server Error: ' + error.message), 500); }
+});
+
+app.post('/license_login', async (c) => {
+    return app.fetch(new Request(new URL('/login', c.req.url), {
+        method: 'POST',
+        headers: c.req.raw.headers,
+        body: c.req.raw.body,
+        duplex: 'half'
+    }), c.env, c.executionCtx);
 });
 
 app.post('/register', async (c) => {

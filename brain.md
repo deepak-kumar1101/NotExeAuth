@@ -199,16 +199,19 @@ DeepXAuth follows a decoupled, edge-first serverless architecture:
 - If email matches `ADMIN_EMAIL` (`deepsrajput1101@gmail.com`), the user receives Super Admin rights.
 
 ### 2. Client Application Authentication (`functions/[[route]].js`)
-- Client applications (C#, C++, Python, Rust, etc.) send a `POST` request to `/login` on `https://deepxauth-api.pages.dev/login`.
+- Client applications (C#, C++, Python, Rust, Java, Go, TypeScript) send a `POST` request to `/login` (or `/license_login`) on `https://deepxauth-api.pages.dev/login`.
+- **Dual Authentication Modes Supported**:
+  1. **Username & Password Authentication**: Client sends `{ username, password, secret, appName, appVersion, hwid }`.
+  2. **License-Only Authentication**: Client sends `{ licenseKey, secret, appName, appVersion, hwid }` (password omitted).
 - The Edge Worker verifies:
   1. IP Rate Limiting (max 10 requests per minute).
   2. Application metadata (`applicationPaused`).
   3. App Version match (`VERSION_MISMATCH` check).
-  4. User credentials & ban status (`isBanned`).
-  5. HWID binding match (`HWID_MISMATCH` check).
+  4. Credentials or License validation & ban status (`isBanned`).
+  5. HWID binding match (`HWID_MISMATCH` check) or binds HWID to license on first login (`HWID_BOUND`).
   6. License expiry date.
 - Worker logs audit event via `dispatchEdgeAuditLog(c, ...)` to `system/auditLogs/${eventId}` asynchronously via `waitUntil`.
-- Worker returns an RSA-256 digitally signed JSON payload containing `LOGIN_SUCCESS`.
+- Worker returns an RSA-256 digitally signed JSON payload containing `LOGIN_SUCCESS`, `username`, `license`, `subscription`, and `expiry`.
 
 ---
 
@@ -398,8 +401,9 @@ All API requests route through the Cloudflare Worker (`functions/[[route]].js`).
 - Production Edge API: `https://deepxauth-api.pages.dev` or `/api` via Cloudflare Pages Functions.
 
 ### Endpoints
-- `POST /login`: Authenticates user credentials, checks HWID lock, verifies subscription status, logs `USER_LOGIN` / `FAILED_LOGIN` / `VERSION_MISMATCH` / `HWID_MISMATCH` events.
-- `POST /register`: Registers new end-user account or redeems license key.
+- `POST /login`: Authenticates credentials (username + password) OR license keys directly (`licenseKey`), binds/verifies HWID, checks license expiry/bans, logs `USER_LOGIN` / `FAILED_LOGIN` / `VERSION_MISMATCH` / `HWID_MISMATCH` events.
+- `POST /license_login`: Dedicated endpoint alias for license-only login.
+- `POST /register`: Registers new end-user account and redeems a license key.
 - `POST /versioncheck`: Checks client application release version against deployed metadata.
 - `POST /getvariable`: Returns encrypted remote cloud variable.
 - `POST /getvariables`: Returns all encrypted remote cloud variables for the application.
@@ -419,9 +423,9 @@ Implemented in `functions/[[route]].js`:
 ## 12. Services
 
 - `auditService.ts`: Central audit logger, payload sanitizer (`sanitizeObject`), local storage backup buffer (`dxa_audit_logs_local`), CSV/JSON/PDF exporters.
-- `sandboxService.ts`: Executes live worker API requests, calculates metrics (latency, payload size, HTTP status), and invokes client-side RSA signature verifications.
+- `sandboxService.ts`: Executes live worker API requests, calculates metrics (latency, payload size, HTTP status), and invokes client-side RSA signature verifications. Supports both Username/Password and License-Only testing.
 - `subscriptionService.ts`: Evaluates subscription state, manages 7-day grace period, executes plan downgrades.
-- `sdkService.ts`: Manages SDK repository templates in Firebase database node `system/sdks`.
+- `sdkService.ts`: Manages SDK repository templates in Firebase database node `system/sdks` with dual Username/Password and License-Only auth support across all 7 languages.
 - `commandPaletteService.ts`: Central registry for universal keyboard search commands (`Ctrl+K`).
 
 ---
@@ -434,7 +438,7 @@ Implemented in `functions/[[route]].js`:
 - `components/timeline/TimelineCard.tsx`: Glassmorphic event card with category icons, actor badges, timestamp, and severity indicator.
 - `components/timeline/TimelineDrawer.tsx`: Slide-over side drawer for inspecting raw JSON, device/network telemetry (IP, Country, User Agent, HWID), and state diffs.
 - `components/timeline/TimelineSeverityBadge.tsx`: Color-coded severity badge component.
-- `components/docs/SDKSandbox.tsx`: Live API Endpoint testing environment.
+- `components/docs/SDKSandbox.tsx`: Live API Endpoint testing environment supporting both credential and license-only modes.
 - `components/CommandPalette.tsx`: Global search modal (`Ctrl+K`).
 
 ---
@@ -476,8 +480,8 @@ Defined in `App.tsx` using `react-router-dom`:
 
 ## 17. SDK System & Live API Sandbox
 
-- Native SDK code templates supported for 7 programming languages (Python, C#, C++, Java, Rust, Go, TypeScript).
-- Interactive Live SDK Sandbox integrated into `Dashboard.tsx` and `Docs.tsx` (`#sandbox`).
+- Native SDK code templates supported for 7 programming languages (Python, C#, C++, Java, Rust, Go, TypeScript) with built-in `login` and `license_login` methods.
+- Interactive Live SDK Sandbox integrated into `Dashboard.tsx` and `Docs.tsx` (`#sandbox`) with Auth Mode switcher (`License Only` vs `User + Pass`).
 - Code snippet generator generates equivalent ready-to-run snippets in Python, C#, C++, Java, Rust, Go, and TypeScript.
 
 ---

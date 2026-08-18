@@ -358,10 +358,24 @@ app.post('/login', async (c) => {
         if (isRateLimited(ip)) return c.json(sendResponse(false, 'TOO_MANY_REQUESTS'), 429);
 
         const body = await c.req.json();
-        let { username, password, secret, appName, appVersion, hwid } = body;
-        username = username?.trim(); password = password?.trim(); secret = secret?.trim();
-        appName = appName?.trim(); appVersion = appVersion?.trim(); hwid = hwid?.trim();
-        if (!username || !password || !secret || !appName || !appVersion) return sdkJson(c, 'login', body, false, 'Missing required fields', {}, 400);
+        let { username, password, licenseKey, license, key, secret, appName, appVersion, hwid } = body;
+        username = username?.trim();
+        password = password?.trim();
+        secret = secret?.trim();
+        appName = appName?.trim();
+        appVersion = appVersion?.trim();
+        hwid = hwid?.trim();
+        const effectiveLicenseKey = (licenseKey || license || key || (!password ? username : null))?.trim();
+
+        if (!secret || !appName || !appVersion) {
+            return sdkJson(c, 'login', body, false, 'Missing required fields', {}, 400);
+        }
+
+        const isLicenseOnly = !!effectiveLicenseKey && !password;
+
+        if (!isLicenseOnly && (!username || !password)) {
+            return sdkJson(c, 'login', body, false, 'Missing required fields (username & password, or license key)', {}, 400);
+        }
 
         const dbSecret = getDbSecret(c.env);
         const appData = await getAppMetadata(c, secret, appName);
@@ -375,7 +389,7 @@ app.post('/login', async (c) => {
                 description: `Outdated or modified client software connected to **${appName}**.`,
                 color: 0xF59E0B,
                 fields: [
-                    { name: 'User', value: username || 'Unknown', inline: true },
+                    { name: 'Identifier', value: effectiveLicenseKey || username || 'Unknown', inline: true },
                     { name: 'Client Version', value: appVersion, inline: true },
                     { name: 'Server Version', value: serverVer, inline: true },
                     { name: 'IP Address', value: ip, inline: true }
@@ -387,14 +401,164 @@ app.post('/login', async (c) => {
                 severity: 'Warning',
                 status: 'BLOCKED',
                 actorType: 'user',
-                username,
+                username: effectiveLicenseKey || username,
+                licenseKey: effectiveLicenseKey,
                 application: appName,
                 actorSecret: secret,
-                description: `Version mismatch for ${username} on ${appName}`
+                description: `Version mismatch for ${effectiveLicenseKey || username} on ${appName}`
             });
             return sdkJson(c, 'login', body, false, 'VERSION_MISMATCH', { serverVersion: serverVer }, 409);
         }
 
+        // ==========================================
+        // 1. LICENSE-ONLY AUTHENTICATION FLOW
+        // ==========================================
+        if (isLicenseOnly) {
+            const targetKey = effectiveLicenseKey;
+            const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${targetKey}`);
+            if (!licenseDataRaw) {
+                dispatchEdgeAuditLog(c, {
+                    type: 'FAILED_LOGIN',
+                    category: 'Authentication',
+                    severity: 'Warning',
+                    status: 'FAILURE',
+                    actorType: 'user',
+                    licenseKey: targetKey,
+                    application: appName,
+                    actorSecret: secret,
+                    description: `Failed login for non-existent license ${targetKey}`
+                });
+                return sdkJson(c, 'login', body, false, 'Invalid or non-existent license key', {}, 401);
+            }
+
+            let licenseData = licenseDataRaw;
+            if (typeof licenseData === 'string') {
+                let dec = decrypt(licenseData, dbSecret);
+                if (typeof dec === 'string') dec = decrypt(licenseData, 'MyDeepXAuthSecretKey_2026!#');
+                if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch (e) {} }
+                licenseData = dec;
+            }
+
+            if (typeof licenseData !== 'object' || licenseData === null) {
+                return sdkJson(c, 'login', body, false, 'Invalid license data', {}, 401);
+            }
+
+            if (licenseData.isBanned) {
+                dispatchEdgeWebhook(c, secret, 'notifyUserBanned', {
+                    title: '⛔ Banned License Access Attempt',
+                    description: `Banned license **${targetKey}** attempted authentication on app **${appName}**.`,
+                    color: 0xEF4444,
+                    fields: [
+                        { name: 'License', value: targetKey, inline: true },
+                        { name: 'HWID', value: hwid || 'N/A', inline: true },
+                        { name: 'IP Address', value: ip, inline: true }
+                    ]
+                });
+                dispatchEdgeAuditLog(c, {
+                    type: 'USER_BANNED',
+                    category: 'Security',
+                    severity: 'Critical',
+                    status: 'BLOCKED',
+                    actorType: 'user',
+                    licenseKey: targetKey,
+                    application: appName,
+                    actorSecret: secret,
+                    hwid,
+                    description: `Banned license ${targetKey} attempted authentication`
+                });
+                return sdkJson(c, 'login', body, false, 'USER_BANNED', {}, 403);
+            }
+
+            if (licenseData.hwidLock !== false) {
+                const currentSid = licenseData.sid || "";
+                if (!currentSid || currentSid === "" || currentSid === "HWID_FAIL") {
+                    if (hwid && hwid !== "" && hwid !== "HWID_FAIL") {
+                        licenseData.sid = hwid;
+                        licenseData.used = true;
+                        await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${targetKey}`, 'PUT', encrypt(licenseData, dbSecret));
+                        dispatchEdgeAuditLog(c, {
+                            type: 'HWID_BOUND',
+                            category: 'License',
+                            severity: 'Success',
+                            status: 'SUCCESS',
+                            actorType: 'user',
+                            licenseKey: targetKey,
+                            application: appName,
+                            actorSecret: secret,
+                            hwid,
+                            description: `Bound HWID fingerprint to license ${targetKey}`
+                        });
+                    }
+                } else if (hwid && hwid !== "" && hwid !== "HWID_FAIL" && currentSid !== hwid) {
+                    dispatchEdgeWebhook(c, secret, 'notifyHwidMismatch', {
+                        title: '🚨 HWID Mismatch Security Threat',
+                        description: `Unauthorized computer/HWID login attempt detected on locked license **${targetKey}** for app **${appName}**.`,
+                        color: 0xEF4444,
+                        fields: [
+                            { name: 'Target License', value: targetKey, inline: true },
+                            { name: 'Registered HWID', value: licenseData.sid || 'Locked', inline: false },
+                            { name: 'Attempted HWID', value: hwid || 'Unknown', inline: false },
+                            { name: 'IP Address', value: ip, inline: true }
+                        ]
+                    });
+                    dispatchEdgeAuditLog(c, {
+                        type: 'HWID_MISMATCH',
+                        category: 'Security',
+                        severity: 'Critical',
+                        status: 'BLOCKED',
+                        actorType: 'user',
+                        licenseKey: targetKey,
+                        application: appName,
+                        actorSecret: secret,
+                        hwid,
+                        description: `HWID mismatch threat blocked on license ${targetKey}`
+                    });
+                    return sdkJson(c, 'login', body, false, 'HWID_MISMATCH', {}, 403);
+                }
+            }
+
+            if (licenseData.expiry && licenseData.expiry !== 'lifetime') {
+                if (new Date(licenseData.expiry) < new Date()) {
+                    return sdkJson(c, 'login', body, false, 'LICENSE_EXPIRED', {}, 403);
+                }
+            }
+
+            dispatchEdgeWebhook(c, secret, 'notifyLogin', {
+                title: '✅ License Authenticated',
+                description: `License **${targetKey}** logged into app **${appName}** successfully.`,
+                color: 0x10B981,
+                fields: [
+                    { name: 'License', value: targetKey, inline: true },
+                    { name: 'Subscription', value: licenseData.rank || licenseData.subscription || 'default', inline: true },
+                    { name: 'Expiry', value: licenseData.expiry || 'lifetime', inline: true }
+                ]
+            });
+
+            dispatchEdgeAuditLog(c, {
+                type: 'USER_LOGIN',
+                category: 'Authentication',
+                severity: 'Success',
+                status: 'SUCCESS',
+                actorType: 'user',
+                username: licenseData.associatedUser || targetKey,
+                licenseKey: targetKey,
+                application: appName,
+                actorSecret: secret,
+                hwid,
+                description: `License ${targetKey} authenticated successfully on ${appName}`
+            });
+
+            return sdkJson(c, 'login', body, true, 'LOGIN_SUCCESS', {
+                username: licenseData.associatedUser || targetKey,
+                license: targetKey,
+                subscription: licenseData.rank || licenseData.subscription || 'default',
+                expiry: licenseData.expiry || 'lifetime'
+            });
+        }
+
+        // ==========================================
+        // 2. USERNAME + PASSWORD AUTHENTICATION FLOW
+        // ==========================================
         const userDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (!userDataRaw) {
             dispatchEdgeAuditLog(c, {
@@ -554,6 +718,16 @@ app.post('/login', async (c) => {
             username: username, subscription: userData.subscription || 'default', expiry: userData.expiry || 'lifetime'
         });
     } catch (error) { return c.json(sendResponse(false, 'Internal Server Error: ' + error.message), 500); }
+});
+
+app.post('/license_login', async (c) => {
+    // Re-use login handler logic for dedicated license login endpoint
+    return app.fetch(new Request(new URL('/login', c.req.url), {
+        method: 'POST',
+        headers: c.req.raw.headers,
+        body: c.req.raw.body,
+        duplex: 'half'
+    }), c.env, c.executionCtx);
 });
 
 app.post('/register', async (c) => {

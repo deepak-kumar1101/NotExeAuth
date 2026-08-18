@@ -65,19 +65,29 @@ export async function executeWorkerRequest(
 
   const apiUrl = `${baseUrl}/${endpointClean}`;
 
+  const isLicenseOnly = endpointPath === '/login' && (config.authMode === 'license' || (!!config.licenseKey && !config.password));
+
   const payload: Record<string, any> = {
     secret: config.secret,
     appName: config.app,
     app: config.app,
     appVersion: config.version,
     version: config.version,
-    username: config.username,
-    password: config.password,
     hwid: config.hwid,
     clientTimestamp: config.autoTimestamp ? Date.now() : config.clientTimestamp,
     clientNonce: config.autoNonce ? Math.random().toString(36).substring(2, 15) : config.clientNonce,
     devMode: config.devMode
   };
+
+  if (isLicenseOnly) {
+    payload.licenseKey = config.licenseKey || config.username;
+  } else {
+    payload.username = config.username;
+    payload.password = config.password;
+    if (endpointPath === '/register' && config.licenseKey) {
+      payload.licenseKey = config.licenseKey;
+    }
+  }
 
   if (endpointPath === '/getvariable' && config.varName) {
     payload.varName = config.varName;
@@ -283,16 +293,28 @@ export function generateCodeSnippet(
   config: SandboxRequestConfig
 ): string {
   const cleanEndpoint = endpointPath.startsWith('/') ? endpointPath.slice(1) : endpointPath;
+  const isLicenseOnly = endpointPath === '/login' && (config.authMode === 'license' || (!!config.licenseKey && !config.password));
 
-  const payloadData = {
+  const payloadData: Record<string, any> = {
     secret: config.secret || 'YOUR_DEV_SECRET',
     app: config.app || 'YOUR_APP_NAME',
-    username: config.username || 'user123',
-    password: config.password || 'password123',
     hwid: config.hwid || 'HWID-8821-X992',
-    version: config.version || '1.0.0',
-    ...(endpointPath === '/getvariable' ? { varName: config.varName || 'API_KEY' } : {})
+    version: config.version || '1.0.0'
   };
+
+  if (isLicenseOnly) {
+    payloadData.licenseKey = config.licenseKey || config.username || 'DXA-XXXX-YYYY-ZZZZ';
+  } else {
+    payloadData.username = config.username || 'user123';
+    payloadData.password = config.password || 'password123';
+    if (endpointPath === '/register') {
+      payloadData.licenseKey = config.licenseKey || 'DXA-XXXX-YYYY-ZZZZ';
+    }
+  }
+
+  if (endpointPath === '/getvariable') {
+    payloadData.varName = config.varName || 'API_KEY';
+  }
 
   const jsonPayload = JSON.stringify(payloadData, null, 2);
 
@@ -334,7 +356,7 @@ class DXAClient
         Console.WriteLine($"Status: {response.StatusCode}");
         Console.WriteLine($"Response: {result}");
     }
-}`;
+} `;
 
     case 'cpp':
       return `#include <iostream>
@@ -436,16 +458,28 @@ export function generateExportPayload(
 ): string {
   const cleanEndpoint = endpointPath.startsWith('/') ? endpointPath.slice(1) : endpointPath;
   const url = `https://deepxauth.pages.dev/api/${cleanEndpoint}`;
+  const isLicenseOnly = endpointPath === '/login' && (config.authMode === 'license' || (!!config.licenseKey && !config.password));
 
-  const payloadData = {
+  const payloadData: Record<string, any> = {
     secret: config.secret || 'YOUR_DEV_SECRET',
     app: config.app || 'YOUR_APP_NAME',
-    username: config.username || 'user123',
-    password: config.password || 'password123',
     hwid: config.hwid || 'HWID-8821-X992',
-    version: config.version || '1.0.0',
-    ...(endpointPath === '/getvariable' ? { varName: config.varName || 'API_KEY' } : {})
+    version: config.version || '1.0.0'
   };
+
+  if (isLicenseOnly) {
+    payloadData.licenseKey = config.licenseKey || config.username || 'DXA-XXXX-YYYY-ZZZZ';
+  } else {
+    payloadData.username = config.username || 'user123';
+    payloadData.password = config.password || 'password123';
+    if (endpointPath === '/register') {
+      payloadData.licenseKey = config.licenseKey || 'DXA-XXXX-YYYY-ZZZZ';
+    }
+  }
+
+  if (endpointPath === '/getvariable') {
+    payloadData.varName = config.varName || 'API_KEY';
+  }
 
   if (format === 'json') {
     return JSON.stringify(payloadData, null, 2);

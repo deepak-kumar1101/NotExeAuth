@@ -103,47 +103,164 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = React.memo(({
           </div>
         </div>
 
-        {/* 2. Username & Password (Only for /login & /register) */}
-        {(endpoint === '/login' || endpoint === '/register') && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                Username / License Key
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                  <User size={14} />
+        {/* 2. Authentication Parameters */}
+        {endpoint === '/login' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Authentication Mode</span>
+              <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-xl border border-white/10">
+                <button
+                  type="button"
+                  onClick={() => onChangeConfig({ authMode: 'license', password: '' })}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                    config.authMode === 'license' || (!!config.licenseKey && !config.password)
+                      ? 'bg-indigo-500 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  License Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChangeConfig({ authMode: 'credentials' })}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                    config.authMode !== 'license' && (!config.licenseKey || !!config.password)
+                      ? 'bg-indigo-500 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  User + Pass
+                </button>
+              </div>
+            </div>
+
+            {config.authMode === 'license' ? (
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                  License Key
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                    <Key size={14} />
+                  </div>
+                  <input
+                    type="text"
+                    value={config.licenseKey || config.username}
+                    onChange={e => onChangeConfig({ licenseKey: e.target.value, username: e.target.value })}
+                    placeholder="DXA-XXXX-YYYY-ZZZZ"
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={config.username}
-                  onChange={e => onChangeConfig({ username: e.target.value })}
-                  placeholder="demo_user"
-                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
-                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                      <User size={14} />
+                    </div>
+                    <input
+                      type="text"
+                      value={config.username}
+                      onChange={e => onChangeConfig({ username: e.target.value })}
+                      placeholder="demo_user"
+                      className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>Password</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-slate-500 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={12} /> : <Eye size={12} />}
+                    </button>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                      <Lock size={14} />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={config.password}
+                      onChange={e => onChangeConfig({ password: e.target.value })}
+                      placeholder="Access Password"
+                      className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {endpoint === '/register' && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                  Username
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                    <User size={14} />
+                  </div>
+                  <input
+                    type="text"
+                    value={config.username}
+                    onChange={e => onChangeConfig({ username: e.target.value })}
+                    placeholder="new_user"
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>Password</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-slate-500 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff size={12} /> : <Eye size={12} />}
+                  </button>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                    <Lock size={14} />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={config.password}
+                    onChange={e => onChangeConfig({ password: e.target.value })}
+                    placeholder="Access Password"
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
+                  />
+                </div>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                <span>Access Password</span>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-slate-500 hover:text-white"
-                >
-                  {showPassword ? <EyeOff size={12} /> : <Eye size={12} />}
-                </button>
+              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                Registration License Key
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                   <Key size={14} />
                 </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={config.password}
-                  onChange={e => onChangeConfig({ password: e.target.value })}
-                  placeholder="Access Password"
+                  type="text"
+                  value={config.licenseKey || ''}
+                  onChange={e => onChangeConfig({ licenseKey: e.target.value })}
+                  placeholder="DXA-XXXX-YYYY-ZZZZ"
                   className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
                 />
               </div>

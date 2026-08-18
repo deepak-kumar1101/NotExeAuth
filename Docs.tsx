@@ -35,18 +35,33 @@ interface Endpoint {
 
 const endpoints: Endpoint[] = [
     {
-        category: 'auth', title: 'Login', method: 'POST', path: '/login',
-        desc: 'Authenticate a user into your application. Handles version checks, HWID locking, bans, and expiry automatically.',
-        beginner: 'This is the most important endpoint. Call it when your user clicks "Login" in your app.',
+        category: 'auth', title: 'Login (Username/Password or License Only)', method: 'POST', path: '/login',
+        desc: 'Authenticate a user via credentials or directly with a License Key only. Handles HWID binding, version checks, bans, and expiry automatically.',
+        beginner: 'Supports two modes: (1) Username + Password login, or (2) License Key Only login (pass licenseKey and omit password).',
         params: [
-            { name: 'username', type: 'string', required: true, desc: 'The user\'s username', example: '"john_doe"' },
-            { name: 'password', type: 'string', required: true, desc: 'The user\'s password', example: '"MyPass123"' },
+            { name: 'licenseKey', type: 'string', required: false, desc: 'Your license key (for License-Only authentication)', example: '"DXA-ABCD-EFGH"' },
+            { name: 'username', type: 'string', required: false, desc: 'The user\'s username (for Username/Password auth)', example: '"john_doe"' },
+            { name: 'password', type: 'string', required: false, desc: 'The user\'s password (for Username/Password auth)', example: '"MyPass123"' },
             { name: 'secret', type: 'string', required: true, desc: 'Your app secret key (from Dashboard)', example: '"DXA-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'The name of your application', example: '"MyApp"' },
             { name: 'appVersion', type: 'string', required: true, desc: 'Your current app version', example: '"1.0.0"' },
-            { name: 'hwid', type: 'string', required: false, desc: 'Hardware ID to lock user to a device', example: '"HWID-XYZ"' },
+            { name: 'hwid', type: 'string', required: false, desc: 'Hardware ID to lock license or user to a device', example: '"HWID-XYZ"' },
         ],
-        example: `fetch('${BASE_URL}/login', {
+        example: `// Option A: License-Only Login
+fetch('${BASE_URL}/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    licenseKey: 'DXA-XXXX-YYYY-ZZZZ',
+    secret: 'DXA-abc123',
+    appName: 'MyApp',
+    appVersion: '1.0.0',
+    hwid: 'HWID-XYZ'
+  })
+})
+
+// Option B: Username + Password Login
+fetch('${BASE_URL}/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -54,15 +69,16 @@ const endpoints: Endpoint[] = [
     password: 'MyPass123',
     secret: 'DXA-abc123',
     appName: 'MyApp',
-    appVersion: '1.0.0'
+    appVersion: '1.0.0',
+    hwid: 'HWID-XYZ'
   })
 })`,
         responses: [
-            { code: 'LOGIN_SUCCESS', desc: 'User authenticated. Returns subscription info and expiry.', success: true },
-            { code: 'INVALID_CREDENTIALS', desc: 'Wrong username or password.', success: false },
-            { code: 'USER_BANNED', desc: 'This user has been banned from your application.', success: false },
-            { code: 'HWID_MISMATCH', desc: 'User is logging in from a different device.', success: false },
-            { code: 'LICENSE_EXPIRED', desc: 'The user\'s subscription has expired.', success: false },
+            { code: 'LOGIN_SUCCESS', desc: 'Authenticated successfully. Returns license, subscription info, and expiry.', success: true },
+            { code: 'INVALID_CREDENTIALS', desc: 'Wrong username/password or non-existent license key.', success: false },
+            { code: 'USER_BANNED', desc: 'This account or license has been banned.', success: false },
+            { code: 'HWID_MISMATCH', desc: 'Account or license is bound to a different device.', success: false },
+            { code: 'LICENSE_EXPIRED', desc: 'The subscription or license duration has expired.', success: false },
             { code: 'APP_PAUSED', desc: 'Your application is temporarily paused.', success: false },
         ]
     },

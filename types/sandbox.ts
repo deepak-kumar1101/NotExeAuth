@@ -22,6 +22,8 @@ export interface SandboxRequestConfig {
   app: string;
   username: string;
   password: string;
+  licenseKey?: string;
+  authMode?: 'credentials' | 'license';
   hwid: string;
   version: string;
   varName: string;
