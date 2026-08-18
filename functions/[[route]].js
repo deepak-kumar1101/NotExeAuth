@@ -961,20 +961,79 @@ app.post('/delete_user', async (c) => {
 
 app.post('/reset_hwid', async (c) => {
     try {
-        const { secret, appName, username } = await c.req.json();
-        if (!secret || !appName || !username) return c.json(sendResponse(false, 'Missing required fields'));
+        const body = await c.req.json();
+        let { secret, appName, username, licenseKey, license, key } = body;
+        secret = secret?.trim();
+        appName = appName?.trim();
+        username = username?.trim();
+        const targetLic = (licenseKey || license || key)?.trim();
+
+        if (!secret || !appName || (!username && !targetLic)) {
+            return c.json(sendResponse(false, 'Missing required fields'));
+        }
 
         const dbSecret = getDbSecret(c.env);
-        const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
-        if (!userSnapshot) return c.json(sendResponse(false, 'User not found'));
+        let resetPerformed = false;
 
-        let user = userSnapshot;
-        if (typeof user === 'string') user = decrypt(user, dbSecret);
-        user.sid = "";
+        // 1. If username is provided, attempt user HWID reset
+        if (username) {
+            const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
+            if (userSnapshot) {
+                let user = userSnapshot;
+                if (typeof user === 'string') user = decrypt(user, dbSecret);
+                if (user && typeof user === 'object') {
+                    user.sid = "";
+                    await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(user, dbSecret));
+                    resetPerformed = true;
 
-        await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`, 'PUT', encrypt(user, dbSecret));
+                    // If user is tied to a license, also reset the license HWID
+                    if (user.license) {
+                        const licSnap = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${user.license}`);
+                        if (licSnap) {
+                            let lic = licSnap;
+                            if (typeof lic === 'string') lic = decrypt(lic, dbSecret);
+                            if (lic && typeof lic === 'object') {
+                                lic.sid = "";
+                                await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${user.license}`, 'PUT', encrypt(lic, dbSecret));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Check if targetLic or username is a license key
+        const potentialLicKey = targetLic || (!resetPerformed ? username : null);
+        if (potentialLicKey) {
+            const licenseSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${potentialLicKey}`);
+            if (licenseSnapshot) {
+                let lic = licenseSnapshot;
+                if (typeof lic === 'string') lic = decrypt(lic, dbSecret);
+                if (lic && typeof lic === 'object') {
+                    lic.sid = "";
+                    await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${potentialLicKey}`, 'PUT', encrypt(lic, dbSecret));
+                    resetPerformed = true;
+
+                    // If license has associatedUser, also reset the user HWID
+                    if (lic.associatedUser) {
+                        const userSnap = await dbRequest(c.env, `applications/${secret}/${appName}/users/${lic.associatedUser}`);
+                        if (userSnap) {
+                            let u = userSnap;
+                            if (typeof u === 'string') u = decrypt(u, dbSecret);
+                            if (u && typeof u === 'object') {
+                                u.sid = "";
+                                await dbRequest(c.env, `applications/${secret}/${appName}/users/${lic.associatedUser}`, 'PUT', encrypt(u, dbSecret));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!resetPerformed) return c.json(sendResponse(false, 'User or License not found'), 404);
+
         return c.json(sendResponse(true, 'HWID_RESET'));
-    } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
+    } catch (error) { return c.json(sendResponse(false, 'Server error: ' + error.message), 500); }
 });
 
 app.post('/create_license', async (c) => {

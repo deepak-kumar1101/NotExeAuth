@@ -570,6 +570,66 @@ const ResellerPortal: React.FC = () => {
         }
     };
 
+    const handleResetLicenseHwid = async (licenseKey: string) => {
+        if (!currentApp || !licenses[licenseKey] || !firebaseAuthAttempted) return;
+        
+        try {
+            const license = licenses[licenseKey];
+            await set(
+                ref(db, `applications/${currentApp.secret}/${currentApp.name}/licenses/${licenseKey}`),
+                encrypt({ 
+                    ...license, 
+                    sid: "" 
+                })
+            );
+
+            if (license.associatedUser && users[license.associatedUser]) {
+                const user = users[license.associatedUser];
+                await set(
+                    ref(db, `applications/${currentApp.secret}/${currentApp.name}/users/${license.associatedUser}`),
+                    encrypt({ 
+                        ...user, 
+                        sid: "" 
+                    })
+                );
+            }
+            addToast('License HWID Reset');
+        } catch (error) {
+            console.error('Failed to reset license HWID:', error);
+            addToast('Failed to reset license HWID', 'error');
+        }
+    };
+
+    const handleUpdateLicenseHwidLock = async (licenseKey: string, lock: boolean) => {
+        if (!currentApp || !licenses[licenseKey] || !firebaseAuthAttempted) return;
+        
+        try {
+            const license = licenses[licenseKey];
+            await set(
+                ref(db, `applications/${currentApp.secret}/${currentApp.name}/licenses/${licenseKey}`),
+                encrypt({ 
+                    ...license, 
+                    hwidLock: lock 
+                })
+            );
+
+            if (license.associatedUser && users[license.associatedUser]) {
+                const user = users[license.associatedUser];
+                await set(
+                    ref(db, `applications/${currentApp.secret}/${currentApp.name}/users/${license.associatedUser}`),
+                    encrypt({ 
+                        ...user, 
+                        hwidLock: lock 
+                    })
+                );
+            }
+            addToast(`License HWID Lock ${lock ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            console.error('Failed to update license HWID lock:', error);
+            addToast('Failed to update HWID lock', 'error');
+        }
+    };
+
     const handleResetUserHwidFromLicense = async (associatedUser: string) => {
         if (!currentApp || !users[associatedUser] || !firebaseAuthAttempted) return;
         
@@ -1222,30 +1282,38 @@ const ResellerPortal: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center p-3 border border-border rounded-xl bg-surfaceHighlight/50">
-                                <span className="text-xs text-muted flex flex-col">
-                                    <span className="font-bold flex items-center gap-1 uppercase tracking-tighter">
-                                        <Monitor size={12} /> HWID Status
-                                    </span>
-                                    <span>
+                            <CustomCheckbox 
+                                checked={licenses[showEditLicense]?.hwidLock !== false} 
+                                onChange={(v) => handleUpdateLicenseHwidLock(showEditLicense, v)} 
+                                label="HWID Lock" 
+                            />
+                            
+                            <div className="p-3 border border-border rounded-xl bg-surfaceHighlight/50 space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1 min-w-0 flex-1 pr-2">
+                                        <div className="font-bold flex items-center gap-1.5 uppercase tracking-tighter text-xs text-white">
+                                            <Monitor size={14} className="text-blue-400" /> HWID Status
+                                        </div>
+                                        <div className="font-mono text-xs text-slate-300 break-all select-all bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/5">
+                                            {licenses[showEditLicense]?.sid || (licenses[showEditLicense]?.associatedUser && users[licenses[showEditLicense].associatedUser]?.sid) || 'No HWID bound'}
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleResetLicenseHwid(showEditLicense)} 
+                                        className="text-[10px] bg-surfaceHighlight px-3 py-2 rounded-lg text-white border border-border hover:bg-white/20 font-bold uppercase tracking-widest transition-colors flex-shrink-0 mt-0.5"
+                                    >
+                                        Reset HWID
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] text-muted pt-1 border-t border-white/5">
+                                    <span>Account Binding:</span>
+                                    <span className="font-semibold text-white/80">
                                         {licenses[showEditLicense]?.associatedUser 
                                             ? `Linked to ${licenses[showEditLicense].associatedUser}` 
-                                            : 'Unlinked'
+                                            : 'Standalone License'
                                         }
                                     </span>
-                                </span>
-                                <button 
-                                    onClick={() => {
-                                        if (licenses[showEditLicense]?.associatedUser) {
-                                            handleResetUserHwidFromLicense(licenses[showEditLicense].associatedUser!);
-                                        } else {
-                                            addToast('No user linked to this license', 'error');
-                                        }
-                                    }} 
-                                    className="text-[10px] bg-surfaceHighlight px-3 py-2 rounded text-white border border-border hover:bg-white/20 font-bold uppercase tracking-widest transition-colors"
-                                >
-                                    Reset User HWID
-                                </button>
+                                </div>
                             </div>
                         </div>
                     </div>

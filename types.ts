@@ -166,6 +166,10 @@ export interface License {
   created: string;
   associatedUser?: string;
   createdBy?: string;
+  sid?: string;
+  hwid?: string;
+  hwidLock?: boolean;
+  isBanned?: boolean;
 }
 
 export interface WebhookSettings {
