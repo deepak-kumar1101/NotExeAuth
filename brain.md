@@ -199,7 +199,7 @@ DeepXAuth follows a decoupled, edge-first serverless architecture:
 - If email matches `ADMIN_EMAIL` (`deepsrajput1101@gmail.com`), the user receives Super Admin rights.
 
 ### 2. Client Application Authentication (`functions/[[route]].js`)
-- Client applications (C#, C++, Python, Rust, Java, Go, TypeScript) send a `POST` request to `/login` (or `/license_login`) on `https://deepxauth-api.pages.dev/login`.
+- Client applications (C#, C++, Python, Rust, Java, Go, TypeScript) send a `POST` request to `/login` (or `/license_login`) on `https://deepxauth.pages.dev/login`.
 - **Dual Authentication Modes Supported**:
   1. **Username & Password Authentication**: Client sends `{ username, password, secret, appName, appVersion, hwid }`.
   2. **License-Only Authentication**: Client sends `{ licenseKey, secret, appName, appVersion, hwid }` (password omitted).
@@ -398,7 +398,7 @@ The `firebase-rules.json` enforces exact node access rules:
 All API requests route through the Cloudflare Worker (`functions/[[route]].js`).
 
 ### Base URL
-- Production Edge API: `https://deepxauth-api.pages.dev` or `/api` via Cloudflare Pages Functions.
+- Production Edge API: `https://deepxauth.pages.dev` or `/api` via Cloudflare Pages Functions.
 
 ### Endpoints
 - `POST /login`: Authenticates credentials (username + password) OR license keys directly (`licenseKey`), binds/verifies HWID, checks license expiry/bans, logs `USER_LOGIN` / `FAILED_LOGIN` / `VERSION_MISMATCH` / `HWID_MISMATCH` events.

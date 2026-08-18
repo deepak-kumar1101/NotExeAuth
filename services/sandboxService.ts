@@ -60,7 +60,7 @@ export async function executeWorkerRequest(
 
   const endpointClean = endpointPath.startsWith('/') ? endpointPath.slice(1) : endpointPath;
   const baseUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-    ? 'https://deepxauth-api.pages.dev'
+    ? 'https://deepxauth.pages.dev'
     : window.location.origin;
 
   const apiUrl = `${baseUrl}/${endpointClean}`;
