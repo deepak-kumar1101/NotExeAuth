@@ -39,41 +39,49 @@ const decrypt = (ciphertext, secret) => {
 
 let cachedToken = null;
 let tokenExpiry = 0;
+let tokenPromise = null;
 
 async function getFirebaseToken(env) {
     if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
-    
-    const credentialsToTry = [
-        { email: env.FIREBASE_AUTH_EMAIL, password: env.FIREBASE_AUTH_PASSWORD },
-        { email: 'sdk_worker@deepxauth.com', password: 'WorkerPassword123!#' }
-    ];
+    if (tokenPromise) return tokenPromise;
 
-    for (const cred of credentialsToTry) {
-        if (!cred.email || !cred.password) continue;
-        try {
-            const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: cred.email,
-                    password: cred.password,
-                    returnSecureToken: true
-                })
-            });
-            const text = await resp.text();
-            if (resp.ok && text) {
-                const data = JSON.parse(text);
-                if (data && data.idToken) {
-                    cachedToken = data.idToken;
-                    tokenExpiry = Date.now() + (parseInt(data.expiresIn || '3600') - 60) * 1000;
-                    return cachedToken;
+    tokenPromise = (async () => {
+        const credentialsToTry = [
+            { email: 'sdk_worker@deepxauth.com', password: 'WorkerPassword123!#' },
+            { email: env?.FIREBASE_AUTH_EMAIL, password: env?.FIREBASE_AUTH_PASSWORD }
+        ];
+
+        for (const cred of credentialsToTry) {
+            if (!cred.email || !cred.password) continue;
+            try {
+                const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: cred.email,
+                        password: cred.password,
+                        returnSecureToken: true
+                    })
+                });
+                const text = await resp.text();
+                if (resp.ok && text) {
+                    const data = JSON.parse(text);
+                    if (data && data.idToken) {
+                        cachedToken = data.idToken;
+                        tokenExpiry = Date.now() + (parseInt(data.expiresIn || '3600') - 60) * 1000;
+                        return cachedToken;
+                    }
                 }
+            } catch (e) {
+                console.error("Firebase auth token error:", e);
             }
-        } catch (e) {
-            console.error("Firebase auth token error:", e);
         }
-    }
-    return cachedToken;
+        return cachedToken;
+    })().finally(() => {
+        tokenPromise = null;
+    });
+
+    return tokenPromise;
 }
 
 async function dbRequest(env, path, method = 'GET', body = null) {

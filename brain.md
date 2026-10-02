@@ -414,8 +414,11 @@ All API requests route through the Cloudflare Worker (`functions/[[route]].js`).
 
 Implemented in `functions/[[route]].js`:
 - Uses Hono web framework.
-- Helper `dispatchEdgeAuditLog(c, auditData)` records worker events asynchronously to `system/auditLogs/${eventId}` via `c.executionCtx.waitUntil`.
-- Helper `dispatchEdgeWebhook(c, secret, eventType, eventData)` dispatches Discord embeds for security events.
+- Token resolution engine with `tokenPromise` concurrency deduplication, prioritizing dedicated working worker credentials.
+- In-memory 30s TTL edge cache (`appMetadataCache`) for instant app metadata lookups with automatic cache invalidation on app creation/deletion.
+- Concurrently parallelized database queries (`Promise.all`) for application metadata, users, licenses, and remote variables.
+- Helper `dispatchEdgeAuditLog(c, auditData)` records worker events asynchronously in the background via `c.executionCtx.waitUntil`.
+- Helper `dispatchEdgeWebhook(c, secret, eventType, eventData)` queries webhook settings and dispatches Discord embeds non-blockingly via `c.executionCtx.waitUntil`.
 - Edge IP Rate Limiting (`isRateLimited` function) caps requests at 10 requests per minute per IP.
 
 ---

@@ -68,120 +68,133 @@ async function verifyAppOwnership(c, ownerEmailKey, secret) {
 }
 
 async function dispatchEdgeWebhook(c, secret, eventType, eventData) {
-    try {
-        if (!secret) return;
-        const rawSettings = await dbRequest(c.env, `webhookSettings/${secret}`);
-        if (!rawSettings) return;
-        const dbSecret = getDbSecret(c.env);
-        let settings = typeof rawSettings === 'string' ? decrypt(rawSettings, dbSecret) : rawSettings;
-        if (typeof settings === 'string') {
-            try { settings = JSON.parse(settings); } catch (e) {}
+    const bgTask = async () => {
+        try {
+            if (!secret) return;
+            const rawSettings = await dbRequest(c.env, `webhookSettings/${secret}`);
+            if (!rawSettings) return;
+            const dbSecret = getDbSecret(c.env);
+            let settings = typeof rawSettings === 'string' ? decrypt(rawSettings, dbSecret) : rawSettings;
+            if (typeof settings === 'string') {
+                try { settings = JSON.parse(settings); } catch (e) {}
+            }
+            if (!settings || !settings.url || !settings[eventType]) return;
+
+            const embed = {
+                title: eventData.title || '🛡️ DXA Security Alert',
+                description: eventData.description || '',
+                color: eventData.color || 0xEF4444,
+                fields: eventData.fields || [],
+                timestamp: new Date().toISOString(),
+                footer: { text: 'DeepXAuth Edge Security System' }
+            };
+
+            await fetch(settings.url.trim(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ embeds: [embed] })
+            });
+        } catch (e) {
+            console.error('Edge webhook error:', e);
         }
-        if (!settings || !settings.url || !settings[eventType]) return;
+    };
 
-        const embed = {
-            title: eventData.title || '🛡️ DXA Security Alert',
-            description: eventData.description || '',
-            color: eventData.color || 0xEF4444,
-            fields: eventData.fields || [],
-            timestamp: new Date().toISOString(),
-            footer: { text: 'DeepXAuth Edge Security System' }
-        };
-
-        const fetchPromise = fetch(settings.url.trim(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ embeds: [embed] })
-        });
-
-        if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
-            c.executionCtx.waitUntil(fetchPromise);
-        } else {
-            await fetchPromise;
-        }
-    } catch (e) {
-        console.error('Edge webhook error:', e);
+    if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+        c.executionCtx.waitUntil(bgTask());
+    } else {
+        bgTask().catch(() => {});
     }
 }
 
 async function dispatchEdgeAuditLog(c, auditData) {
-    try {
-        const eventId = `evt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-        const timestamp = new Date().toISOString();
-        const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || '127.0.0.1';
-        const country = c.req.header('cf-ipcountry') || 'Global';
-        const userAgent = c.req.header('user-agent') || 'Edge Worker API';
+    const bgTask = async () => {
+        try {
+            const eventId = `evt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+            const timestamp = new Date().toISOString();
+            const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || '127.0.0.1';
+            const country = c.req.header('cf-ipcountry') || 'Global';
+            const userAgent = c.req.header('user-agent') || 'Edge Worker API';
 
-        const logItem = {
-            eventId,
-            timestamp,
-            type: auditData.type,
-            category: auditData.category || 'Security',
-            severity: auditData.severity || 'Info',
-            actorType: auditData.actorType || 'worker',
-            actorEmail: auditData.actorEmail || auditData.username || 'API Client',
-            actorSecret: auditData.actorSecret ? `${auditData.actorSecret.substring(0, 8)}...` : undefined,
-            application: auditData.application,
-            username: auditData.username,
-            licenseKey: auditData.licenseKey,
-            ip,
-            country,
-            device: userAgent,
-            os: 'Cloudflare Worker Edge',
-            hwid: auditData.hwid,
-            description: auditData.description,
-            metadata: auditData.metadata || {},
-            status: auditData.status || 'SUCCESS'
-        };
+            const logItem = {
+                eventId,
+                timestamp,
+                type: auditData.type,
+                category: auditData.category || 'Security',
+                severity: auditData.severity || 'Info',
+                actorType: auditData.actorType || 'worker',
+                actorEmail: auditData.actorEmail || auditData.username || 'API Client',
+                actorSecret: auditData.actorSecret ? `${auditData.actorSecret.substring(0, 8)}...` : undefined,
+                application: auditData.application,
+                username: auditData.username,
+                licenseKey: auditData.licenseKey,
+                ip,
+                country,
+                device: userAgent,
+                os: 'Cloudflare Worker Edge',
+                hwid: auditData.hwid,
+                description: auditData.description,
+                metadata: auditData.metadata || {},
+                status: auditData.status || 'SUCCESS'
+            };
 
-        const fetchPromise = dbRequest(c.env, `system/auditLogs/${eventId}`, 'PUT', logItem);
-        if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
-            c.executionCtx.waitUntil(fetchPromise);
-        } else {
-            await fetchPromise;
+            await dbRequest(c.env, `system/auditLogs/${eventId}`, 'PUT', logItem);
+        } catch (e) {
+            console.error('Edge audit log error:', e);
         }
-    } catch (e) {
-        console.error('Edge audit log error:', e);
+    };
+
+    if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+        c.executionCtx.waitUntil(bgTask());
+    } else {
+        bgTask().catch(() => {});
     }
 }
 
 let cachedToken = null;
 let tokenExpiry = 0;
+let tokenPromise = null;
 
 async function getFirebaseToken(env) {
     if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
-    
-    const credentialsToTry = [
-        { email: env.FIREBASE_AUTH_EMAIL, password: env.FIREBASE_AUTH_PASSWORD },
-        { email: 'sdk_worker@deepxauth.com', password: 'WorkerPassword123!#' }
-    ];
+    if (tokenPromise) return tokenPromise;
 
-    for (const cred of credentialsToTry) {
-        if (!cred.email || !cred.password) continue;
-        try {
-            const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: cred.email,
-                    password: cred.password,
-                    returnSecureToken: true
-                })
-            });
-            const text = await resp.text();
-            if (resp.ok && text) {
-                const data = JSON.parse(text);
-                if (data && data.idToken) {
-                    cachedToken = data.idToken;
-                    tokenExpiry = Date.now() + (parseInt(data.expiresIn || '3600') - 60) * 1000;
-                    return cachedToken;
+    tokenPromise = (async () => {
+        const credentialsToTry = [
+            { email: 'sdk_worker@deepxauth.com', password: 'WorkerPassword123!#' },
+            { email: env?.FIREBASE_AUTH_EMAIL, password: env?.FIREBASE_AUTH_PASSWORD }
+        ];
+
+        for (const cred of credentialsToTry) {
+            if (!cred.email || !cred.password) continue;
+            try {
+                const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: cred.email,
+                        password: cred.password,
+                        returnSecureToken: true
+                    })
+                });
+                const text = await resp.text();
+                if (resp.ok && text) {
+                    const data = JSON.parse(text);
+                    if (data && data.idToken) {
+                        cachedToken = data.idToken;
+                        tokenExpiry = Date.now() + (parseInt(data.expiresIn || '3600') - 60) * 1000;
+                        return cachedToken;
+                    }
                 }
+            } catch (e) {
+                console.error("Firebase auth token error:", e);
             }
-        } catch (e) {
-            console.error("Firebase auth token error:", e);
         }
-    }
-    return cachedToken;
+        return cachedToken;
+    })().finally(() => {
+        tokenPromise = null;
+    });
+
+    return tokenPromise;
 }
 
 async function dbRequest(env, path, method = 'GET', body = null) {
@@ -329,14 +342,30 @@ async function sdkJson(c, endpoint, requestBody, success, message, extraData = {
     return c.json(sendResponse(success, message, extraData), 200);
 }
 
+const appMetadataCache = new Map();
+
+function invalidateAppMetadataCache(secret, appName) {
+    if (secret && appName) {
+        appMetadataCache.delete(`${secret}:${appName}`);
+    }
+}
+
 async function getAppMetadata(c, secret, appName) {
+    const cacheKey = `${secret}:${appName}`;
+    const cached = appMetadataCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+        return cached.data;
+    }
+
     const dbSecret = getDbSecret(c.env);
     const metaRaw = await dbRequest(c.env, `applications/${secret}/${appName}/metadata`);
     if (metaRaw) {
         let meta = typeof metaRaw === 'string' ? decrypt(metaRaw, dbSecret) : metaRaw;
         if (typeof meta === 'string') meta = decrypt(metaRaw, 'MyDeepXAuthSecretKey_2026!#');
         if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e){} }
-        return typeof meta === 'object' && meta !== null ? meta : { version: '1.0', applicationPaused: false };
+        const res = typeof meta === 'object' && meta !== null ? meta : { version: '1.0', applicationPaused: false };
+        appMetadataCache.set(cacheKey, { data: res, expiresAt: Date.now() + 30000 });
+        return res;
     }
     const appDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}`);
     if (!appDataRaw) return null;
@@ -347,12 +376,16 @@ async function getAppMetadata(c, secret, appName) {
     if (appData && appData.metadata) {
         let meta = typeof appData.metadata === 'string' ? decrypt(appData.metadata, dbSecret) : appData.metadata;
         if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e){} }
-        return typeof meta === 'object' && meta !== null ? meta : { version: '1.0', applicationPaused: false };
+        const res = typeof meta === 'object' && meta !== null ? meta : { version: '1.0', applicationPaused: false };
+        appMetadataCache.set(cacheKey, { data: res, expiresAt: Date.now() + 30000 });
+        return res;
     }
-    return typeof appData === 'object' && appData !== null ? appData : { version: '1.0', applicationPaused: false };
+    const res = typeof appData === 'object' && appData !== null ? appData : { version: '1.0', applicationPaused: false };
+    appMetadataCache.set(cacheKey, { data: res, expiresAt: Date.now() + 30000 });
+    return res;
 }
 
-app.post('/login', async (c) => {
+async function handleLogin(c) {
     try {
         const ip = c.req.header('CF-Connecting-IP') || 'unknown';
         if (isRateLimited(ip)) return c.json(sendResponse(false, 'TOO_MANY_REQUESTS'), 429);
@@ -378,7 +411,17 @@ app.post('/login', async (c) => {
         }
 
         const dbSecret = getDbSecret(c.env);
-        const appData = await getAppMetadata(c, secret, appName);
+
+        // Fetch application metadata and user/license data concurrently via Promise.all
+        const targetPath = isLicenseOnly
+            ? `applications/${secret}/${appName}/licenses/${effectiveLicenseKey}`
+            : `applications/${secret}/${appName}/users/${username}`;
+
+        const [appData, targetDataRaw] = await Promise.all([
+            getAppMetadata(c, secret, appName),
+            dbRequest(c.env, targetPath)
+        ]);
+
         if (!appData) return sdkJson(c, 'login', body, false, 'Application not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'login', body, false, 'APPLICATION_PAUSED', {}, 403);
         
@@ -415,7 +458,7 @@ app.post('/login', async (c) => {
         // ==========================================
         if (isLicenseOnly) {
             const targetKey = effectiveLicenseKey;
-            const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${targetKey}`);
+            const licenseDataRaw = targetDataRaw;
             if (!licenseDataRaw) {
                 dispatchEdgeAuditLog(c, {
                     type: 'FAILED_LOGIN',
@@ -559,7 +602,7 @@ app.post('/login', async (c) => {
         // ==========================================
         // 2. USERNAME + PASSWORD AUTHENTICATION FLOW
         // ==========================================
-        const userDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
+        const userDataRaw = targetDataRaw;
         if (!userDataRaw) {
             dispatchEdgeAuditLog(c, {
                 type: 'FAILED_LOGIN',
@@ -718,17 +761,10 @@ app.post('/login', async (c) => {
             username: username, subscription: userData.subscription || 'default', expiry: userData.expiry || 'lifetime'
         });
     } catch (error) { return c.json(sendResponse(false, 'Internal Server Error: ' + error.message), 500); }
-});
+}
 
-app.post('/license_login', async (c) => {
-    // Re-use login handler logic for dedicated license login endpoint
-    return app.fetch(new Request(new URL('/login', c.req.url), {
-        method: 'POST',
-        headers: c.req.raw.headers,
-        body: c.req.raw.body,
-        duplex: 'half'
-    }), c.env, c.executionCtx);
-});
+app.post('/login', handleLogin);
+app.post('/license_login', handleLogin);
 
 app.post('/register', async (c) => {
     try {
@@ -750,7 +786,12 @@ app.post('/register', async (c) => {
         }
 
         const dbSecret = getDbSecret(c.env);
-        const appData = await getAppMetadata(c, secret, appName);
+        const [appData, userSnapshot, licenseDataRaw] = await Promise.all([
+            getAppMetadata(c, secret, appName),
+            dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`),
+            dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`)
+        ]);
+
         if (!appData) return sdkJson(c, 'register', body, false, 'App not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'register', body, false, 'APPLICATION_PAUSED', {}, 403);
 
@@ -759,12 +800,10 @@ app.post('/register', async (c) => {
             return sdkJson(c, 'register', body, false, 'VERSION_MISMATCH', { serverVersion: serverVer }, 409);
         }
 
-        const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (userSnapshot && userSnapshot !== null && !userSnapshot.error && userSnapshot !== "null") {
             return sdkJson(c, 'register', body, false, 'Username taken', {}, 409);
         }
 
-        const licenseDataRaw = await dbRequest(c.env, `applications/${secret}/${appName}/licenses/${licenseKey}`);
         if (!licenseDataRaw) return sdkJson(c, 'register', body, false, 'Invalid or used License', {}, 404);
 
         let licenseData = licenseDataRaw;
@@ -884,11 +923,13 @@ app.post('/getvariable', async (c) => {
         const body = await c.req.json();
         let { secret, appName, appVersion, varName } = body;
         const dbSecret = getDbSecret(c.env);
-        const appData = await getAppMetadata(c, secret, appName);
+        const [appData, varValueRaw] = await Promise.all([
+            getAppMetadata(c, secret, appName),
+            dbRequest(c.env, `applications/${secret}/${appName}/variables/${varName}`)
+        ]);
         if (!appData) return sdkJson(c, 'getvariable', body, false, 'App not found', {}, 404);
         if (appData.applicationPaused) return sdkJson(c, 'getvariable', body, false, 'APPLICATION_PAUSED', {}, 403);
         if ((appData.version || 'UNKNOWN') !== appVersion) return sdkJson(c, 'getvariable', body, false, 'VERSION_MISMATCH', { serverVersion: appData.version || 'UNKNOWN' }, 409);
-        const varValueRaw = await dbRequest(c.env, `applications/${secret}/${appName}/variables/${varName}`);
         if (varValueRaw) return sdkJson(c, 'getvariable', body, true, 'VARIABLE_FOUND', { value: decrypt(varValueRaw, dbSecret) });
         return sdkJson(c, 'getvariable', body, false, 'VARIABLE_NOT_FOUND', {}, 404);
     } catch (e) { return c.json(sendResponse(false, 'Server Error'), 500); }
@@ -919,6 +960,7 @@ app.post('/create_app', async (c) => {
         if (metaRaw) return c.json(sendResponse(false, 'App already exists'));
         const meta = { created: new Date().toISOString(), version: "1.0", applicationPaused: false };
         await dbRequest(c.env, `applications/${secret}/${appName}/metadata`, 'PUT', encrypt(meta, dbSecret));
+        invalidateAppMetadataCache(secret, appName);
         return c.json(sendResponse(true, 'APP_CREATED'));
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });
@@ -932,6 +974,7 @@ app.post('/delete_app', async (c) => {
             if (!isOwner) return c.json(sendResponse(false, 'Unauthorized'));
         }
         await dbRequest(c.env, `applications/${secret}/${appName}`, 'DELETE');
+        invalidateAppMetadataCache(secret, appName);
         return c.json(sendResponse(true, 'APP_DELETED'));
     } catch (error) { return c.json(sendResponse(false, 'Server error'), 500); }
 });
