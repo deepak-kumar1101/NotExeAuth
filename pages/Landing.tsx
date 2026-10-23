@@ -7,71 +7,123 @@ import {
   Terminal, Layers, MessageSquare, ExternalLink,
   ChevronDown, Monitor, CheckCircle2, Key, Database,
   Sparkles, Check, Copy, Server, FileText, Fingerprint,
-  Radio, RefreshCw
+  Radio, RefreshCw, HelpCircle, HardDrive, CpuIcon,
+  Sliders, ArrowUpRight
 } from 'lucide-react';
 import { ref, get } from 'firebase/database';
 import { db } from '../services/firebase';
-import { subscribeToSDKs } from '../services/sdkService';
-import { SDK } from '../types';
 import BrandMark from '../components/BrandMark';
 
-const TECH_STACK = [
+// API Command Endpoints structure (Mughal Auth style)
+const API_CATEGORIES = [
   {
-    name: 'C++',
-    badge: 'C++ Native SDK',
-    sub: 'Anti-Tamper & In-Memory',
-    glow: 'rgba(245, 158, 11, 0.4)',
-    color: '#F59E0B',
-    codeSnippet: `#include "NotExeAuth.hpp"
-
-// Initialize Not Exe Client
-NotExe::Client client("AppName", "NXE-APP-SECRET-KEY");
-
-if (client.Authenticate("license_key", NotExe::GetHWID())) {
-    std::cout << "Access Granted. Verified RSA Signature.\\n";
-    std::string secret = client.GetCloudVar("GAME_OFFSET");
-}`
+    id: 'apps',
+    name: 'Applications',
+    icon: <Database className="w-4 h-4 text-amber-400" />,
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/apps',
+        desc: 'List all seller-owned applications and active status',
+        auth: 'Authorization: Bearer <secret>',
+        response: `{ "success": true, "apps": ["MyApp-V1", "LoaderPro"] }`
+      },
+      {
+        method: 'POST',
+        path: '/apps',
+        desc: 'Create a new protected application with cryptographic keys',
+        auth: 'Authorization: Bearer <secret>',
+        response: `{ "success": true, "message": "App created", "appId": "NXE-8821" }`
+      }
+    ]
   },
   {
-    name: 'C#',
-    badge: 'C# .NET Core',
-    sub: 'WPF, WinForms, Unity',
-    glow: 'rgba(155, 79, 150, 0.4)',
-    color: '#9B4F96',
-    codeSnippet: `using NotExe.Shield;
-
-var auth = new NotExeClient("AppName", "NXE-APP-SECRET-KEY");
-var result = await auth.ValidateLicenseAsync("NXE-XXXX-YYYY-ZZZZ");
-
-if (result.IsValid) {
-    Console.WriteLine($"Welcome {result.User.Email}! Node verified.");
-}`
+    id: 'licenses',
+    name: 'Licenses',
+    icon: <Key className="w-4 h-4 text-emerald-400" />,
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/apps/:id/licenses',
+        desc: 'Fetch paginated licenses with HWID and expiry status',
+        auth: 'Authorization: Bearer <secret>',
+        response: `{ "success": true, "count": 250, "licenses": [{ "key": "NXE-99A1-B2C3", "used": true }] }`
+      },
+      {
+        method: 'POST',
+        path: '/apps/:id/licenses',
+        desc: 'Generate single or bulk license keys with custom prefixes',
+        auth: 'Authorization: Bearer <secret>',
+        response: `{ "success": true, "generated": 5, "keys": ["NXE-X881-A912", "NXE-B410-C229"] }`
+      }
+    ]
   },
   {
-    name: 'Python',
-    badge: 'Python SDK',
-    sub: 'FastAPI, Desktop, CLI',
-    glow: 'rgba(55, 118, 171, 0.4)',
-    color: '#3776AB',
-    codeSnippet: `import notexe
-
-client = notexe.Client(app="AppName", secret="NXE-APP-SECRET-KEY")
-res = client.login(key="NXE-XXXX-YYYY-ZZZZ")
-
-if res.authorized:
-    print(f"HWID Locked: {res.device_id} | Expiry: {res.expiry}")`
+    id: 'users',
+    name: 'Users & HWID',
+    icon: <Users className="w-4 h-4 text-cyan-400" />,
+    endpoints: [
+      {
+        method: 'POST',
+        path: '/login',
+        desc: 'Validate user credentials or license key and lock hardware signature',
+        auth: 'Payload: { appName, secret, licenseKey, hwid }',
+        response: `{ "success": true, "token": "JWT_TOKEN", "hwidLocked": true, "expiry": "2026-12-31" }`
+      },
+      {
+        method: 'POST',
+        path: '/hwid/reset',
+        desc: 'Developer or user one-click hardware identifier reset',
+        auth: 'Authorization: Bearer <secret>',
+        response: `{ "success": true, "message": "HWID_RESET_SUCCESSFUL" }`
+      }
+    ]
   },
   {
-    name: 'Rust',
-    badge: 'Rust Crates',
-    sub: 'Zero Overhead & Memory Safe',
-    glow: 'rgba(239, 68, 68, 0.4)',
-    color: '#EF4444',
-    codeSnippet: `use notexe_auth::NotExeClient;
+    id: 'variables',
+    name: 'Cloud Variables',
+    icon: <Lock className="w-4 h-4 text-purple-400" />,
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/var/:name',
+        desc: 'Retrieve encrypted runtime variable or memory offset',
+        auth: 'Payload: { sessionToken, varName }',
+        response: `{ "success": true, "value": "0x7FFF54A180", "signature": "RSA_SIGNED_HASH" }`
+      }
+    ]
+  }
+];
 
-let client = NotExeClient::new("AppName", "NXE-APP-SECRET-KEY");
-let session = client.verify_hwid()?;
-println!("Session token verified with RSA-4096: {:?}", session.token);`
+// Infrastructure Regional Shards (Mughal Auth style)
+const REGIONAL_SHARDS = [
+  { region: 'US East', location: 'N. Virginia', latency: '12ms', status: 'Operational', flag: '🇺🇸' },
+  { region: 'EU Central', location: 'Frankfurt', latency: '18ms', status: 'Operational', flag: '🇩🇪' },
+  { region: 'AP South', location: 'Mumbai', latency: '8ms', status: 'Operational', flag: '🇮🇳' },
+  { region: 'AP East', location: 'Tokyo', latency: '24ms', status: 'Operational', flag: '🇯🇵' },
+];
+
+// FAQs (Mughal Auth style)
+const FAQS = [
+  {
+    q: 'Is Not Exe Auth a separate frontend and backend?',
+    a: 'Yes. The React frontend runs separately from the Cloudflare edge serverless API. Frontend assets are distributed via global CDN caching, while the backend strictly enforces authentication, token security, and database verification.'
+  },
+  {
+    q: 'Can users and licenses be managed from one panel?',
+    a: 'Yes. The control panel provides centralized management for applications, license keys, user profiles, hardware resets, cloud variables, reseller allocations, and real-time audit event logs.'
+  },
+  {
+    q: 'Can someone bypass the dashboard from frontend code?',
+    a: 'No. The client interface is never the security boundary. Every critical operation requires cryptographic validation, RSA-4096 response signing, and strict backend permission checks on Cloudflare Workers.'
+  },
+  {
+    q: 'How does hardware-locked (HWID) security work?',
+    a: 'Upon first redemption, the client computes a cryptographic hash of CPU, motherboard, and BIOS signatures. Once locked, authentication fails if executed on an unauthorized secondary device.'
+  },
+  {
+    q: 'What happens if the API is offline?',
+    a: 'Not Exe operates on Cloudflare’s distributed 300+ city edge network with 99.99% uptime SLA, redundant regional failover, and automatic DDoS mitigation.'
   }
 ];
 
@@ -79,34 +131,21 @@ const Landing: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [totalUsers, setTotalUsers] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeCodeIndex, setActiveCodeIndex] = useState(0);
-  const [previewTab, setPreviewTab] = useState<'ui' | 'code'>('ui');
-  const [copiedCode, setCopiedCode] = useState(false);
-
-  const [dynamicSdks, setDynamicSdks] = useState<SDK[]>([]);
-  const [selectedSdkId, setSelectedSdkId] = useState<string>('');
+  const [activeApiTab, setActiveApiTab] = useState('apps');
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
-    // Throttled scroll listener to prevent unnecessary re-renders
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 40);
+          setIsScrolled(window.scrollY > 30);
           ticking = false;
         });
         ticking = true;
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    const unsubscribe = subscribeToSDKs((loadedSdks) => {
-      const visible = loadedSdks.filter(s => s.visible !== false);
-      setDynamicSdks(visible);
-      if (visible.length > 0 && !selectedSdkId) {
-        setSelectedSdkId(visible[0].id);
-      }
-    });
 
     const fetchUserCount = async () => {
       try {
@@ -122,65 +161,71 @@ const Landing: React.FC = () => {
     };
     fetchUserCount();
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      unsubscribe();
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
   return (
-    <div className="min-h-screen bg-[#07090e] text-white selection:bg-amber-500/30 font-sans overflow-x-hidden relative">
-      {/* High-performance static ambient glows (zero GPU blur overhead) */}
+    <div className="min-h-screen bg-[#06070a] text-white selection:bg-amber-500/30 font-sans overflow-x-hidden relative">
+      {/* Background Ambience */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="ambient-glow-top" />
         <div className="ambient-glow-bottom" />
         <div className="grid-cyber-bg" />
       </div>
 
-      {/* Floating Glass Navigation Bar */}
-      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
+      {/* TOP FLOATING NAVIGATION BAR (Mughal Auth Liquid Pill Style) */}
+      <header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
         <nav
-          className={`w-full max-w-5xl transition-all duration-300 rounded-full border ${
+          className={`w-full max-w-6xl transition-all duration-300 rounded-full border ${
             isScrolled
-              ? 'bg-[#0c1017]/90 backdrop-blur-md border-amber-400/25 py-2.5 px-6 shadow-2xl shadow-black/90'
-              : 'bg-[#0c1017]/60 backdrop-blur-md border-white/10 py-3.5 px-7'
+              ? 'bg-[#090b12]/90 backdrop-blur-xl border-amber-400/30 py-2.5 px-6 shadow-2xl shadow-black/90'
+              : 'bg-[#0c0f18]/70 backdrop-blur-xl border-white/10 py-3.5 px-7'
           }`}
         >
           <div className="flex justify-between items-center">
+            {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
               <BrandMark size="sm" />
             </Link>
 
-            <div className="hidden md:flex items-center gap-7">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-7">
+              <a href="#features" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-amber-400 transition-colors">
+                Features
+              </a>
+              <a href="#endpoints" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-amber-400 transition-colors">
+                API Commands
+              </a>
+              <a href="#infrastructure" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-amber-400 transition-colors">
+                Status
+              </a>
+              <Link to="/docs" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-amber-400 transition-colors">
+                Docs
+              </Link>
               <Link to="/shop" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-amber-400 transition-colors">
                 Shop
               </Link>
-              <Link to="/docs" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-amber-400 transition-colors">
-                Documentation
-              </Link>
-              <Link to="/tos" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-amber-400 transition-colors">
-                Terms
-              </Link>
-              <div className="h-4 w-px bg-white/10 mx-1" />
-              <Link to="/login" className="text-xs font-semibold tracking-wider text-slate-300 hover:text-white transition-colors">
-                Sign In
-              </Link>
+            </div>
+
+            {/* Right Status & Action Buttons */}
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-mono text-emerald-400 font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>API ONLINE</span>
+              </div>
+
               <Link
-                to="/signup"
-                className="btn-magnetic-primary px-5 py-2 text-xs font-black uppercase tracking-wider"
+                to="/login"
+                className="btn-magnetic-primary px-4 py-2 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-glow-sm"
               >
-                Get Started
+                <span>Open Panel</span>
+                <ArrowRight size={13} />
               </Link>
             </div>
 
+            {/* Mobile Menu Button */}
             <button
-              className="md:hidden text-white p-2"
+              className="lg:hidden text-white p-2"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle Menu"
             >
@@ -190,60 +235,46 @@ const Landing: React.FC = () => {
 
           {/* Mobile Dropdown */}
           {isMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 right-0 mt-3 glass-card-premium border border-amber-400/20 p-6 flex flex-col gap-4 rounded-3xl shadow-2xl animate-fade-in">
+            <div className="lg:hidden absolute top-full left-0 right-0 mt-3 liquid-glass-strong border border-amber-400/25 p-6 flex flex-col gap-4 rounded-3xl shadow-2xl animate-fade-in">
+              <a href="#features" className="text-xs font-semibold text-slate-300 hover:text-amber-400" onClick={() => setIsMenuOpen(false)}>
+                Features
+              </a>
+              <a href="#endpoints" className="text-xs font-semibold text-slate-300 hover:text-amber-400" onClick={() => setIsMenuOpen(false)}>
+                API Commands
+              </a>
+              <a href="#infrastructure" className="text-xs font-semibold text-slate-300 hover:text-amber-400" onClick={() => setIsMenuOpen(false)}>
+                Status
+              </a>
+              <Link to="/docs" className="text-xs font-semibold text-slate-300 hover:text-amber-400" onClick={() => setIsMenuOpen(false)}>
+                Docs
+              </Link>
               <Link to="/shop" className="text-xs font-semibold text-slate-300 hover:text-amber-400" onClick={() => setIsMenuOpen(false)}>
                 Shop
               </Link>
-              <Link to="/docs" className="text-xs font-semibold text-slate-300 hover:text-amber-400" onClick={() => setIsMenuOpen(false)}>
-                Documentation
-              </Link>
-              <Link to="/tos" className="text-xs font-semibold text-slate-300 hover:text-amber-400" onClick={() => setIsMenuOpen(false)}>
-                Terms of Service
-              </Link>
               <hr className="border-white/10 my-1" />
-              <Link to="/login" className="text-xs font-semibold text-white" onClick={() => setIsMenuOpen(false)}>
-                Sign In
-              </Link>
               <Link
-                to="/signup"
+                to="/login"
                 className="btn-magnetic-primary text-center py-3 text-xs font-black uppercase tracking-wider"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Create Account
+                Open Panel Now
               </Link>
             </div>
           )}
         </nav>
-      </div>
+      </header>
 
       <main className="relative z-10">
-        {/* HERO SECTION */}
+        {/* HERO SECTION (Mughal Auth Layout) */}
         <section className="min-h-screen flex flex-col justify-center pt-32 pb-16 px-6 relative">
-          {/* Floating High-Tech Badges */}
-          <div className="absolute top-40 left-[8%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#0c1017]/80 border border-amber-400/25 backdrop-blur-md text-[11px] font-semibold text-slate-200 shadow-xl effect-magnetic">
-            <ShieldCheck size={14} className="text-amber-400" />
-            <span>HWID Locked & Protected</span>
-          </div>
-          <div className="absolute top-48 right-[10%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#0c1017]/80 border border-cyan-400/25 backdrop-blur-md text-[11px] font-semibold text-slate-200 shadow-xl effect-magnetic">
-            <Zap size={14} className="text-cyan-400" />
-            <span>&lt;8ms Global Edge Response</span>
-          </div>
-          <div className="absolute bottom-40 left-[10%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#0c1017]/80 border border-white/10 backdrop-blur-md text-[11px] font-semibold text-slate-200 shadow-xl effect-magnetic">
-            <Database size={14} className="text-amber-300" />
-            <span>Encrypted Cloud Variables</span>
-          </div>
-          <div className="absolute bottom-36 right-[8%] hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#0c1017]/80 border border-emerald-400/25 backdrop-blur-md text-[11px] font-semibold text-slate-200 shadow-xl effect-magnetic">
-            <Lock size={14} className="text-emerald-400" />
-            <span>RSA-4096 Anti-Tamper Signing</span>
-          </div>
-
-          <div className="max-w-5xl mx-auto text-center animate-slide-up">
-            {/* Prominent Glowing Circular Not Exe Mascot Avatar */}
+          <div className="max-w-4xl mx-auto text-center animate-slide-up">
+            
+            {/* Mascot Avatar Centerpiece */}
             <div className="flex justify-center mb-6">
               <div className="relative group cursor-pointer">
                 <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-cyan-400 opacity-60 blur-xl group-hover:opacity-90 transition-opacity" />
-                <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full p-[3px] bg-gradient-to-tr from-amber-400 via-yellow-300 to-cyan-400 shadow-[0_0_35px_rgba(245,158,11,0.5)]">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-[#07090e] border-2 border-amber-300/40 flex items-center justify-center">
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full p-[2.5px] bg-gradient-to-tr from-amber-400 via-yellow-300 to-cyan-400 shadow-[0_0_35px_rgba(245,158,11,0.5)]">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-[#07090e] border border-amber-300/40 flex items-center justify-center">
                     <img
                       src="/logo.png"
                       alt="Not Exe"
@@ -254,219 +285,119 @@ const Landing: React.FC = () => {
               </div>
             </div>
 
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-amber-400/10 border border-amber-400/30 text-xs font-semibold text-amber-300 mb-6 backdrop-blur-md shadow-lg">
+            {/* Top Status Banner (Identical to Mughal Auth) */}
+            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/[0.04] border border-white/10 text-xs font-semibold text-slate-300 mb-6 backdrop-blur-md shadow-lg">
               <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>NOT EXE AUTH SHIELD v2.5 IS LIVE</span>
-              <ChevronRight size={14} className="text-amber-400" />
+              <span>API Systems Online</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-amber-300 font-mono">Now securing {totalUsers > 0 ? totalUsers.toLocaleString() : '12,500+'} applications</span>
             </div>
 
+            {/* Headline */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.08] text-white">
-              Next-Gen Cryptographic <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-300 to-amber-500">
-                Licensing & HWID Shield.
+              Control Your Software With <br />
+              <span className="text-gradient-gold">
+                Not Exe Auth.
               </span>
             </h1>
 
+            {/* Subtitle */}
             <p className="text-slate-300 text-sm sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
-              Military-grade RSA response verification, instantaneous cloud variables, and hardware-fingerprinted licensing built for modern developers and software studios.
+              A secure licensing control panel for applications, users, licenses, tokens, sessions, HWID resets, files, variables, and audit logs.
             </p>
 
+            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               <Link
-                to="/signup"
-                className="btn-magnetic-primary h-12 px-8 text-xs font-black tracking-wider uppercase flex items-center gap-2 shadow-glow-md"
+                to="/login"
+                className="btn-magnetic-primary h-12 px-8 text-xs font-black tracking-wider uppercase flex items-center gap-2 shadow-glow-sm"
               >
-                <span>Deploy Free License Key</span>
-                <ArrowRight size={15} />
+                <span>Open Panel</span>
+                <ArrowRight size={14} />
               </Link>
-              <Link
-                to="/docs"
+              <a
+                href="https://discord.gg/HrVXH3wNpj"
+                target="_blank"
+                rel="noreferrer"
                 className="btn-magnetic-glass h-12 px-8 text-xs font-semibold tracking-wider uppercase flex items-center gap-2"
               >
-                <span>Explore SDKs</span>
-                <ExternalLink size={14} />
-              </Link>
+                <span>Contact Support</span>
+                <ExternalLink size={13} />
+              </a>
             </div>
           </div>
 
-          {/* Interactive Live Preview Component */}
-          <div className="max-w-4xl mx-auto w-full animate-fade-in">
-            <div className="glass-card-premium rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
-              {/* Header */}
-              <div className="p-4 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                  <span className="ml-2 text-xs font-mono text-slate-400">notexe-shield-console.preview</span>
-                </div>
-                <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/10">
-                  <button
-                    onClick={() => setPreviewTab('ui')}
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
-                      previewTab === 'ui' ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    Console UI
-                  </button>
-                  <button
-                    onClick={() => setPreviewTab('code')}
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
-                      previewTab === 'code' ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    SDK Integration
-                  </button>
-                </div>
-              </div>
-
-              {previewTab === 'ui' ? (
-                <div className="p-6 md:p-8 space-y-6 bg-gradient-to-b from-[#0c1017] to-[#07090e]">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white/[0.03] border border-white/[0.08] p-4 rounded-2xl">
-                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Managed Nodes</div>
-                      <div className="text-2xl font-black text-white">{totalUsers > 0 ? totalUsers.toLocaleString() : '12,450+'}</div>
-                    </div>
-                    <div className="bg-white/[0.03] border border-white/[0.08] p-4 rounded-2xl">
-                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Protection Engine</div>
-                      <div className="text-2xl font-black text-emerald-400 flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" /> Active
-                      </div>
-                    </div>
-                    <div className="bg-white/[0.03] border border-white/[0.08] p-4 rounded-2xl">
-                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">HWID Binding</div>
-                      <div className="text-2xl font-black text-amber-400">Strict Lock</div>
-                    </div>
-                    <div className="bg-white/[0.03] border border-white/[0.08] p-4 rounded-2xl">
-                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Signature Mode</div>
-                      <div className="text-2xl font-black text-cyan-400">RSA-4096</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-black/60 border border-white/10 rounded-2xl p-5 space-y-3 font-mono text-xs">
-                    <div className="flex justify-between items-center border-b border-white/10 pb-2 text-slate-400 text-[11px] font-bold">
-                      <span>LICENSE KEY</span>
-                      <span>HWID SIGNATURE</span>
-                      <span>STATUS</span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-200">
-                      <span className="text-amber-300 font-bold">NXE-8821-X99B-3104</span>
-                      <span className="text-emerald-400">HARDWARE LOCKED [HWID-99A1-F428]</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px]">Verified</span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-200">
-                      <span className="text-amber-300 font-bold">NXE-4420-K11C-8921</span>
-                      <span className="text-emerald-400">HARDWARE LOCKED [HWID-44C2-B910]</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px]">Verified</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-6 bg-[#080b12] font-mono text-xs text-slate-300">
-                  <div className="flex items-center justify-between gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      {TECH_STACK.map((tech, idx) => (
-                        <button
-                          key={tech.name}
-                          onClick={() => setActiveCodeIndex(idx)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                            activeCodeIndex === idx
-                              ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-sm'
-                              : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/5'
-                          }`}
-                        >
-                          {tech.name}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => copyCode(TECH_STACK[activeCodeIndex].codeSnippet)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors border border-white/10 cursor-pointer"
-                    >
-                      {copiedCode ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                      <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
-                    </button>
-                  </div>
-
-                  <pre className="overflow-x-auto p-5 bg-black/80 rounded-2xl border border-white/10 text-slate-200 leading-relaxed custom-scrollbar max-h-80 text-xs">
-                    <code>{TECH_STACK[activeCodeIndex].codeSnippet}</code>
-                  </pre>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* METRICS & CAPABILITIES */}
-        <section className="py-20 px-6 max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* REAL-TIME SERVICE METRICS (Mughal Auth 6-tile live grid) */}
+          <div className="max-w-6xl mx-auto w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: 'Active Licenses', val: totalUsers > 0 ? totalUsers.toLocaleString() : '10,000+', icon: <Users size={16} />, color: 'text-white' },
-              { label: 'Uptime SLA', val: '99.99%', icon: <Activity size={16} />, color: 'text-emerald-400' },
-              { label: 'Global Latency', val: '< 8ms', icon: <Zap size={16} />, color: 'text-amber-400' },
-              { label: 'Anti-Tamper', val: 'RSA-4096', icon: <ShieldCheck size={16} />, color: 'text-cyan-400' },
-            ].map((stat, i) => (
-              <div key={i} className="glass-card-premium p-6 rounded-2xl border border-white/10">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
-                  {stat.icon} <span>{stat.label}</span>
+              { label: 'Active Services', val: 'Operational', color: 'text-emerald-400', badge: '100%' },
+              { label: 'Edge Latency', val: '< 8ms', color: 'text-amber-400', badge: 'Fast' },
+              { label: 'Uptime SLA', val: '99.99%', color: 'text-white', badge: 'SLA' },
+              { label: 'Secured Apps', val: '2,500+', color: 'text-cyan-400', badge: 'Live' },
+              { label: 'Active Users', val: totalUsers > 0 ? `${totalUsers.toLocaleString()}` : '50,000+', color: 'text-white', badge: 'Nodes' },
+              { label: 'Protected Events', val: '1.4M+', color: 'text-amber-300', badge: 'Audit' },
+            ].map((m, idx) => (
+              <div key={idx} className="liquid-glass p-4 rounded-2xl flex flex-col justify-between">
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 uppercase mb-2">
+                  <span>{m.label}</span>
+                  <span className="px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-[9px] font-bold">{m.badge}</span>
                 </div>
-                <div className={`text-3xl font-black tracking-tight ${stat.color}`}>{stat.val}</div>
+                <div className={`text-base sm:text-lg font-black tracking-tight ${m.color}`}>
+                  {m.val}
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* CORE FEATURES GRID */}
-        <section id="features" className="py-20 px-6 max-w-6xl mx-auto">
+        {/* CORE CAPABILITIES (Mughal Auth 6 Feature Cards) */}
+        <section id="features" className="py-24 px-6 max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <div className="inline-block px-3.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-[11px] font-bold uppercase tracking-widest text-amber-300 mb-4">
-              Defensive Capabilities
+            <div className="inline-block px-3.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-[11px] font-bold uppercase tracking-widest text-amber-300 mb-3">
+              Capabilities
             </div>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-4">
-              Everything Needed To Protect <br />
-              <span className="text-slate-400 font-semibold">Against Cracks & Unauthorized Execution.</span>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-3">
+              Everything for License Operations
             </h2>
             <p className="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto font-medium leading-relaxed">
-              A comprehensive cryptographic licensing suite engineered specifically for desktop apps, tools, and games.
+              A fast control panel for managing apps, licenses, users, tokens, sessions, and reseller workflows.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
-                icon: <Fingerprint className="w-5 h-5 text-amber-400" />,
-                title: 'Hardware Fingerprint Locking',
-                desc: 'Binds licenses directly to CPU, motherboard, and BIOS identifiers. Prevents key leaking, multi-PC sharing, and VM cloning.'
+                icon: <Key className="w-5 h-5 text-amber-400" />,
+                title: 'License Control',
+                desc: 'Create, copy, revoke, extend, and audit licenses with app-scoped controls, batch generator, and safe API calls.'
               },
               {
-                icon: <ShieldCheck className="w-5 h-5 text-emerald-400" />,
-                title: 'RSA-4096 Response Signing',
-                desc: 'Every server response is cryptographically signed with our edge private key. HTTP packet interception or hosts-file reroutes fail.'
+                icon: <Users className="w-5 h-5 text-emerald-400" />,
+                title: 'User Operations',
+                desc: 'Manage users, HWID resets, bans, subscriptions, sessions, cooldowns, and last-login metadata from one place.'
               },
               {
-                icon: <Database className="w-5 h-5 text-cyan-400" />,
-                title: 'Encrypted Cloud Variables',
-                desc: 'Store sensitive decryption keys, pointers, and game offsets in the cloud. Variables are only delivered upon valid authentication.'
+                icon: <Lock className="w-5 h-5 text-cyan-400" />,
+                title: 'Token Security',
+                desc: 'Protect reseller, seller, and client API flows with scoped master secrets, session checks, and edge validation.'
               },
               {
-                icon: <MessageSquare className="w-5 h-5 text-amber-300" />,
-                title: 'Discord Automated Webhooks',
-                desc: 'Receive real-time Discord notifications for logins, redemptions, HWID reset requests, and suspicious tamper attempts.'
+                icon: <Activity className="w-5 h-5 text-purple-400" />,
+                title: 'Real-time Audit Logs',
+                desc: 'Track user, license, session, and administrative actions with clean, filterable event trails for every application.'
               },
               {
-                icon: <Terminal className="w-5 h-5 text-purple-400" />,
-                title: 'Zero-Dependency Native SDKs',
-                desc: 'Single header C++ client, robust C# .NET library, Python package, and Rust crate ready for immediate drag-and-drop integration.'
+                icon: <Database className="w-5 h-5 text-rose-400" />,
+                title: 'Files & Variables',
+                desc: 'Upload protected files, define runtime memory variables, and expose only the sensitive data authorized clients receive.'
               },
               {
-                icon: <Key className="w-5 h-5 text-rose-400" />,
-                title: 'Bulk License Minter',
-                desc: 'Instantly generate thousands of licenses with custom NXE- prefixes, custom duration (Days/Lifetime), and level attributes.'
+                icon: <Zap className="w-5 h-5 text-amber-300" />,
+                title: 'Fast Edge Architecture',
+                desc: 'Vite-built frontend caches globally on CDN while Cloudflare Workers handle instant cryptographic verification.'
               },
             ].map((f, i) => (
-              <div key={i} className="glass-card-premium p-7 rounded-2xl flex flex-col justify-between border border-white/10 hover:border-amber-400/40 transition-colors">
+              <div key={i} className="liquid-glass p-7 rounded-2xl flex flex-col justify-between">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-5">
                     {f.icon}
@@ -479,72 +410,181 @@ const Landing: React.FC = () => {
           </div>
         </section>
 
-        {/* SECURITY GUARANTEE BANNER */}
-        <section className="py-16 px-6 max-w-5xl mx-auto">
-          <div className="glass-card-premium p-8 md:p-12 rounded-3xl border border-amber-400/25 relative overflow-hidden">
-            <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
-              <div className="w-14 h-14 rounded-2xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
-                <ShieldCheck className="text-amber-400" size={28} />
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-1">Edge Cryptography</div>
-                  <h3 className="text-2xl font-black text-white">How Not Exe Prevents Reverse Engineering</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
-                  <div className="space-y-2">
-                    <div className="font-bold text-white flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-emerald-400" /> Platform Defenses
+        {/* DEVELOPER ENDPOINTS & COMMAND PALETTE (Mughal Auth API Showcase) */}
+        <section id="endpoints" className="py-20 px-6 max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-block px-3.5 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-[11px] font-bold uppercase tracking-widest text-cyan-300 mb-3">
+              Developer Endpoints
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-2">
+              Ready For Direct API Integration
+            </h2>
+            <p className="text-slate-400 text-xs max-w-md mx-auto">
+              Clean RESTful endpoints supporting JSON payloads, scoped secrets, and RSA responses.
+            </p>
+          </div>
+
+          {/* Liquid Glass Tabs & Endpoint Container */}
+          <div className="liquid-glass-strong border border-white/10 p-6 md:p-8">
+            {/* Tabs */}
+            <div className="flex items-center gap-2 border-b border-white/10 pb-4 mb-6 overflow-x-auto custom-scrollbar">
+              {API_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveApiTab(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    activeApiTab === cat.id
+                      ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-sm'
+                      : 'text-slate-400 hover:text-white bg-white/[0.02] border border-transparent'
+                  }`}
+                >
+                  {cat.icon}
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Endpoints List */}
+            <div className="space-y-4">
+              {API_CATEGORIES.find(c => c.id === activeApiTab)?.endpoints.map((ep, idx) => (
+                <div key={idx} className="liquid-glass p-5 rounded-2xl border border-white/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-black uppercase ${
+                        ep.method === 'GET' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' :
+                        ep.method === 'POST' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                        'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      }`}>
+                        {ep.method}
+                      </span>
+                      <span className="font-mono text-xs font-bold text-white">{ep.path}</span>
                     </div>
-                    <ul className="space-y-1.5 text-slate-300">
-                      <li>• Server-side token signing using private RSA keys.</li>
-                      <li>• Strict HWID hashing prevents VM cloning and multi-seat sharing.</li>
-                      <li>• Rate limiting and IP anti-bruteforce protection at Cloudflare Edge.</li>
-                    </ul>
+                    <span className="text-[11px] font-mono text-slate-400">{ep.auth}</span>
                   </div>
-                  <div className="space-y-2">
-                    <div className="font-bold text-white flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-amber-400" /> Developer Best Practices
-                    </div>
-                    <ul className="space-y-1.5 text-slate-300">
-                      <li>• Verify the signed response with the public PEM key.</li>
-                      <li>• Protect critical routines using encrypted Cloud Variables.</li>
-                      <li>• Obfuscate native binaries with standard code protection.</li>
-                    </ul>
+
+                  <p className="text-slate-400 text-xs font-normal">{ep.desc}</p>
+
+                  <div className="bg-black/60 rounded-xl p-3 border border-white/5 font-mono text-[11px] text-slate-300 overflow-x-auto custom-scrollbar">
+                    <span className="text-slate-500 select-none mr-2">Response:</span>
+                    <code>{ep.response}</code>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* CALL TO ACTION */}
+        {/* INFRASTRUCTURE REGIONAL SHARDS (Mughal Auth Style) */}
+        <section id="infrastructure" className="py-20 px-6 max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-block px-3.5 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-[11px] font-bold uppercase tracking-widest text-emerald-400 mb-3">
+              Global Shards
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-2">
+              Multi-Region Edge Infrastructure
+            </h2>
+            <p className="text-slate-400 text-xs max-w-md mx-auto">
+              Automated load balancing and edge caching across major global continents.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {REGIONAL_SHARDS.map((shard, idx) => (
+              <div key={idx} className="liquid-glass p-5 rounded-2xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-2xl">{shard.flag}</span>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-mono font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>{shard.status}</span>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-white">{shard.region}</div>
+                  <div className="text-xs text-slate-400">{shard.location}</div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
+                  <span className="text-slate-500">Avg Latency</span>
+                  <span className="text-amber-400 font-bold">{shard.latency}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ ACCORDION (Mughal Auth FAQ section) */}
+        <section className="py-20 px-6 max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-block px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[11px] font-bold uppercase tracking-widest text-slate-300 mb-3">
+              FAQ
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-2">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-slate-400 text-xs max-w-md mx-auto">
+              Architecture and security controls explained.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {FAQS.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="liquid-glass rounded-2xl border border-white/10 overflow-hidden transition-colors"
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-white hover:text-amber-300 transition-colors cursor-pointer"
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown
+                      size={16}
+                      className={`text-slate-400 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-amber-400' : ''}`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-xs text-slate-400 leading-relaxed border-t border-white/5">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* CALL TO ACTION BANNER (Mughal Auth Style) */}
         <section className="py-24 px-6 text-center relative overflow-hidden">
-          <div className="max-w-3xl mx-auto relative z-10 space-y-8">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">
-              Ready To Protect Your Application With <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-300 to-amber-500">
-                Not Exe Shield?
+          <div className="max-w-3xl mx-auto relative z-10 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/25 text-[11px] font-mono text-amber-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>INSTANT INITIALIZATION</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+              Ready to Control Your Software With <br />
+              <span className="text-gradient-gold">
+                Not Exe Auth?
               </span>
             </h2>
-            <p className="text-slate-300 text-sm max-w-lg mx-auto leading-relaxed">
-              Integrate in minutes using our official SDKs and manage all licenses directly from the web console.
+            <p className="text-slate-400 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
+              Create an account in 30 seconds and generate your first protected application master secret.
             </p>
-            <div className="pt-2">
+            <div className="pt-3">
               <Link
                 to="/signup"
-                className="btn-magnetic-primary inline-flex h-12 px-9 text-xs font-black tracking-wider uppercase items-center gap-2 shadow-glow-md"
+                className="btn-magnetic-primary inline-flex h-12 px-9 text-xs font-black tracking-wider uppercase items-center gap-2 shadow-glow-sm"
               >
-                <span>Create Free Developer Account</span>
-                <ChevronRight size={16} />
+                <span>Open Panel Now</span>
+                <ChevronRight size={15} />
               </Link>
             </div>
           </div>
         </section>
       </main>
 
-      {/* FOOTER */}
-      <footer className="border-t border-white/[0.08] bg-[#06070a] py-14 px-6 relative z-10">
+      {/* FOOTER (Mughal Auth Structured Footer) */}
+      <footer className="border-t border-white/[0.08] bg-[#050608] py-14 px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             <div className="md:col-span-2 space-y-4">
@@ -552,42 +592,48 @@ const Landing: React.FC = () => {
                 <BrandMark size="sm" />
               </Link>
               <p className="text-slate-400 text-xs max-w-sm leading-relaxed">
-                Next-generation software licensing, hardware-bound anti-crack security, and edge variable management.
+                Not Exe Auth is a modern software licensing control panel for applications, users, licenses, tokens, sessions, files, variables, and audit logs.
               </p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="text-xs font-bold uppercase tracking-wider text-white">Platform</div>
-              <div className="flex flex-col gap-2 text-xs text-slate-400">
-                <Link to="/shop" className="hover:text-amber-400 transition-colors">Shop</Link>
-                <Link to="/docs" className="hover:text-amber-400 transition-colors">Documentation</Link>
-                <Link to="/login" className="hover:text-amber-400 transition-colors">Sign In</Link>
-                <Link to="/signup" className="hover:text-amber-400 transition-colors">Create Account</Link>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="text-xs font-bold uppercase tracking-wider text-white">Community & Legal</div>
-              <div className="flex flex-col gap-2 text-xs text-slate-400">
-                <Link to="/tos" className="hover:text-amber-400 transition-colors">Terms of Service</Link>
+              <div className="flex items-center gap-3 pt-2">
                 <a
                   href="https://discord.gg/HrVXH3wNpj"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-amber-400 transition-colors flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors"
                 >
-                  <span>Official Discord</span>
-                  <ExternalLink size={12} />
+                  <MessageSquare size={13} className="text-amber-400" />
+                  <span>Discord Community</span>
                 </a>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-xs font-bold uppercase tracking-wider text-white">Navigate</div>
+              <div className="flex flex-col gap-2 text-xs text-slate-400">
+                <a href="#features" className="hover:text-amber-400 transition-colors">Features</a>
+                <a href="#endpoints" className="hover:text-amber-400 transition-colors">API Commands</a>
+                <a href="#infrastructure" className="hover:text-amber-400 transition-colors">System Status</a>
+                <Link to="/docs" className="hover:text-amber-400 transition-colors">Docs</Link>
+                <Link to="/shop" className="hover:text-amber-400 transition-colors">Shop</Link>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-xs font-bold uppercase tracking-wider text-white">Resources & Legal</div>
+              <div className="flex flex-col gap-2 text-xs text-slate-400">
+                <Link to="/login" className="hover:text-amber-400 transition-colors">Sign In</Link>
+                <Link to="/signup" className="hover:text-amber-400 transition-colors">Create Account</Link>
+                <Link to="/tos" className="hover:text-amber-400 transition-colors">Terms of Service</Link>
+                <Link to="/tos" className="hover:text-amber-400 transition-colors">Privacy Policy</Link>
               </div>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-white/[0.08] flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] text-slate-500">
-            <div>© {new Date().getFullYear()} NOT EXE SHIELD. ALL RIGHTS RESERVED.</div>
-            <div className="flex items-center gap-6">
-              <Link to="/tos" className="hover:text-slate-300 transition-colors">Privacy Policy</Link>
-              <Link to="/tos" className="hover:text-slate-300 transition-colors">Terms of Service</Link>
+          <div className="pt-8 border-t border-white/[0.08] flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-slate-500 font-mono">
+            <div>© {new Date().getFullYear()} NOT EXE AUTH. ALL RIGHTS RESERVED.</div>
+            <div className="flex items-center gap-4 text-emerald-400 font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>ALL SYSTEMS OPERATIONAL</span>
             </div>
           </div>
         </div>

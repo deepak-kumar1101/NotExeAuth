@@ -8,19 +8,19 @@
 DB_SECRET="NotExeSecretKey_2026!#"
 
 # Cloudflare Turnstile Secret Key (from Cloudflare Dashboard -> Turnstile)
-TURNSTILE_SECRET_KEY="0x4AAAAAA..."
+TURNSTILE_SECRET_KEY="0x4AAAAAAFiv8qjSf2kcDEUU2Ivl0JFjfWg"
 
 # Worker Service Account Credentials in Firebase Auth
 # Create this user in Firebase Authentication -> Users -> Add user
-FIREBASE_AUTH_EMAIL="sdk_worker@yourdomain.com"
-FIREBASE_AUTH_PASSWORD="YourStrongWorkerPassword123!#"
+FIREBASE_AUTH_EMAIL="sdk_worker@notexe.com"
+FIREBASE_AUTH_PASSWORD="WorkerPass2026!#"
 
 # Firebase Project Configuration
-FIREBASE_API_KEY="AIzaSyYourFirebaseApiKeyHere"
-FIREBASE_DB_URL="https://your-notexe-project-default-rtdb.firebaseio.com"
+FIREBASE_API_KEY="AIzaSyBfvAC4cYiHW2-2GueUkqHAeA-9yAedmso"
+FIREBASE_DB_URL="https://notexeauth-default-rtdb.firebaseio.com"
 
 # Super Admin Email
-ADMIN_EMAIL="admin@yourdomain.com"
+ADMIN_EMAIL="abhisheksinghgulshan9631@gmail.com"
 
 # RSA-2048 Private Key for Cryptographically Signing API Responses
 # Generate via: openssl genrsa -out private.pem 2048
