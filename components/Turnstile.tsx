@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { TURNSTILE_SITE_KEY } from '../constants';
 
@@ -36,6 +35,7 @@ const Turnstile: React.FC<TurnstileProps> = ({ onVerify, onExpire, onError }) =>
                 try {
                     widgetIdRef.current = window.turnstile.render(containerRef.current, {
                         sitekey: TURNSTILE_SITE_KEY,
+                        theme: 'dark',
                         callback: (token: string) => onVerifyRef.current(token),
                         'expired-callback': () => {
                             if (onExpireRef.current) onExpireRef.current();
