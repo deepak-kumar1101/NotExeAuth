@@ -1,7 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { TURNSTILE_SITE_KEY } from '../constants';
-
-const FALLBACK_TEST_KEY = '1x00000000000000000000AA';
 
 interface TurnstileProps {
     onVerify: (token: string) => void;
@@ -18,8 +16,6 @@ declare global {
 const Turnstile: React.FC<TurnstileProps> = ({ onVerify, onExpire, onError }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
-    const [currentKey, setCurrentKey] = useState<string>(TURNSTILE_SITE_KEY || FALLBACK_TEST_KEY);
-    const hasFallenBackRef = useRef(false);
 
     const onVerifyRef = useRef(onVerify);
     const onExpireRef = useRef(onExpire);
@@ -47,7 +43,7 @@ const Turnstile: React.FC<TurnstileProps> = ({ onVerify, onExpire, onError }) =>
 
                 try {
                     widgetIdRef.current = window.turnstile.render(containerRef.current, {
-                        sitekey: currentKey,
+                        sitekey: TURNSTILE_SITE_KEY,
                         theme: 'dark',
                         callback: (token: string) => {
                             if (isMounted) onVerifyRef.current(token);
@@ -56,23 +52,12 @@ const Turnstile: React.FC<TurnstileProps> = ({ onVerify, onExpire, onError }) =>
                             if (isMounted && onExpireRef.current) onExpireRef.current();
                         },
                         'error-callback': (errCode: any) => {
-                            console.warn("Turnstile widget error code:", errCode);
+                            console.error("[Turnstile] Cloudflare returned error code:", errCode);
                             if (isMounted && onErrorRef.current) onErrorRef.current(errCode);
-
-                            // If invalid sitekey (400020) or domain disallowed (110200), auto-fallback to universal test key
-                            if (!hasFallenBackRef.current && currentKey !== FALLBACK_TEST_KEY) {
-                                console.info("Turnstile: Falling back to universal testing key...");
-                                hasFallenBackRef.current = true;
-                                setCurrentKey(FALLBACK_TEST_KEY);
-                            }
                         },
                     });
                 } catch (err) {
-                    console.error("Turnstile render error:", err);
-                    if (!hasFallenBackRef.current && currentKey !== FALLBACK_TEST_KEY) {
-                        hasFallenBackRef.current = true;
-                        setCurrentKey(FALLBACK_TEST_KEY);
-                    }
+                    console.error("[Turnstile] Render exception:", err);
                 }
             }
         };
@@ -103,7 +88,7 @@ const Turnstile: React.FC<TurnstileProps> = ({ onVerify, onExpire, onError }) =>
                 widgetIdRef.current = null;
             }
         };
-    }, [currentKey]);
+    }, []);
 
     return (
         <div className="flex flex-col items-center justify-center">
