@@ -117,8 +117,17 @@ const Login: React.FC = () => {
       } else {
         navigate('/dashboard');
       }
-    } catch (err) {
-      setError("Social sign-in failed. Please try again.");
+    } catch (err: any) {
+      console.error("Social login error:", err);
+      let msg = "Social sign-in failed. Please try again.";
+      if (err.code === 'auth/popup-closed-by-user') {
+        msg = "Sign-in popup closed before completion.";
+      } else if (err.code === 'auth/unauthorized-domain') {
+        msg = "Domain not authorized in Firebase Console -> Authentication -> Settings -> Authorized domains.";
+      } else if (err.code === 'auth/operation-not-allowed') {
+        msg = "Google sign-in is disabled. Please enable Google in Firebase Console -> Authentication -> Sign-in method.";
+      }
+      setError(msg);
     }
   };
 
