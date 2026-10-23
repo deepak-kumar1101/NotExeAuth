@@ -8,7 +8,7 @@
 DB_SECRET="NotExeSecretKey_2026!#"
 
 # Cloudflare Turnstile Secret Key (from Cloudflare Dashboard -> Turnstile)
-TURNSTILE_SECRET_KEY="0x4AAAAAAFiv8qjSf2kcDEUU2Ivl0JFjfWg"
+TURNSTILE_SECRET_KEY="0x4AAAAAAFi1ofbdZAD6oiEZjUGsKGHn0O0"
 
 # Worker Service Account Credentials in Firebase Auth
 # Create this user in Firebase Authentication -> Users -> Add user
