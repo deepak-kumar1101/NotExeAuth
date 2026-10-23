@@ -705,7 +705,7 @@ const Admin: React.FC = () => {
 
   const [creditPackages, setCreditPackages] = useState<Record<string, CreditPackage>>({});
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
-    upiId: 'deepxauth@upi',
+    upiId: 'notexe@upi',
     qrImageUrl: '',
     discordUrl: 'https://discord.gg/HrVXH3wNpj',
     instagramUrl: 'https://instagram.com/'
@@ -770,7 +770,7 @@ const Admin: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `dxa_plans_catalog_${Date.now()}.json`;
+    a.download = `notexe_plans_catalog_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     addToast('Exported plan catalog to JSON');
@@ -836,7 +836,7 @@ const Admin: React.FC = () => {
           const derivedEmail = (result.email && result.email.includes('@'))
             ? result.email
             : k.replace(/,/g, '.');
-          const derivedSecret = result.secret || `DXA-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+          const derivedSecret = result.secret || `NXE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
           const derivedPlan = result.plan || 'Free Plan';
           const derivedCreatedAt = result.createdAt || new Date().toISOString();
 
@@ -1519,7 +1519,7 @@ const Admin: React.FC = () => {
                         </div>
 
                         <p className="text-xs text-slate-400 font-medium leading-relaxed break-words max-w-2xl">
-                          {sdk.description || 'Official client library for Deep X Auth.'}
+                          {sdk.description || 'Official client library for Not Exe.'}
                         </p>
 
                         {sdk.githubUrl && (
@@ -1794,7 +1794,7 @@ const Admin: React.FC = () => {
                   type="text"
                   value={paymentConfig.upiId}
                   onChange={e => setPaymentConfig({ ...paymentConfig, upiId: e.target.value })}
-                  placeholder="e.g. deepxauth@upi or yourname@paytm"
+                  placeholder="e.g. notexe@upi or yourname@paytm"
                   className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-mono font-bold text-indigo-400 focus:outline-none focus:border-indigo-500"
                 />
               </div>

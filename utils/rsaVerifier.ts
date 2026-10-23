@@ -1,6 +1,6 @@
 import { SignatureVerificationResult } from '../types/sandbox';
 
-export const DXA_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
+export const NOTEXE_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhnfjJEqt8/GbGNkhn9wu
 8/7cStTdgEv2712vsJUhyJXS/hhG6wLcTHCk/hY/+jICvAF7lsSAMmz4Nwntp62B
 cPj+OP6eWcX4WSSciK0O+i1qiF0QRXEFchnQCcUa3GVxrDLKFPB5/44ctuINqUV5
@@ -9,6 +9,8 @@ mKo1V8M3F4O7G91s6bZLhxONOU6NhgSuykCM2u3hzP34nXC4uJe0Lx/8ENftWNwZ
 3Qf3cuXcXCZJsWSzEhfYSZX5waQOUoE5qqqslygoCt40lCP7qk1Z9drP9C9losxy
 f1vHTQIDAQAB
 -----END PUBLIC KEY-----`;
+
+export const DXA_PUBLIC_KEY_PEM = NOTEXE_PUBLIC_KEY_PEM;
 
 const encoder = new TextEncoder();
 
@@ -37,7 +39,7 @@ function base64ToUint8Array(b64: string): Uint8Array {
   const binary = atob(b64.replace(/\s+/g, ''));
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
+  return bytes.buffer;
 }
 
 export async function buildSignaturePayload(endpoint: string, body: any): Promise<string> {
@@ -87,7 +89,7 @@ export async function verifyRsaSignature(
 
     const publicKey = await crypto.subtle.importKey(
       'spki',
-      pemToArrayBuffer(DXA_PUBLIC_KEY_PEM),
+      pemToArrayBuffer(NOTEXE_PUBLIC_KEY_PEM),
       { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
       false,
       ['verify']

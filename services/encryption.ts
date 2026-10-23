@@ -1,4 +1,3 @@
-
 import { DB_SECRET } from '../constants';
 
 declare const CryptoJS: any;
@@ -6,7 +5,8 @@ declare const CryptoJS: any;
 export function encrypt(data: any): string {
   if (!data) return '';
   const str = typeof data === 'string' ? data : JSON.stringify(data);
-  return CryptoJS.AES.encrypt(str, DB_SECRET).toString();
+  const secretKey = DB_SECRET || 'NotExeSecretKey_2026!#';
+  return CryptoJS.AES.encrypt(str, secretKey).toString();
 }
 
 export function decrypt(ciphertext: any, customSecret?: string): any {
@@ -23,6 +23,7 @@ export function decrypt(ciphertext: any, customSecret?: string): any {
   const secretsToTry = [
     customSecret,
     DB_SECRET,
+    'NotExeSecretKey_2026!#',
     'MyDeepXAuthSecretKey_2026!#'
   ].filter(Boolean);
 

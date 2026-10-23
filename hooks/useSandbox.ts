@@ -24,8 +24,8 @@ const DEFAULT_CONFIG: SandboxRequestConfig = {
   devMode: false
 };
 
-const LOCAL_STORAGE_CONFIG_KEY = 'dxa_sandbox_last_config';
-const LOCAL_STORAGE_HISTORY_KEY = 'dxa_sandbox_history';
+const LOCAL_STORAGE_CONFIG_KEY = 'notexe_sandbox_last_config';
+const LOCAL_STORAGE_HISTORY_KEY = 'notexe_sandbox_history';
 
 export function useSandbox() {
   const [endpoint, setEndpoint] = useState<SandboxEndpointPath>('/login');

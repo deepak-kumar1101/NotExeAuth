@@ -8,7 +8,7 @@ export const DEFAULT_SDKS: SDK[] = [
     name: "Python",
     language: "python",
     icon: "Terminal",
-    githubUrl: "https://github.com/deepak-kumar1101/deepXauth-python-sdk",
+    githubUrl: "https://github.com/notexe-auth/notexe-python-sdk",
     version: "v1.3.0",
     badge: "Stable",
     displayOrder: 1,
@@ -20,12 +20,12 @@ import json
 import hashlib
 import subprocess
 
-class DXAAuth:
+class NotExeAuth:
     def __init__(self, app_name: str, app_version: str, app_secret: str):
         self.app_name = app_name
         self.app_version = app_version
         self.app_secret = app_secret
-        self.base_url = "https://deepxauth.pages.dev"
+        self.base_url = "https://notexe.pages.dev"
         self.session_user = None
 
     def get_hwid(self) -> str:
@@ -68,10 +68,10 @@ class DXAAuth:
         return data
 
 # Usage Example:
-auth = DXAAuth("MyApp", "1.0.0", "YOUR_APP_SECRET")
+auth = NotExeAuth("MyApp", "1.0.0", "YOUR_APP_SECRET")
 
 # Option A: License-Only Login
-result = auth.license_login("DXA-XXXX-YYYY-ZZZZ")
+result = auth.license_login("NXE-XXXX-YYYY-ZZZZ")
 print("License Login Result:", result)
 
 # Option B: Username + Password Login
@@ -83,7 +83,7 @@ print("License Login Result:", result)
     name: "C# .NET",
     language: "csharp",
     icon: "Code",
-    githubUrl: "https://github.com/deepak-kumar1101/deepXauth-csharp-sdk",
+    githubUrl: "https://github.com/notexe-auth/notexe-csharp-sdk",
     version: "v2.2.0",
     badge: "Stable",
     displayOrder: 2,
@@ -96,15 +96,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 
-public class DXAAuth 
+public class NotExeAuth 
 {
     private readonly string _appName;
     private readonly string _appVersion;
     private readonly string _appSecret;
     private static readonly HttpClient client = new HttpClient();
-    private const string BaseUrl = "https://deepxauth.pages.dev/login";
+    private const string BaseUrl = "https://notexe.pages.dev/login";
 
-    public DXAAuth(string appName, string appVersion, string appSecret) 
+    public NotExeAuth(string appName, string appVersion, string appSecret) 
     {
         _appName = appName;
         _appVersion = appVersion;
@@ -153,7 +153,7 @@ public class DXAAuth
     name: "C++ Native",
     language: "cpp",
     icon: "Cpu",
-    githubUrl: "https://github.com/deepak-kumar1101/deepXauth-cpp-sdk",
+    githubUrl: "https://github.com/notexe-auth/notexe-cpp-sdk",
     version: "v1.1.0",
     badge: "Stable",
     displayOrder: 3,
@@ -164,24 +164,24 @@ public class DXAAuth
 #include <string>
 #include <curl/curl.h>
 
-class DXAClient {
+class NotExeClient {
 public:
     std::string app_name;
     std::string app_version;
     std::string secret_key;
 
-    DXAClient(std::string name, std::string ver, std::string secret) 
+    NotExeClient(std::string name, std::string ver, std::string secret) 
         : app_name(name), app_version(ver), secret_key(secret) {}
 
     // Username and Password Authentication
     bool login(const std::string& username, const std::string& password, const std::string& hwid = "") {
-        std::cout << "[DXA] Authenticating user credentials..." << std::endl;
+        std::cout << "[NotExe] Authenticating user credentials..." << std::endl;
         return send_auth_request("{\\"username\\":\\"" + username + "\\",\\"password\\":\\"" + password + "\\",\\"secret\\":\\"" + secret_key + "\\",\\"appName\\":\\"" + app_name + "\\",\\"appVersion\\":\\"" + app_version + "\\",\\"hwid\\":\\"" + hwid + "\\"}");
     }
 
     // License-Only Authentication
     bool login_license(const std::string& license_key, const std::string& hwid = "") {
-        std::cout << "[DXA] Authenticating license key..." << std::endl;
+        std::cout << "[NotExe] Authenticating license key..." << std::endl;
         return send_auth_request("{\\"licenseKey\\":\\"" + license_key + "\\",\\"secret\\":\\"" + secret_key + "\\",\\"appName\\":\\"" + app_name + "\\",\\"appVersion\\":\\"" + app_version + "\\",\\"hwid\\":\\"" + hwid + "\\"}");
     }
 
@@ -193,7 +193,7 @@ private:
         struct curl_slist* headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/json");
 
-        curl_easy_setopt(curl, CURLOPT_URL, "https://deepxauth.pages.dev/login");
+        curl_easy_setopt(curl, CURLOPT_URL, "https://notexe.pages.dev/login");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_payload.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
@@ -204,10 +204,10 @@ private:
 };
 
 int main() {
-    DXAClient auth("MyGame", "1.0.0", "YOUR_APP_SECRET");
+    NotExeClient auth("MyGame", "1.0.0", "YOUR_APP_SECRET");
     
     // License-Only Login
-    if (auth.login_license("DXA-XXXX-YYYY-ZZZZ", "HWID-1234")) {
+    if (auth.login_license("NXE-XXXX-YYYY-ZZZZ", "HWID-1234")) {
         std::cout << "License Verified & Granted!" << std::endl;
     }
     return 0;
@@ -219,28 +219,28 @@ int main() {
     name: "Java",
     language: "java",
     icon: "Box",
-    githubUrl: "https://github.com/deepak-kumar1101/deepXauth-java-sdk",
+    githubUrl: "https://github.com/notexe-auth/notexe-java-sdk",
     version: "v1.2.0",
     badge: "Beta",
     displayOrder: 4,
     visible: true,
     description:
       "Official Java JDK client with asynchronous REST requests & JSON parsing.",
-    sdkCode: `package com.deepxauth.sdk;
+    sdkCode: `package com.notexe.sdk;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class DXAAuth {
+public class NotExeAuth {
     private final String appName;
     private final String appVersion;
     private final String appSecret;
     private final HttpClient client = HttpClient.newHttpClient();
-    private static final String API_URL = "https://deepxauth.pages.dev/login";
+    private static final String API_URL = "https://notexe.pages.dev/login";
 
-    public DXAAuth(String appName, String appVersion, String appSecret) {
+    public NotExeAuth(String appName, String appVersion, String appSecret) {
         this.appName = appName;
         this.appVersion = appVersion;
         this.appSecret = appSecret;
@@ -280,7 +280,7 @@ public class DXAAuth {
     name: "Rust",
     language: "rust",
     icon: "Shield",
-    githubUrl: "https://github.com/deepak-kumar1101/deepXauth-rust-sdk",
+    githubUrl: "https://github.com/notexe-auth/notexe-rust-sdk",
     version: "v1.0.0",
     badge: "Stable",
     displayOrder: 5,
@@ -290,14 +290,14 @@ public class DXAAuth {
     sdkCode: `use reqwest::Client;
 use serde_json::json;
 
-pub struct DXAClient {
+pub struct NotExeClient {
     pub app_name: String,
     pub app_version: String,
     pub app_secret: String,
     client: Client,
 }
 
-impl DXAClient {
+impl NotExeClient {
     pub fn new(app_name: &str, app_version: &str, app_secret: &str) -> Self {
         Self {
             app_name: app_name.to_string(),
@@ -317,7 +317,7 @@ impl DXAClient {
             "hwid": hwid
         });
 
-        let res = self.client.post("https://deepxauth.pages.dev/login")
+        let res = self.client.post("https://notexe.pages.dev/login")
             .json(&payload)
             .send()
             .await?;
@@ -335,7 +335,7 @@ impl DXAClient {
             "hwid": hwid
         });
 
-        let res = self.client.post("https://deepxauth.pages.dev/login")
+        let res = self.client.post("https://notexe.pages.dev/login")
             .json(&payload)
             .send()
             .await?;
@@ -351,7 +351,7 @@ impl DXAClient {
     name: "Go",
     language: "go",
     icon: "Zap",
-    githubUrl: "https://github.com/deepak-kumar1101/deepXauth-go-sdk",
+    githubUrl: "https://github.com/notexe-auth/notexe-go-sdk",
     version: "v1.1.0",
     badge: "Stable",
     displayOrder: 6,
@@ -368,13 +368,13 @@ import (
 	"net/http"
 )
 
-type DXAClient struct {
+type NotExeClient struct {
 	AppName    string
 	AppVersion string
 	AppSecret  string
 }
 
-func (c *DXAClient) Login(username, password, hwid string) (bool, error) {
+func (c *NotExeClient) Login(username, password, hwid string) (bool, error) {
 	payload := map[string]string{
 		"username":   username,
 		"password":   password,
@@ -386,7 +386,7 @@ func (c *DXAClient) Login(username, password, hwid string) (bool, error) {
 	return c.sendAuth(payload)
 }
 
-func (c *DXAClient) LicenseLogin(licenseKey, hwid string) (bool, error) {
+func (c *NotExeClient) LicenseLogin(licenseKey, hwid string) (bool, error) {
 	payload := map[string]string{
 		"licenseKey": licenseKey,
 		"secret":     c.AppSecret,
@@ -397,9 +397,9 @@ func (c *DXAClient) LicenseLogin(licenseKey, hwid string) (bool, error) {
 	return c.sendAuth(payload)
 }
 
-func (c *DXAClient) sendAuth(payload map[string]string) (bool, error) {
+func (c *NotExeClient) sendAuth(payload map[string]string) (bool, error) {
 	body, _ := json.Marshal(payload)
-	resp, err := http.Post("https://deepxauth.pages.dev/login", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post("https://notexe.pages.dev/login", "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return false, err
 	}
@@ -415,7 +415,7 @@ func (c *DXAClient) sendAuth(payload map[string]string) (bool, error) {
     name: "TypeScript",
     language: "typescript",
     icon: "Code",
-    githubUrl: "https://github.com/deepak-kumar1101/deepXauth-ts-sdk",
+    githubUrl: "https://github.com/notexe-auth/notexe-ts-sdk",
     version: "v2.1.0",
     badge: "Stable",
     displayOrder: 7,
@@ -423,16 +423,16 @@ func (c *DXAClient) sendAuth(payload map[string]string) (bool, error) {
     description: "Type-safe SDK for Node.js, Next.js, and web backends.",
     sdkCode: `import axios from 'axios';
 
-export interface DXAOptions {
+export interface NotExeOptions {
   appName: string;
   appVersion: string;
   secret: string;
 }
 
-export class DXAService {
-  private baseUrl = 'https://deepxauth.pages.dev/login';
+export class NotExeService {
+  private baseUrl = 'https://notexe.pages.dev/login';
 
-  constructor(private options: DXAOptions) {}
+  constructor(private options: NotExeOptions) {}
 
   /** Authenticate with Username and Password */
   async authenticate(username: string, password: string, hwid: string = ''): Promise<boolean> {
@@ -481,15 +481,15 @@ export const subscribeToSDKs = (callback: (sdks: SDK[]) => void) => {
         if (
           sdk &&
           typeof sdk.sdkCode === "string" &&
-          sdk.sdkCode.includes("deepxauth-api.pages.dev")
+          sdk.sdkCode.includes("notexe.pages.dev")
         ) {
           const updated = {
             ...sdk,
             sdkCode: sdk.sdkCode
-              .split("https://deepxauth-api.pages.dev")
-              .join("https://deepxauth.pages.dev")
-              .split("deepxauth-api.pages.dev")
-              .join("deepxauth.pages.dev"),
+              .split("https://notexe.pages.dev")
+              .join("https://notexe.pages.dev")
+              .split("notexe.pages.dev")
+              .join("notexe.pages.dev"),
           };
           set(ref(db, `system/sdks/${sdk.id}`), updated);
           return updated;

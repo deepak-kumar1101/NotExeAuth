@@ -1,5 +1,5 @@
 {
-  "name": "DXA Security",
-  "description": "A secure licensing and authentication platform for software developers with AES-256 encryption and cloud variables.",
+  "name": "Not Exe Auth",
+  "description": "Next-Gen authentication, licensing and anti-crack security platform for software developers and games with AES-256 encryption, HWID locking, and RSA response signing.",
   "requestFramePermissions": []
 }

@@ -147,7 +147,7 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = React.memo(({
                     type="text"
                     value={config.licenseKey || config.username}
                     onChange={e => onChangeConfig({ licenseKey: e.target.value, username: e.target.value })}
-                    placeholder="DXA-XXXX-YYYY-ZZZZ"
+                    placeholder="NXE-XXXX-YYYY-ZZZZ"
                     className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
                   />
                 </div>
@@ -260,7 +260,7 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = React.memo(({
                   type="text"
                   value={config.licenseKey || ''}
                   onChange={e => onChangeConfig({ licenseKey: e.target.value })}
-                  placeholder="DXA-XXXX-YYYY-ZZZZ"
+                  placeholder="NXE-XXXX-YYYY-ZZZZ"
                   className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 font-mono"
                 />
               </div>

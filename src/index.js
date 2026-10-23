@@ -10,10 +10,10 @@ app.get('/', async (c) => {
     if (c.env && c.env.ASSETS) {
         return c.env.ASSETS.fetch(c.req.raw);
     }
-    return c.text('Deep X Auth API is Active.', 200);
+    return c.text('Not Exe API is Active.', 200);
 });
 
-app.get('/api-status', (c) => c.json({ status: 'Online', service: 'DXA Pages API' }));
+app.get('/api-status', (c) => c.json({ status: 'Online', service: 'Not Exe API' }));
 
 const encrypt = (data, secret) => {
     if (!data) return data;
@@ -47,9 +47,9 @@ async function getFirebaseToken(env) {
 
     tokenPromise = (async () => {
         const credentialsToTry = [
-            { email: 'sdk_worker@deepxauth.com', password: 'WorkerPassword123!#' },
-            { email: env?.FIREBASE_AUTH_EMAIL, password: env?.FIREBASE_AUTH_PASSWORD }
-        ];
+            { email: env?.FIREBASE_AUTH_EMAIL, password: env?.FIREBASE_AUTH_PASSWORD },
+            { email: 'sdk_worker@notexe.com', password: env?.FIREBASE_AUTH_PASSWORD || 'WorkerPassword123!#' }
+        ].filter(c => c.email && c.password);
 
         for (const cred of credentialsToTry) {
             if (!cred.email || !cred.password) continue;
@@ -158,7 +158,7 @@ const arrayBufferToBase64 = (buffer) => {
 };
 
 async function getResponseSigningKey(env) {
-    const pem = (env.DXA_RESPONSE_SIGNING_PRIVATE_KEY_PEM || env.TXA_RESPONSE_SIGNING_PRIVATE_KEY_PEM)?.trim();
+    const pem = (env.NOTEXE_RESPONSE_SIGNING_PRIVATE_KEY_PEM || env.DXA_RESPONSE_SIGNING_PRIVATE_KEY_PEM || env.TXA_RESPONSE_SIGNING_PRIVATE_KEY_PEM)?.trim();
     if (!pem) throw new Error('Missing DXA_RESPONSE_SIGNING_PRIVATE_KEY_PEM');
 
     if (cachedSigningKey && cachedSigningPem === pem) return cachedSigningKey;
@@ -229,14 +229,14 @@ async function sdkJson(c, endpoint, requestBody, success, message, extraData = {
     return c.json(sendResponse(success, message, extraData), 200);
 }
 
-const getDbSecret = (env) => (env && env.DB_SECRET) ? env.DB_SECRET : 'MyDeepXAuthSecretKey_2026!#';
+const getDbSecret = (env) => (env && env.DB_SECRET) ? env.DB_SECRET : (c.env && c.env.DB_SECRET) ? c.env.DB_SECRET : 'NotExeSecretKey_2026!#';
 
 async function getAppMetadata(c, secret, appName) {
     const dbSecret = getDbSecret(c.env);
     const metaRaw = await dbRequest(c.env, `applications/${secret}/${appName}/metadata`);
     if (metaRaw) {
         let meta = typeof metaRaw === 'string' ? decrypt(metaRaw, dbSecret) : metaRaw;
-        if (typeof meta === 'string') meta = decrypt(metaRaw, 'MyDeepXAuthSecretKey_2026!#');
+        if (typeof meta === 'string') meta = decrypt(metaRaw, (c.env && c.env.DB_SECRET) ? c.env.DB_SECRET : 'NotExeSecretKey_2026!#');
         if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e){} }
         return typeof meta === 'object' && meta !== null ? meta : { version: '1.0', applicationPaused: false };
     }
@@ -244,7 +244,7 @@ async function getAppMetadata(c, secret, appName) {
     if (!appDataRaw) return null;
     let appData = appDataRaw;
     if (typeof appData === 'string') appData = decrypt(appData, dbSecret);
-    if (typeof appData === 'string') appData = decrypt(appDataRaw, 'MyDeepXAuthSecretKey_2026!#');
+    if (typeof appData === 'string') appData = decrypt(appDataRaw, (c.env && c.env.DB_SECRET) ? c.env.DB_SECRET : 'NotExeSecretKey_2026!#');
     if (typeof appData === 'string') { try { appData = JSON.parse(appData); } catch(e){} }
     if (appData && appData.metadata) {
         let meta = typeof appData.metadata === 'string' ? decrypt(appData.metadata, dbSecret) : appData.metadata;
@@ -296,7 +296,7 @@ app.post('/login', async (c) => {
             let licenseData = licenseDataRaw;
             if (typeof licenseData === 'string') {
                 let dec = decrypt(licenseData, dbSecret);
-                if (typeof dec === 'string') dec = decrypt(licenseData, 'MyDeepXAuthSecretKey_2026!#');
+                if (typeof dec === 'string') dec = decrypt(licenseData, (c.env && c.env.DB_SECRET) ? c.env.DB_SECRET : 'NotExeSecretKey_2026!#');
                 if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch (e) {} }
                 licenseData = dec;
             }
@@ -339,7 +339,7 @@ app.post('/login', async (c) => {
         let userData = userDataRaw;
         if (typeof userData === 'string') {
             let dec = decrypt(userData, dbSecret);
-            if (typeof dec === 'string') dec = decrypt(userData, 'MyDeepXAuthSecretKey_2026!#');
+            if (typeof dec === 'string') dec = decrypt(userData, (c.env && c.env.DB_SECRET) ? c.env.DB_SECRET : 'NotExeSecretKey_2026!#');
             if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch (e) {} }
             userData = dec;
         }
@@ -418,7 +418,7 @@ app.post('/register', async (c) => {
         let licenseData = licenseDataRaw;
         if (typeof licenseData === 'string') {
             let dec = decrypt(licenseData, dbSecret);
-            if (typeof dec === 'string') dec = decrypt(licenseData, 'MyDeepXAuthSecretKey_2026!#');
+            if (typeof dec === 'string') dec = decrypt(licenseData, (c.env && c.env.DB_SECRET) ? c.env.DB_SECRET : 'NotExeSecretKey_2026!#');
             if (typeof dec === 'string') { try { dec = JSON.parse(dec); } catch (e) {} }
             licenseData = dec;
         }
@@ -487,7 +487,7 @@ app.post('/create_user', async (c) => {
         const userSnapshot = await dbRequest(c.env, `applications/${secret}/${appName}/users/${username}`);
         if (userSnapshot) return c.json(sendResponse(false, 'Username taken'));
         
-        const dbSecret = c.env.DB_SECRET || 'MyDeepXAuthSecretKey_2026!#';
+        const dbSecret = c.env.DB_SECRET || (c.env && c.env.DB_SECRET) ? c.env.DB_SECRET : 'NotExeSecretKey_2026!#';
 
         const newUser = {
             password, 

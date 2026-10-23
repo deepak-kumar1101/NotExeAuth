@@ -171,7 +171,7 @@ const FEATURE_CATALOG: Record<string, FeatureMeta> = {
     name: 'Bulk User Import',
     category: 'Developer Tools',
     description: 'Import existing user account databases seamlessly via bulk CSV/JSON payloads.',
-    example: 'Migrate users from legacy auth platforms into DeepXAuth in seconds.'
+    example: 'Migrate users from legacy auth platforms into Not Exe in seconds.'
   },
   'priority_support': {
     id: 'priority_support',
@@ -256,7 +256,7 @@ const CreditTopUpPortalModal: React.FC<{
 }> = ({ customer, onClose }) => {
   const [packages, setPackages] = useState<CreditPackage[]>(CREDIT_PACKAGES);
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
-    upiId: 'deepxauth@upi',
+    upiId: 'notexe@upi',
     qrImageUrl: '',
     discordUrl: 'https://discord.gg/HrVXH3wNpj',
     instagramUrl: 'https://instagram.com/'
@@ -478,14 +478,14 @@ const CreditTopUpPortalModal: React.FC<{
                       {/* Generated High-Res UPI QR Code SVG Canvas or Custom Image */}
                       <div className="w-52 h-52 bg-white p-3 rounded-2xl shadow-2xl mx-auto flex items-center justify-center relative">
                         <img 
-                          src={paymentConfig.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${paymentConfig.upiId || 'deepxauth@upi'}%26pn=DeepXAuth%26am=${selectedPkg.priceINR}%26cu=INR`}
+                          src={paymentConfig.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${paymentConfig.upiId || 'notexe@upi'}%26pn=Not Exe%26am=${selectedPkg.priceINR}%26cu=INR`}
                           alt="Payment QR Code"
                           className="w-full h-full object-contain rounded-xl"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <div className="text-xs font-mono font-bold text-slate-300">UPI ID: <span className="text-purple-400 font-extrabold select-all">{paymentConfig.upiId || 'deepxauth@upi'}</span></div>
+                        <div className="text-xs font-mono font-bold text-slate-300">UPI ID: <span className="text-purple-400 font-extrabold select-all">{paymentConfig.upiId || 'notexe@upi'}</span></div>
                         <div className="text-[10px] text-slate-400">Supports Google Pay, PhonePe, Paytm & all UPI apps.</div>
                       </div>
                     </div>
@@ -1236,7 +1236,7 @@ const Shop: React.FC = () => {
         // Auto-initialize customer record if missing in Firebase
         const initialCustomer: Customer = {
           email: auth.currentUser!.email!,
-          secret: `DXA-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+          secret: `NXE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
           plan: 'Free Plan',
           credits: 500, // Grant 500 initial test credits for instant testing
           createdAt: new Date().toISOString(),
@@ -1300,7 +1300,7 @@ const Shop: React.FC = () => {
     // Use current state or construct fallback on the fly
     const activeCust: Customer = customer || {
       email: auth.currentUser.email,
-      secret: `DXA-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+      secret: `NXE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
       plan: 'Free Plan',
       credits: 500,
       createdAt: new Date().toISOString()
@@ -1381,7 +1381,7 @@ const Shop: React.FC = () => {
       const updatedCustomer: Customer = {
         ...customer,
         email: customer.email || auth.currentUser.email || '',
-        secret: customer.secret || `DXA-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        secret: customer.secret || `NXE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
         credits: Math.max(0, (customer.credits || 0) - purchasePrice),
         plan: name,
         createdAt: customer.createdAt || new Date().toISOString(),
@@ -1434,8 +1434,17 @@ const Shop: React.FC = () => {
       <nav className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
         <div className="w-full max-w-6xl bg-[rgba(18,20,28,0.8)] backdrop-blur-2xl rounded-full border border-white/[0.08] px-6 py-3 flex justify-between items-center shadow-2xl glass-reflection">
           <Link to="/" className="flex items-center gap-3 effect-magnetic">
-            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-white via-slate-200 to-[#8B5CF6] text-black font-black flex items-center justify-center text-xs shadow-md">DXA</div>
-            <span className="font-bold text-xs uppercase tracking-widest text-white">Infrastructure Platform</span>
+            <div className="relative w-8 h-8 rounded-full p-[2px] bg-gradient-to-tr from-amber-400 via-yellow-400 to-cyan-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] flex-shrink-0">
+              <div className="w-full h-full rounded-full overflow-hidden bg-[#07090e] border border-amber-300/40 flex items-center justify-center">
+                <img src="/logo.png" alt="Not Exe" className="w-full h-full object-cover rounded-full" />
+              </div>
+            </div>
+            <div className="flex flex-col leading-none">
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-sm tracking-tight text-white">NOT<span className="text-amber-400 ml-0.5">EXE</span></span>
+                <span className="px-1.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest bg-amber-400/15 text-amber-300 border border-amber-400/30">SHOP</span>
+              </div>
+            </div>
           </Link>
           <div className="flex items-center gap-5">
             <button 

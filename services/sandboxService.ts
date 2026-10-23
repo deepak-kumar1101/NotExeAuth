@@ -60,7 +60,7 @@ export async function executeWorkerRequest(
 
   const endpointClean = endpointPath.startsWith('/') ? endpointPath.slice(1) : endpointPath;
   const baseUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-    ? 'https://deepxauth.pages.dev'
+    ? 'https://notexe.pages.dev'
     : window.location.origin;
 
   const apiUrl = `${baseUrl}/${endpointClean}`;
@@ -101,7 +101,7 @@ export async function executeWorkerRequest(
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-Client-Platform': 'DXA-Sandbox/2.0'
+        'X-Client-Platform': 'NotExe-Sandbox/2.0'
       },
       body: bodyString,
       signal
@@ -204,7 +204,7 @@ export function diagnoseError(status: number, body: any): SandboxErrorCard | nul
       title: 'Worker Connection Failed',
       description: 'Unable to reach the Cloudflare Worker API. Check internet connectivity or CORS configuration.',
       code: status || 'NET_ERR',
-      recommendation: 'Ensure your network allows connections to deepxauth.pages.dev'
+      recommendation: 'Ensure your network allows connections to notexe.pages.dev'
     };
   }
 
@@ -283,7 +283,7 @@ export function diagnoseError(status: number, body: any): SandboxErrorCard | nul
     title: 'API Request Error',
     description: body?.message || 'The server returned a negative validation state.',
     code: status,
-    recommendation: 'Verify input parameters and consult DeepXAuth Docs.'
+    recommendation: 'Verify input parameters and consult Not Exe Docs.'
   };
 }
 
@@ -303,12 +303,12 @@ export function generateCodeSnippet(
   };
 
   if (isLicenseOnly) {
-    payloadData.licenseKey = config.licenseKey || config.username || 'DXA-XXXX-YYYY-ZZZZ';
+    payloadData.licenseKey = config.licenseKey || config.username || 'NXE-XXXX-YYYY-ZZZZ';
   } else {
     payloadData.username = config.username || 'user123';
     payloadData.password = config.password || 'password123';
     if (endpointPath === '/register') {
-      payloadData.licenseKey = config.licenseKey || 'DXA-XXXX-YYYY-ZZZZ';
+      payloadData.licenseKey = config.licenseKey || 'NXE-XXXX-YYYY-ZZZZ';
     }
   }
 
@@ -322,7 +322,7 @@ export function generateCodeSnippet(
     case 'python':
       return `import requests
 
-url = "https://deepxauth.pages.dev/api/${cleanEndpoint}"
+url = "https://notexe.pages.dev/api/${cleanEndpoint}"
 payload = ${jsonPayload.replace(/"/g, '"')}
 
 headers = {
@@ -340,12 +340,12 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-class DXAClient
+class NotExeClient
 {
     static async Task Main()
     {
         var client = new HttpClient();
-        var url = "https://deepxauth.pages.dev/api/${cleanEndpoint}";
+        var url = "https://notexe.pages.dev/api/${cleanEndpoint}";
         
         var jsonPayload = @"${jsonPayload.replace(/"/g, '""')}";
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
@@ -365,7 +365,7 @@ class DXAClient
 int main() {
     CURL* curl = curl_easy_init();
     if(curl) {
-        const char* url = "https://deepxauth.pages.dev/api/${cleanEndpoint}";
+        const char* url = "https://notexe.pages.dev/api/${cleanEndpoint}";
         const char* json_data = "${jsonPayload.replace(/"/g, '\\"').replace(/\n/g, '')}";
 
         struct curl_slist* headers = NULL;
@@ -388,7 +388,7 @@ use serde_json::json;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
-    let url = "https://deepxauth.pages.dev/api/${cleanEndpoint}";
+    let url = "https://notexe.pages.dev/api/${cleanEndpoint}";
 
     let payload = json!(${jsonPayload});
 
@@ -414,7 +414,7 @@ import (
 )
 
 func main() {
-	url := "https://deepxauth.pages.dev/api/${cleanEndpoint}"
+	url := "https://notexe.pages.dev/api/${cleanEndpoint}"
 	var jsonStr = []byte(\`${jsonPayload}\`)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -434,8 +434,8 @@ func main() {
 
     case 'typescript':
     default:
-      return `async function callDeepXAuth() {
-  const response = await fetch('https://deepxauth.pages.dev/api/${cleanEndpoint}', {
+      return `async function callNot Exe() {
+  const response = await fetch('https://notexe.pages.dev/api/${cleanEndpoint}', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -447,7 +447,7 @@ func main() {
   console.log('API Response:', data);
 }
 
-callDeepXAuth();`;
+callNot Exe();`;
   }
 }
 
@@ -457,7 +457,7 @@ export function generateExportPayload(
   config: SandboxRequestConfig
 ): string {
   const cleanEndpoint = endpointPath.startsWith('/') ? endpointPath.slice(1) : endpointPath;
-  const url = `https://deepxauth.pages.dev/api/${cleanEndpoint}`;
+  const url = `https://notexe.pages.dev/api/${cleanEndpoint}`;
   const isLicenseOnly = endpointPath === '/login' && (config.authMode === 'license' || (!!config.licenseKey && !config.password));
 
   const payloadData: Record<string, any> = {
@@ -468,12 +468,12 @@ export function generateExportPayload(
   };
 
   if (isLicenseOnly) {
-    payloadData.licenseKey = config.licenseKey || config.username || 'DXA-XXXX-YYYY-ZZZZ';
+    payloadData.licenseKey = config.licenseKey || config.username || 'NXE-XXXX-YYYY-ZZZZ';
   } else {
     payloadData.username = config.username || 'user123';
     payloadData.password = config.password || 'password123';
     if (endpointPath === '/register') {
-      payloadData.licenseKey = config.licenseKey || 'DXA-XXXX-YYYY-ZZZZ';
+      payloadData.licenseKey = config.licenseKey || 'NXE-XXXX-YYYY-ZZZZ';
     }
   }
 
@@ -495,7 +495,7 @@ export function generateExportPayload(
     return JSON.stringify(
       {
         info: {
-          name: `DeepXAuth ${cleanEndpoint} Request`,
+          name: `Not Exe ${cleanEndpoint} Request`,
           schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
         },
         item: [
@@ -511,7 +511,7 @@ export function generateExportPayload(
               url: {
                 raw: url,
                 protocol: 'https',
-                host: ['deepxauth', 'pages', 'dev'],
+                host: ['notexe', 'pages', 'dev'],
                 path: ['api', cleanEndpoint]
               }
             }

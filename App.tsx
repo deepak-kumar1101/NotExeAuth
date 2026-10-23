@@ -18,6 +18,7 @@ import NotFound from './pages/NotFound';
 
 import LoadingScreen from './components/LoadingScreen';
 import CursorGlow from './components/CursorGlow';
+import SmoothScroll from './components/SmoothScroll';
 import { CommandPalette } from './components/CommandPalette';
 
 import { onValue, ref } from 'firebase/database';
@@ -52,7 +53,13 @@ const App: React.FC = () => {
   const [maintenance, setMaintenance] = useState<SystemConfig | null>(null);
 
   useEffect(() => {
+    // Safety fallback: ensure initial loading resolves quickly even if Firebase is connecting
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
     const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
+      clearTimeout(timer);
       if (u?.email === 'reseller@gmail.com') {
         setUser(null);
         setLoading(false);
@@ -60,14 +67,21 @@ const App: React.FC = () => {
       }
       setUser(u);
       setLoading(false);
+    }, (err) => {
+      clearTimeout(timer);
+      console.warn("Auth state listener error:", err);
+      setLoading(false);
     });
 
     const maintenanceRef = ref(db, 'system/config');
     const unsubscribeMaintenance = onValue(maintenanceRef, (snapshot) => {
       setMaintenance(snapshot.val());
+    }, (err) => {
+      console.warn("Maintenance listener error:", err);
     });
 
     return () => {
+      clearTimeout(timer);
       unsubscribeAuth();
       unsubscribeMaintenance();
     };
@@ -90,6 +104,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
+      <SmoothScroll />
       <CursorGlow />
       <CommandPalette userRole={userRole} />
       <Routes>

@@ -157,7 +157,7 @@ const ResellerPortal: React.FC = () => {
     });
 
     const [licenseForm, setLicenseForm] = useState({
-        prefix: 'DXA',
+        prefix: 'NXE',
         displayName: '',
         duration: '1',
         unit: 'days',
@@ -309,8 +309,8 @@ const ResellerPortal: React.FC = () => {
         if (!reseller || !currentApp || !firebaseAuthAttempted) return;
 
         const { prefix, displayName, duration, unit, amount } = licenseForm;
-        const cleanPrefix = (prefix || 'DXA').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-        const prefixUpper = cleanPrefix || 'DXA';
+        const cleanPrefix = (prefix || 'NXE').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const prefixUpper = cleanPrefix || 'NXE';
         const durationNum = Math.max(1, parseInt(duration) || 1);
         const amountNum = Math.min(100, Math.max(1, parseInt(amount) || 1));
 
@@ -357,7 +357,7 @@ const ResellerPortal: React.FC = () => {
             addToast(`Generated ${amountNum} licenses`);
             
             setLicenseForm({
-                prefix: 'DXA',
+                prefix: 'NXE',
                 displayName: '',
                 duration: '1',
                 unit: 'days',
@@ -1014,7 +1014,7 @@ const ResellerPortal: React.FC = () => {
                                     <input 
                                         value={licenseForm.prefix}
                                         onChange={e => setLicenseForm(prev => ({ ...prev, prefix: e.target.value }))}
-                                        placeholder="DXA" 
+                                        placeholder="NXE" 
                                         className="w-full bg-surfaceHighlight border border-border p-3 rounded-xl text-sm focus:outline-none focus:border-white/30 text-white placeholder:text-muted/50" 
                                     />
                                 </div>

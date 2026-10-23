@@ -183,12 +183,12 @@ const Dashboard: React.FC = () => {
 
     try {
       const embed = {
-        title: data.title || 'DXA Event',
+        title: data.title || 'Not Exe Event',
         description: data.description || '',
         color: data.color || 3447003, 
         fields: data.fields || [],
         timestamp: new Date().toISOString(),
-        footer: { text: 'DXA Authentication System' }
+        footer: { text: 'Not Exe Shield Engine' }
       };
 
       await fetch(webhookSettings.url, {
@@ -219,7 +219,7 @@ const Dashboard: React.FC = () => {
           setPlanLimits({ maxApps: 2, maxUsers: 50, onSale: true, creditPrice: 0, price: '$0', order: 1, features: ['multi_app', 'user_data'] });
         }
       } else {
-        const secret = 'DXA-' + Math.random().toString(36).substring(2, 15).toUpperCase();
+        const secret = 'NXE-' + Math.random().toString(36).substring(2, 15).toUpperCase();
         const customer = {
           email: auth.currentUser?.email,
           secret,
@@ -241,7 +241,7 @@ const Dashboard: React.FC = () => {
         if (raw[k]?.metadata) dec[k] = decrypt(raw[k].metadata);
       });
       setApps(dec);
-      if (Object.keys(dec).length === 0 && !localStorage.getItem('dxa_onboarding_done')) {
+      if (Object.keys(dec).length === 0 && !localStorage.getItem('notexe_onboarding_done')) {
         setShowOnboarding(true);
       }
       if (!currentApp && Object.keys(dec).length > 0) {
@@ -543,7 +543,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
       localStorage.setItem('mtc_selected_app', name);
       setShowCreateApp(false);
       setShowOnboarding(false);
-      localStorage.setItem('dxa_onboarding_done', 'true');
+      localStorage.setItem('notexe_onboarding_done', 'true');
       
       try {
         await sendWebhook('notifyPauseApp', {
@@ -623,7 +623,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
   };
 
   const logout = () => {
-    ['dxa_afk_earnings', 'dxa_last_daily', 'dxa_streak', 'dxa_selected_app'].forEach(k => localStorage.removeItem(k));
+    ['notexe_afk_earnings', 'notexe_last_daily', 'notexe_streak', 'notexe_selected_app'].forEach(k => localStorage.removeItem(k));
     signOut(auth).then(() => navigate('/login'));
   };
 
@@ -651,11 +651,13 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 floating-sidebar-shell transform transition-transform duration-300 md:relative md:transform-none flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-5 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-white via-indigo-100 to-indigo-300 text-black flex items-center justify-center font-black text-xs shadow-lg shadow-white/20">
-              DXA
+            <div className="relative w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-amber-400 via-yellow-400 to-cyan-400 shadow-[0_0_18px_rgba(245,158,11,0.4)] flex-shrink-0">
+              <div className="w-full h-full rounded-full overflow-hidden bg-[#07090e] border border-amber-300/40 flex items-center justify-center">
+                <img src="/logo.png" alt="Not Exe" className="w-full h-full object-cover rounded-full" />
+              </div>
             </div>
             <div>
-              <div className="text-white font-extrabold text-sm tracking-tight">Deep X Auth</div>
+              <div className="text-white font-extrabold text-sm tracking-tight">Not Exe</div>
               <div className="text-[10px] text-indigo-400 font-semibold uppercase tracking-wider">Enterprise Pro</div>
             </div>
           </div>
@@ -1675,7 +1677,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
               <div className="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-8 group-hover:scale-110 transition-transform duration-500">
                 <Box size={48} className="text-white opacity-50 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h2 className="text-4xl font-black mb-6 tracking-tight">Welcome to <span className="text-white">DXA Security</span></h2>
+              <h2 className="text-4xl font-black mb-6 tracking-tight">Welcome to <span className="text-white">Not Exe Shield</span></h2>
               <p className="text-muted text-lg font-medium mb-12 leading-relaxed max-w-md mx-auto">
                 Protect your software with industry-leading encryption. Let's start by creating your first application profile to generate your master keys.
               </p>
@@ -1954,7 +1956,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
         <form onSubmit={async (e) => {
           e.preventDefault();
           const d = new FormData(e.currentTarget);
-          const prefix = (d.get('prefix') as string || 'DXA').toUpperCase();
+          const prefix = (d.get('prefix') as string || 'NXE').toUpperCase();
           const displayName = d.get('displayName') as string;
           const amount = genAmount;
 
@@ -2003,7 +2005,7 @@ const DEFAULT_PLANS: Record<string, SystemPlan> = {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs text-muted mb-1 block">Prefix</label>
-              <input name="prefix" placeholder="Prefix (DXA)" className="w-full bg-surfaceHighlight border border-border p-4 rounded-xl focus:outline-none" />
+              <input name="prefix" placeholder="Prefix (NXE)" className="w-full bg-surfaceHighlight border border-border p-4 rounded-xl focus:outline-none" />
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted mb-1 block">Display Name</label>

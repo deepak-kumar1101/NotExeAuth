@@ -1,0 +1,30 @@
+# ==============================================================================
+# Not Exe (NXE) Cloudflare Worker / Pages Functions Secrets (.dev.vars.example)
+# Use with Wrangler locally: wrangler pages dev dist
+# In Cloudflare Dashboard: Pages -> Settings -> Environment Variables
+# ==============================================================================
+
+# Master Database Encryption Secret (Must match VITE_DB_SECRET)
+DB_SECRET="NotExeSecretKey_2026!#"
+
+# Cloudflare Turnstile Secret Key (from Cloudflare Dashboard -> Turnstile)
+TURNSTILE_SECRET_KEY="0x4AAAAAA..."
+
+# Worker Service Account Credentials in Firebase Auth
+# Create this user in Firebase Authentication -> Users -> Add user
+FIREBASE_AUTH_EMAIL="sdk_worker@yourdomain.com"
+FIREBASE_AUTH_PASSWORD="YourStrongWorkerPassword123!#"
+
+# Firebase Project Configuration
+FIREBASE_API_KEY="AIzaSyYourFirebaseApiKeyHere"
+FIREBASE_DB_URL="https://your-notexe-project-default-rtdb.firebaseio.com"
+
+# Super Admin Email
+ADMIN_EMAIL="admin@yourdomain.com"
+
+# RSA-2048 Private Key for Cryptographically Signing API Responses
+# Generate via: openssl genrsa -out private.pem 2048
+#               openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private.pem -out pkcs8_private.pem
+NOTEXE_RESPONSE_SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC6...
+-----END PRIVATE KEY-----"

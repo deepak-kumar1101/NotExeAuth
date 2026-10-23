@@ -11,7 +11,7 @@ import {
     Terminal, ChevronDown, ChevronUp, Globe, ExternalLink
 } from 'lucide-react';
 
-const BASE_URL = 'https://deepxauth.pages.dev';
+const BASE_URL = 'https://notexe.pages.dev';
 const SDK_PUBLIC_KEY_SNIPPET = `-----BEGIN PUBLIC KEY-----
 MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAh3fjJEqt8/GbGNkhn9ws
 8v7cStTdgEv2712vsJUhyJXS/hhG6wLcTHCk/hY/+jICvAF7lsSAMmz4Nwntp62B
@@ -48,7 +48,7 @@ const endpoints: Endpoint[] = [
         params: [
             { name: 'username', type: 'string', required: true, desc: 'The user\'s username', example: '"john_doe"' },
             { name: 'password', type: 'string', required: true, desc: 'The user\'s password', example: '"MyPass123"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key (from Dashboard)', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key (from Dashboard)', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'The name of your application', example: '"MyApp"' },
             { name: 'appVersion', type: 'string', required: true, desc: 'Your current app version', example: '"1.0.0"' },
             { name: 'hwid', type: 'string', required: false, desc: 'Hardware ID to lock user to a device', example: '"HWID-XYZ"' },
@@ -59,7 +59,7 @@ const endpoints: Endpoint[] = [
   body: JSON.stringify({
     username: 'john_doe',
     password: 'MyPass123',
-    secret: 'DXA-abc123',
+    secret: 'Not Exe-abc123',
     appName: 'MyApp',
     appVersion: '1.0.0'
   })
@@ -80,8 +80,8 @@ const endpoints: Endpoint[] = [
         params: [
             { name: 'username', type: 'string', required: true, desc: 'Desired username', example: '"new_user"' },
             { name: 'password', type: 'string', required: true, desc: 'Desired password', example: '"SecurePass"' },
-            { name: 'licenseKey', type: 'string', required: true, desc: 'A valid unused license key', example: '"DXA-ABCD-EFGH"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key', example: '"DXA-abc123..."' },
+            { name: 'licenseKey', type: 'string', required: true, desc: 'A valid unused license key', example: '"Not Exe-ABCD-EFGH"' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
             { name: 'appVersion', type: 'string', required: true, desc: 'App version', example: '"1.0.0"' },
         ],
@@ -91,8 +91,8 @@ const endpoints: Endpoint[] = [
   body: JSON.stringify({
     username: 'new_user',
     password: 'SecurePass',
-    licenseKey: 'DXA-ABCD-EFGH',
-    secret: 'DXA-abc123',
+    licenseKey: 'Not Exe-ABCD-EFGH',
+    secret: 'Not Exe-abc123',
     appName: 'MyApp',
     appVersion: '1.0.0'
   })
@@ -109,7 +109,7 @@ const endpoints: Endpoint[] = [
         desc: 'Verify that the client is running an approved version before doing anything else. Use this to force updates.',
         beginner: 'Run this check first in your app startup before showing a login screen. It prevents old versions from connecting.',
         params: [
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
             { name: 'appVersion', type: 'string', required: true, desc: 'Version to verify', example: '"1.0.0"' },
         ],
@@ -117,7 +117,7 @@ const endpoints: Endpoint[] = [
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    secret: 'DXA-abc123',
+    secret: 'Not Exe-abc123',
     appName: 'MyApp',
     appVersion: '1.0.0'
   })
@@ -133,7 +133,7 @@ const endpoints: Endpoint[] = [
         desc: 'Create a user account directly without needing a license key. Useful for manual provisioning.',
         params: [
             { name: 'ownerEmailKey', type: 'string', required: true, desc: 'Your account email (dots replaced with commas)', example: '"user,example,com"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret key', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
             { name: 'appVersion', type: 'string', required: true, desc: 'App version', example: '"1.0.0"' },
             { name: 'username', type: 'string', required: true, desc: 'New username', example: '"admin_user"' },
@@ -152,7 +152,7 @@ const endpoints: Endpoint[] = [
         desc: 'Permanently delete a user account and free up their bound license.',
         params: [
             { name: 'ownerEmailKey', type: 'string', required: true, desc: 'Your account email key', example: '"user,example,com"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
             { name: 'username', type: 'string', required: true, desc: 'User to delete', example: '"john_doe"' },
         ],
@@ -165,7 +165,7 @@ const endpoints: Endpoint[] = [
         category: 'users', title: 'Reset HWID', method: 'POST', path: '/reset_hwid',
         desc: 'Clear the Hardware ID binding for a user, allowing them to log in from a new device.',
         params: [
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
             { name: 'username', type: 'string', required: true, desc: 'Target username', example: '"john_doe"' },
         ],
@@ -179,9 +179,9 @@ const endpoints: Endpoint[] = [
         desc: 'Generate a new license key programmatically. Use this for automated license delivery.',
         params: [
             { name: 'ownerEmailKey', type: 'string', required: true, desc: 'Your account email key', example: '"user,example,com"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
-            { name: 'licenseKey', type: 'string', required: true, desc: 'The license key string', example: '"DXA-XXXX-YYYY"' },
+            { name: 'licenseKey', type: 'string', required: true, desc: 'The license key string', example: '"Not Exe-XXXX-YYYY"' },
             { name: 'rank', type: 'string', required: false, desc: 'Access level/rank', example: '"premium"' },
             { name: 'expiry', type: 'string', required: false, desc: 'Expiry or "lifetime"', example: '"2025-12-31"' },
             { name: 'note', type: 'string', required: false, desc: 'Internal note for this key', example: '"Sold via Discord"' },
@@ -197,9 +197,9 @@ const endpoints: Endpoint[] = [
         desc: 'Remove a license key. If the key was claimed by a user, that account remains intact.',
         params: [
             { name: 'ownerEmailKey', type: 'string', required: true, desc: 'Your account email key', example: '"user,example,com"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
-            { name: 'licenseKey', type: 'string', required: true, desc: 'License to delete', example: '"DXA-XXXX-YYYY"' },
+            { name: 'licenseKey', type: 'string', required: true, desc: 'License to delete', example: '"Not Exe-XXXX-YYYY"' },
         ],
         responses: [
             { code: 'LICENSE_DELETED', desc: 'License removed from the system.', success: true },
@@ -211,7 +211,7 @@ const endpoints: Endpoint[] = [
         desc: 'Programmatically initialize a new application container under your account.',
         params: [
             { name: 'ownerEmailKey', type: 'string', required: true, desc: 'Your account email key', example: '"user,example,com"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your master secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your master secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'New application name', example: '"MyNewApp"' },
         ],
         responses: [
@@ -225,7 +225,7 @@ const endpoints: Endpoint[] = [
         desc: 'Permanently delete an entire application including all its users, licenses, and variables.',
         params: [
             { name: 'ownerEmailKey', type: 'string', required: true, desc: 'Your account email key', example: '"user,example,com"' },
-            { name: 'secret', type: 'string', required: true, desc: 'Your master secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your master secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application to delete', example: '"MyApp"' },
         ],
         responses: [
@@ -238,7 +238,7 @@ const endpoints: Endpoint[] = [
         desc: 'Fetch a single remote variable value from your app. Great for pushing config updates without patching.',
         beginner: 'Store things like "download_link", "discord_invite", or "announcement" in your dashboard and fetch them here. Update anytime without recompiling your app.',
         params: [
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
             { name: 'varName', type: 'string', required: true, desc: 'Variable name to fetch', example: '"download_link"' },
             { name: 'appVersion', type: 'string', required: true, desc: 'App version', example: '"1.0.0"' },
@@ -252,7 +252,7 @@ const endpoints: Endpoint[] = [
         category: 'vars', title: 'Get All Variables', method: 'POST', path: '/getvariables',
         desc: 'Fetch all remote variables for your application in a single request.',
         params: [
-            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"DXA-abc123..."' },
+            { name: 'secret', type: 'string', required: true, desc: 'Your app secret', example: '"Not Exe-abc123..."' },
             { name: 'appName', type: 'string', required: true, desc: 'Application name', example: '"MyApp"' },
         ],
         responses: [
@@ -379,7 +379,7 @@ const QuickStart: React.FC = () => (
         <div>
             <h1 className="text-4xl font-black tracking-tight mb-3">Quick Start</h1>
             <p className="text-muted text-base leading-relaxed max-w-2xl">
-                Get up and running with DXA in 3 steps. No complex setup — just a secret key and a few HTTP requests.
+                Get up and running with Not Exe in 3 steps. No complex setup — just a secret key and a few HTTP requests.
             </p>
         </div>
 
@@ -387,9 +387,9 @@ const QuickStart: React.FC = () => (
             {[
                 {
                     step: '01', title: 'Get Your Secret Key',
-                    desc: 'Go to your Dashboard → select your application → copy the Secret Key shown at the top. It looks like DXA-xxxxxxxx...',
+                    desc: 'Go to your Dashboard → select your application → copy the Secret Key shown at the top. It looks like Not Exe-xxxxxxxx...',
                     code: `
-const SECRET = "DXA-abc123..."
+const SECRET = "Not Exe-abc123..."
 const APP    = "MyApp"
 const VERSION = "1.0.0"`
                 },
@@ -500,7 +500,7 @@ const Docs: React.FC = () => {
                         <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center group-hover:rotate-12 transition-all shadow-lg shadow-white/10">
                             <Shield className="text-black" size={18} />
                         </div>
-                        <span className="font-black tracking-tight text-lg">DXA <span className="text-muted font-light">Docs</span></span>
+                        <span className="font-black tracking-tight text-lg">Not Exe <span className="text-muted font-light">Docs</span></span>
                     </Link>
 
                     
@@ -672,7 +672,7 @@ const Docs: React.FC = () => {
 
                     
                     <div className="mt-16 pt-8 border-t border-white/[0.05] text-center">
-                        <p className="text-muted/40 text-xs">DXA Authentication · All endpoints use HTTPS</p>
+                        <p className="text-muted/40 text-xs">Not Exe Authentication · All endpoints use HTTPS</p>
                     </div>
                 </main>
             </div>

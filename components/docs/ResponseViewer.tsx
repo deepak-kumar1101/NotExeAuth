@@ -66,7 +66,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `dxa_${endpoint.replace('/', '')}_response.json`;
+    a.download = `notexe_${endpoint.replace('/', '')}_response.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

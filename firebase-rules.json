@@ -3,35 +3,35 @@
     "system": {
       "config": {
         ".read": true,
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))"
       },
       "plans": {
         ".read": true,
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))"
       },
       "stats": {
         ".read": true,
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || auth.token.role === 'worker' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || auth.token.role === 'worker' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))"
       },
       "sdks": {
         ".read": true,
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))"
       },
       "creditPackages": {
         ".read": true,
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))"
       },
       "paymentConfig": {
         ".read": true,
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))"
       },
       "creditRequests": {
         ".read": "auth != null",
         ".write": "auth != null"
       },
       "planAuditLogs": {
-        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))"
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))"
       },
       "subscriptionEvents": {
         ".read": "auth != null",
@@ -47,40 +47,40 @@
     },
 
     "customers": {
-      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))",
       "$emailKey": {
-        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))",
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))",
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || (auth.token.email != null && auth.token.email.replace('.', ',') === $emailKey))",
         "secret": {
-          ".validate": "auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || !data.exists() || data.val() === newData.val()"
+          ".validate": "auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || !data.exists() || data.val() === newData.val()"
         }
       }
     },
 
     "applications": {
-      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com'))",
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')))",
       "$userSecret": {
-        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.email != null || auth.token.secret === $userSecret || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || auth.token.role === 'worker')",
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.email != null || auth.token.secret === $userSecret || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || auth.token.role === 'worker')"
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.email != null || auth.token.secret === $userSecret || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || auth.token.role === 'worker')",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.email != null || auth.token.secret === $userSecret || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || auth.token.role === 'worker')"
       }
     },
 
     "webhookSettings": {
       "$userSecret": {
-        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.email != null || auth.token.secret === $userSecret)",
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.email != null || auth.token.secret === $userSecret)"
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.email != null || auth.token.secret === $userSecret)",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.email != null || auth.token.secret === $userSecret)"
       }
     },
 
     "resellers": {
-      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || (auth.token.email != null && query.orderByChild === 'createdBy' && query.equalTo === auth.token.email.replace('.', ',')))",
+      ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || (auth.token.email != null && query.orderByChild === 'createdBy' && query.equalTo === auth.token.email.replace('.', ',')))",
       ".indexOn": ["createdBy"],
       "$hash": {
-        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && data.child('createdBy').val() === auth.token.email.replace('.', ',')))",
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && (data.exists() ? data.child('createdBy').val() === auth.token.email.replace('.', ',') : newData.child('createdBy').val() === auth.token.email.replace('.', ','))))",
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && data.child('createdBy').val() === auth.token.email.replace('.', ',')))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && (data.exists() ? data.child('createdBy').val() === auth.token.email.replace('.', ',') : newData.child('createdBy').val() === auth.token.email.replace('.', ','))))",
         ".validate": "newData.hasChildren(['createdBy', 'payload'])",
         "createdBy": {
-          ".validate": "newData.isString() && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && newData.val() === auth.token.email.replace('.', ','))) && (!data.exists() || data.val() === newData.val())"
+          ".validate": "newData.isString() && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && newData.val() === auth.token.email.replace('.', ','))) && (!data.exists() || data.val() === newData.val())"
         },
         "payload": {
           ".validate": "newData.isString()"
@@ -90,8 +90,8 @@
 
     "resellerWebhooks": {
       "$hash": {
-        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && auth.token.email.replace('.', ',') === root.child('resellers').child($hash).child('createdBy').val()))",
-        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com') || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && auth.token.email.replace('.', ',') === root.child('resellers').child($hash).child('createdBy').val()))"
+        ".read": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && auth.token.email.replace('.', ',') === root.child('resellers').child($hash).child('createdBy').val()))",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'admin' || (auth.token.email != null && (auth.token.email.toLowerCase() === root.child('system/config/adminEmail').val() || auth.token.email.toLowerCase() === 'admin@notexe.com' || auth.token.email.toLowerCase() === 'deepsrajput1101@gmail.com')) || auth.token.role === 'reseller' || auth.token.reseller === true || auth.token.email === 'reseller@gmail.com' || (auth.token.email != null && auth.token.email.replace('.', ',') === root.child('resellers').child($hash).child('createdBy').val()))"
       }
     }
   }

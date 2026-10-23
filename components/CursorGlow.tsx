@@ -1,64 +1,70 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export const CursorGlow: React.FC = () => {
-  const [position, setPosition] = useState({ x: -100, y: -100 });
-  const [visible, setVisible] = useState(false);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only enable on pointer-fine devices to preserve mobile performance
-    if (window.matchMedia('(pointer: coarse)').matches) return;
+    // Only enable on desktop pointer-fine devices to preserve mobile performance
+    if (typeof window === 'undefined' || window.matchMedia('(pointer: coarse)').matches) return;
 
-    let requestId: number;
-    let targetX = -100;
-    let targetY = -100;
-    let currentX = -100;
-    let currentY = -100;
+    let targetX = -200;
+    let targetY = -200;
+    let currentX = -200;
+    let currentY = -200;
+    let animId: number;
+    let isVisible = false;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const onMouseMove = (e: MouseEvent) => {
       targetX = e.clientX;
       targetY = e.clientY;
-      if (!visible) setVisible(true);
+      if (!isVisible && glowRef.current) {
+        isVisible = true;
+        glowRef.current.style.opacity = '1';
+      }
     };
 
-    const handleMouseLeave = () => {
-      setVisible(false);
+    const onMouseLeave = () => {
+      isVisible = false;
+      if (glowRef.current) {
+        glowRef.current.style.opacity = '0';
+      }
     };
 
-    const animate = () => {
-      // Smooth lerp for liquid motion
-      currentX += (targetX - currentX) * 0.15;
-      currentY += (targetY - currentY) * 0.15;
+    // Smooth lerp loop mutating transform directly on the DOM element
+    // NO React state updates, zero re-renders!
+    const render = () => {
+      currentX += (targetX - currentX) * 0.12;
+      currentY += (targetY - currentY) * 0.12;
 
-      setPosition({ x: currentX, y: currentY });
-      requestId = requestAnimationFrame(animate);
+      if (glowRef.current) {
+        glowRef.current.style.transform = `translate3d(${currentX - 160}px, ${currentY - 160}px, 0)`;
+      }
+      animId = requestAnimationFrame(render);
     };
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    document.addEventListener('mouseleave', handleMouseLeave);
-    requestId = requestAnimationFrame(animate);
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    document.addEventListener('mouseleave', onMouseLeave);
+    animId = requestAnimationFrame(render);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      cancelAnimationFrame(requestId);
+      window.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseleave', onMouseLeave);
+      cancelAnimationFrame(animId);
     };
-  }, [visible]);
-
-  if (!visible) return null;
+  }, []);
 
   return (
     <div
-      className="pointer-events-none fixed z-[9999] transition-opacity duration-500 hidden md:block"
+      ref={glowRef}
+      className="pointer-events-none fixed top-0 left-0 z-[9999] opacity-0 transition-opacity duration-300 hidden md:block"
       style={{
-        left: 0,
-        top: 0,
-        transform: `translate3d(${position.x - 200}px, ${position.y - 200}px, 0)`,
-        opacity: visible ? 0.35 : 0,
-        willChange: 'transform'
+        width: '320px',
+        height: '320px',
+        willChange: 'transform',
+        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(6, 182, 212, 0.05) 45%, transparent 70%)',
+        borderRadius: '50%',
       }}
-    >
-      <div className="w-[400px] h-[400px] rounded-full bg-radial from-indigo-500/30 via-purple-500/10 to-transparent blur-[80px]" />
-    </div>
+    />
   );
 };
 

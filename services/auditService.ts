@@ -2,7 +2,7 @@ import { ref, push, set, onValue, query, orderByChild, limitToLast } from 'fireb
 import { db } from './firebase';
 import { AuditLogItem, AuditEventType, AuditCategory, AuditSeverity, AuditActorType } from '../types/audit';
 
-const LOCAL_AUDIT_KEY = 'dxa_audit_logs_local';
+const LOCAL_AUDIT_KEY = 'notexe_audit_logs_local';
 
 const SEED_DEMO_LOGS: AuditLogItem[] = [
   {
@@ -264,7 +264,7 @@ export class AuditService {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>DeepXAuth Audit Log Report</title>
+      <title>Not Exe Audit Log Report</title>
       <style>
         body { font-family: monospace, sans-serif; background: #07080c; color: #f8fafc; padding: 20px; }
         h1 { color: #6366f1; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -279,7 +279,7 @@ export class AuditService {
       </style>
     </head>
     <body>
-      <h1>🛡️ DeepXAuth Audit Activity Report</h1>
+      <h1>🛡️ Not Exe Audit Activity Report</h1>
       <p>Generated: ${new Date().toLocaleString()} | Total Records: ${logs.length}</p>
       <table>
         <thead>

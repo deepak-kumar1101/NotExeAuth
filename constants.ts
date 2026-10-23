@@ -1,4 +1,9 @@
+export const BRAND_NAME = "Not Exe";
+export const BRAND_SHORT = "NOT EXE";
+export const BRAND_TAGLINE = "Next-Gen Authentication & Anti-Crack Protection";
+export const BRAND_PREFIX = "NXE";
 
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 export const DB_SECRET = import.meta.env.VITE_DB_SECRET || "";
 
 export const FIREBASE_CONFIG = {
